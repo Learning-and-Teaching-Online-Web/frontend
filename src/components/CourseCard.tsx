@@ -1,6 +1,7 @@
 import React from 'react';
 import { Clock, Users, ChevronRight, Star } from 'lucide-react';
 import type { Course } from '../data/mockData';
+import '../styles/CourseCard.css';
 
 interface CourseCardProps {
   course: Course;

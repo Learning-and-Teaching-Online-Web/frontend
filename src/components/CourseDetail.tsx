@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Clock, Users, BookOpen, HelpCircle, Star, Award } from 'lucide-react';
 import { mockCourses } from '../data/mockData';
+import '../styles/CourseDetail.css';
 
 interface CourseDetailProps {
   courseId: string;

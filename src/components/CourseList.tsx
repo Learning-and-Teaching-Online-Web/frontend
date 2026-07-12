@@ -4,6 +4,7 @@ import { mockCourses } from '../data/mockData';
 import SidebarFilters from './SidebarFilters';
 import type { FilterState } from './SidebarFilters';
 import CourseCard from './CourseCard';
+import '../styles/CourseList.css';
 
 interface CourseListProps {
   onSelectCourse: (courseId: string) => void;

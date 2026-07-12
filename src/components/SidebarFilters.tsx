@@ -1,6 +1,7 @@
 import React from 'react';
 import { Search, Star } from 'lucide-react';
 import { mockCourses } from '../data/mockData';
+import '../styles/SidebarFilters.css';
 
 export interface FilterState {
   search: string;

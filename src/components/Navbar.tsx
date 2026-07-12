@@ -1,5 +1,6 @@
 import React from 'react';
 import { BookOpen, Search } from 'lucide-react';
+import '../styles/Navbar.css';
 
 interface NavbarProps {
   currentPage: 'list' | 'detail';

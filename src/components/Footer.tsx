@@ -1,5 +1,6 @@
 import React from 'react';
 import { BookOpen, Facebook, Twitter, Instagram, Youtube, Compass } from 'lucide-react';
+import '../styles/Footer.css';
 
 const Footer: React.FC = () => {
   return (
