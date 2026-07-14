@@ -3,8 +3,8 @@ import { BookOpen, Search } from 'lucide-react';
 import '../styles/Navbar.css';
 
 interface NavbarProps {
-  currentPage: 'list' | 'detail';
-  onNavigate: (page: 'list' | 'detail') => void;
+  currentPage: 'home' | 'list' | 'detail' | 'auth' | 'faq' | 'contact' | 'blog_list' | 'blog_detail';
+  onNavigate: (page: 'home' | 'list' | 'detail' | 'auth' | 'faq' | 'contact' | 'blog_list' | 'blog_detail') => void;
 }
 
 const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
@@ -12,9 +12,9 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
     <nav className="navbar">
       <div className="container navbar-container">
         {/* Brand Logo */}
-        <a href="#" className="brand-logo" onClick={(e) => { e.preventDefault(); onNavigate('list'); }}>
+        <a href="#" className="brand-logo" onClick={(e) => { e.preventDefault(); onNavigate('home'); }}>
           <BookOpen className="brand-icon" size={28} strokeWidth={2.5} />
-          Edu<span>Press</span>
+          Nova<span>Learn</span>
         </a>
 
         {/* Navigation Links */}
@@ -22,8 +22,8 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
           <li>
             <a 
               href="#" 
-              className={`nav-link ${currentPage === 'list' ? '' : ''}`} 
-              onClick={(e) => { e.preventDefault(); onNavigate('list'); }}
+              className={`nav-link ${currentPage === 'home' ? 'active' : ''}`} 
+              onClick={(e) => { e.preventDefault(); onNavigate('home'); }}
             >
               Home
             </a>
@@ -38,30 +38,61 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
             </a>
           </li>
           <li>
-            <a href="#" className="nav-link" onClick={(e) => e.preventDefault()}>
+            <a 
+              href="#" 
+              className={`nav-link ${currentPage === 'blog_list' || currentPage === 'blog_detail' ? 'active' : ''}`} 
+              onClick={(e) => { e.preventDefault(); onNavigate('blog_list'); }}
+            >
               Blog
             </a>
           </li>
-          <li>
-            <a href="#" className="nav-link" onClick={(e) => e.preventDefault()}>
-              Page
+          <li className="nav-dropdown-wrapper">
+            <a 
+              href="#" 
+              className={`nav-link ${currentPage === 'faq' || currentPage === 'contact' ? 'active' : ''}`} 
+              onClick={(e) => e.preventDefault()}
+            >
+              Page <span className="dropdown-arrow">⌵</span>
             </a>
+            <ul className="dropdown-menu">
+              <li>
+                <a 
+                  href="#" 
+                  onClick={(e) => { 
+                    e.preventDefault(); 
+                    onNavigate('faq'); 
+                  }}
+                >
+                  FAQs
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="#" 
+                  onClick={(e) => { 
+                    e.preventDefault(); 
+                    onNavigate('contact'); 
+                  }}
+                >
+                  Contact
+                </a>
+              </li>
+            </ul>
           </li>
           <li>
             <a href="#" className="nav-link" onClick={(e) => e.preventDefault()}>
               LearnPress Add-On
             </a>
           </li>
-          <li>
-            <a href="#" className="nav-link" onClick={(e) => e.preventDefault()}>
-              Premium Theme
-            </a>
-          </li>
         </ul>
 
         {/* Actions */}
         <div className="navbar-actions">
-          <a href="#" className="auth-link" onClick={(e) => e.preventDefault()}>
+          <a 
+            href="#" 
+            className={`auth-link ${currentPage === 'auth' ? 'active' : ''}`} 
+            onClick={(e) => { e.preventDefault(); onNavigate('auth'); }}
+          >
             Login / Register
           </a>
           <button className="search-trigger" aria-label="Search">

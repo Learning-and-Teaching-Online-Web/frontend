@@ -2,7 +2,12 @@ import React from 'react';
 import { BookOpen, Facebook, Twitter, Instagram, Youtube, Compass } from 'lucide-react';
 import '../styles/Footer.css';
 
-const Footer: React.FC = () => {
+interface FooterProps {
+  onNavigateFAQ?: () => void;
+  onNavigateContact?: () => void;
+}
+
+const Footer: React.FC<FooterProps> = ({ onNavigateFAQ, onNavigateContact }) => {
   return (
     <footer className="footer">
       <div className="container">
@@ -11,7 +16,7 @@ const Footer: React.FC = () => {
           <div className="footer-column">
             <div className="footer-logo">
               <BookOpen className="brand-icon" size={24} style={{ display: 'inline', marginRight: '6px' }} />
-              Edu<span>Press</span>
+              Nova<span>Learn</span>
             </div>
             <p>
               Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
@@ -40,9 +45,29 @@ const Footer: React.FC = () => {
           <div className="footer-column">
             <h3>Get Help</h3>
             <ul className="footer-links">
-              <li><a href="#" onClick={(e) => e.preventDefault()}>Contact Us</a></li>
+              <li>
+                <a 
+                  href="#" 
+                  onClick={(e) => { 
+                    e.preventDefault(); 
+                    if (onNavigateContact) onNavigateContact(); 
+                  }}
+                >
+                  Contact Us
+                </a>
+              </li>
               <li><a href="#" onClick={(e) => e.preventDefault()}>Latest Articles</a></li>
-              <li><a href="#" onClick={(e) => e.preventDefault()}>FAQ</a></li>
+              <li>
+                <a 
+                  href="#" 
+                  onClick={(e) => { 
+                    e.preventDefault(); 
+                    if (onNavigateFAQ) onNavigateFAQ(); 
+                  }}
+                >
+                  FAQ
+                </a>
+              </li>
             </ul>
           </div>
 
