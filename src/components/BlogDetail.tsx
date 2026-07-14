@@ -3,7 +3,6 @@ import { User, Calendar, MessageCircle, AlertCircle, CheckCircle2, ChevronLeft, 
 import { mockArticles, mockComments } from '../data/blogData';
 import type { BlogComment } from '../data/blogData';
 import { renderBlogIllustration } from './BlogList';
-import BlogSidebar from './BlogSidebar';
 import '../styles/Blog.css';
 
 interface BlogDetailProps {
@@ -31,18 +30,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({ articleId, onSelectArticle, onB
     return mockArticles[idx + 1];
   }, [article]);
 
-  // Sidebar Filter States (dummies just to keep Sidebar rendering)
-  const [sidebarSearch, setSidebarSearch] = useState('');
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
-  const handleToggleCategory = (category: string) => {
-    setSelectedCategories(prev =>
-      prev.includes(category)
-        ? prev.filter(c => c !== category)
-        : [...prev, category]
-    );
-  };
 
   // Leave a Comment form states
   const [name, setName] = useState('');
@@ -109,25 +97,12 @@ const BlogDetail: React.FC<BlogDetailProps> = ({ articleId, onSelectArticle, onB
         </div>
       </div>
 
-      <div className="container faq-page-container">
+      <div className="container blog-detail-page-container">
         
-        {/* Layout split with Left Sidebar */}
-        <div className="blog-layout-wrapper">
+        {/* Detail layout wrapper without Sidebar */}
+        <div className="blog-detail-layout-wrapper">
           
-          {/* Left Column: Sidebar Widgets */}
-          <BlogSidebar
-            searchQuery={sidebarSearch}
-            onSearchChange={setSidebarSearch}
-            selectedCategories={selectedCategories}
-            onToggleCategory={handleToggleCategory}
-            selectedTag={selectedTag}
-            onSelectTag={setSelectedTag}
-            onSelectArticle={onSelectArticle}
-          />
-
-          {/* Right Column: Article Details */}
-          <div className="blog-main-content">
-            <div className="blog-detail-container">
+          <div className="blog-detail-container">
               {/* Title */}
               <h1 className="faq-page-title" style={{ margin: '0 0 16px 0', fontSize: '32px', lineHeight: '1.3' }}>
                 {article.title}
@@ -314,7 +289,6 @@ const BlogDetail: React.FC<BlogDetailProps> = ({ articleId, onSelectArticle, onB
               </div>
 
             </div>
-          </div>
 
         </div>
       </div>

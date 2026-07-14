@@ -31,7 +31,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
           <li>
             <a 
               href="#" 
-              className={`nav-link ${currentPage === 'list' ? 'active' : ''}`} 
+              className={`nav-link ${currentPage === 'list' || currentPage === 'detail' ? 'active' : ''}`} 
               onClick={(e) => { e.preventDefault(); onNavigate('list'); }}
             >
               Courses

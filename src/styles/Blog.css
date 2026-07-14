@@ -675,3 +675,14 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Blog Detail Layout styling without Sidebar */
+.blog-detail-page-container {
+  padding-top: 60px;
+  padding-bottom: 80px;
+}
+
+.blog-detail-layout-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+}
