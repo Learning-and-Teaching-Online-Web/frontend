@@ -46,11 +46,11 @@ const Footer: React.FC<FooterProps> = ({ onNavigateFAQ, onNavigateContact }) => 
             <h3>Get Help</h3>
             <ul className="footer-links">
               <li>
-                <a 
-                  href="#" 
-                  onClick={(e) => { 
-                    e.preventDefault(); 
-                    if (onNavigateContact) onNavigateContact(); 
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (onNavigateContact) onNavigateContact();
                   }}
                 >
                   Contact Us
@@ -58,11 +58,11 @@ const Footer: React.FC<FooterProps> = ({ onNavigateFAQ, onNavigateContact }) => 
               </li>
               <li><a href="#" onClick={(e) => e.preventDefault()}>Latest Articles</a></li>
               <li>
-                <a 
-                  href="#" 
-                  onClick={(e) => { 
-                    e.preventDefault(); 
-                    if (onNavigateFAQ) onNavigateFAQ(); 
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (onNavigateFAQ) onNavigateFAQ();
                   }}
                 >
                   FAQ
@@ -87,10 +87,10 @@ const Footer: React.FC<FooterProps> = ({ onNavigateFAQ, onNavigateContact }) => 
           <div className="footer-column">
             <h3>Contact Us</h3>
             <p style={{ lineHeight: '1.6' }}>
-              Address: 2321 New Design Str, Lorem Ipsum10 Hudson Yards, USA
+              Address: Khu Cong Nghe Cao, Thu Duc, TP.HCM
             </p>
             <p style={{ marginTop: '8px' }}>
-              Tel: + (123) 2500-567-8988
+              Tel: + 84 93 808 1475
             </p>
             <p style={{ marginTop: '4px' }}>
               Mail: supportlms@gmail.com
@@ -100,7 +100,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigateFAQ, onNavigateContact }) => 
 
         {/* Copyright */}
         <div className="footer-bottom">
-          Copyright © 2026 LearnPress LMS | Powered by ThimPress
+          Copyright © 2026 NovaLearn | Powered by TEAM
         </div>
       </div>
     </footer>
