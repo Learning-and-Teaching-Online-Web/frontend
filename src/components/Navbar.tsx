@@ -1,11 +1,31 @@
-import React from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { BookOpen, Search } from 'lucide-react';
 import '../styles/Navbar.css';
 
 const Navbar: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const isPageActive = location.pathname === '/faq' || location.pathname === '/contact';
+
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = () => {
+      setIsAuthenticated(localStorage.getItem('isAuthenticated') === 'true');
+    };
+    checkAuth();
+    
+    window.addEventListener('authChange', checkAuth);
+    return () => window.removeEventListener('authChange', checkAuth);
+  }, []);
+
+  const handleLogout = (e: React.MouseEvent) => {
+    e.preventDefault();
+    localStorage.removeItem('isAuthenticated');
+    window.dispatchEvent(new Event('authChange'));
+    navigate('/');
+  };
 
   return (
     <nav className="navbar">
@@ -63,12 +83,18 @@ const Navbar: React.FC = () => {
 
         {/* Actions */}
         <div className="navbar-actions">
-          <NavLink
-            to="/auth"
-            className={({ isActive }) => `auth-link ${isActive ? 'active' : ''}`}
-          >
-            Đăng nhập / Đăng ký
-          </NavLink>
+          {isAuthenticated ? (
+            <a href="#" onClick={handleLogout} className="auth-link">
+              Đăng xuất
+            </a>
+          ) : (
+            <NavLink
+              to="/auth"
+              className={({ isActive }) => `auth-link ${isActive ? 'active' : ''}`}
+            >
+              Đăng nhập / Đăng ký
+            </NavLink>
+          )}
           <button className="search-trigger" aria-label="Tìm kiếm">
             <Search size={18} />
           </button>

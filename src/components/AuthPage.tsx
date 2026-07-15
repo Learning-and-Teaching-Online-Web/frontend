@@ -59,6 +59,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
         email: loginIdentifier,
         password: loginPassword,
       });
+      localStorage.setItem('isAuthenticated', 'true');
+      window.dispatchEvent(new Event('authChange'));
       toast.success('Đăng nhập thành công!');
       navigate('/');
     } catch (error: any) {
@@ -118,6 +120,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
         dateOfBirth: registerDateOfBirth,
         role: registerRole
       });
+      localStorage.setItem('isAuthenticated', 'true');
+      window.dispatchEvent(new Event('authChange'));
       toast.success('Đăng ký tài khoản thành công!');
       navigate('/');
     } catch (error: any) {
