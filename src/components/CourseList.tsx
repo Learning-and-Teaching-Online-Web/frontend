@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { Grid, List, ChevronLeft, ChevronRight } from 'lucide-react';
 import { mockCourses } from '../data/mockData';
 import SidebarFilters from './SidebarFilters';
@@ -6,11 +7,7 @@ import type { FilterState } from './SidebarFilters';
 import CourseCard from './CourseCard';
 import '../styles/CourseList.css';
 
-interface CourseListProps {
-  onSelectCourse: (courseId: string) => void;
-}
-
-const CourseList: React.FC<CourseListProps> = ({ onSelectCourse }) => {
+const CourseList: React.FC = () => {
   const [layout, setLayout] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<string>('default');
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -102,7 +99,7 @@ const CourseList: React.FC<CourseListProps> = ({ onSelectCourse }) => {
       {/* Breadcrumbs Header */}
       <div className="breadcrumbs">
         <div className="container breadcrumbs-container">
-          <a href="#" onClick={(e) => e.preventDefault()}>Homepage</a>
+          <Link to="/">Homepage</Link>
           <span className="breadcrumbs-separator">/</span>
           <span className="breadcrumbs-current">Course</span>
         </div>
@@ -175,7 +172,6 @@ const CourseList: React.FC<CourseListProps> = ({ onSelectCourse }) => {
                     key={course.course_id}
                     course={course}
                     layout={layout}
-                    onSelect={onSelectCourse}
                   />
                 ))}
               </div>

@@ -1,12 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { GraduationCap } from 'lucide-react';
 
-interface CallToActionProps {
-  onJoinAsStudent: () => void;
-  onJoinAsInstructor: () => void;
-}
-
-const CallToAction: React.FC<CallToActionProps> = ({ onJoinAsStudent, onJoinAsInstructor }) => {
+const CallToAction: React.FC = () => {
+  const navigate = useNavigate();
+  const onJoinAsStudent = () => navigate('/auth');
+  const onJoinAsInstructor = () => navigate('/auth');
   return (
     <section className="cta-banner-section-wrapper" style={{ padding: '20px 0' }}>
       <div className="container">

@@ -1,14 +1,10 @@
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { Grid, List, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { mockArticles } from '../data/blogData';
 import type { Article } from '../data/blogData';
 import BlogSidebar from './BlogSidebar';
 import '../styles/Blog.css';
-
-interface BlogListProps {
-  onSelectArticle: (articleId: string) => void;
-  onBack: () => void;
-}
 
 export const renderBlogIllustration = (type: Article['imageType']) => {
   switch (type) {
@@ -213,7 +209,7 @@ export const renderBlogIllustration = (type: Article['imageType']) => {
   }
 };
 
-const BlogList: React.FC<BlogListProps> = ({ onSelectArticle, onBack }) => {
+const BlogList: React.FC = () => {
   const [layout, setLayout] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<string>('default');
   
@@ -291,7 +287,7 @@ const BlogList: React.FC<BlogListProps> = ({ onSelectArticle, onBack }) => {
       {/* 1. Breadcrumbs */}
       <div className="breadcrumbs">
         <div className="container breadcrumbs-container">
-          <a href="#" onClick={(e) => { e.preventDefault(); onBack(); }}>Homepage</a>
+          <Link to="/">Homepage</Link>
           <span className="breadcrumbs-separator">/</span>
           <span className="breadcrumbs-current">Blog</span>
         </div>
@@ -314,7 +310,6 @@ const BlogList: React.FC<BlogListProps> = ({ onSelectArticle, onBack }) => {
             onToggleCategory={handleToggleCategory}
             selectedTag={selectedTag}
             onSelectTag={handleTagSelect}
-            onSelectArticle={onSelectArticle}
           />
 
           {/* Right Column: Main Articles Content */}
@@ -364,9 +359,9 @@ const BlogList: React.FC<BlogListProps> = ({ onSelectArticle, onBack }) => {
               <div className={`blog-grid ${layout === 'list' ? 'list-view' : ''}`}>
                 {paginatedArticles.map((article) => (
                   <article className="blog-card" key={article.id}>
-                    <div className="blog-card-image" onClick={() => onSelectArticle(article.id)} style={{ cursor: 'pointer' }}>
+                    <Link to={`/blog/${article.id}`} className="blog-card-image" style={{ display: 'block', cursor: 'pointer' }}>
                       {renderBlogIllustration(article.imageType)}
-                    </div>
+                    </Link>
                     
                     <div className="blog-card-content">
                       {/* Meta info */}
@@ -379,9 +374,9 @@ const BlogList: React.FC<BlogListProps> = ({ onSelectArticle, onBack }) => {
 
                       {/* Title */}
                       <h3 className="blog-card-title">
-                        <a href="#" onClick={(e) => { e.preventDefault(); onSelectArticle(article.id); }}>
+                        <Link to={`/blog/${article.id}`}>
                           {article.title}
-                        </a>
+                        </Link>
                       </h3>
 
                       {/* Excerpt */}

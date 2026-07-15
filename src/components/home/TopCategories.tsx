@@ -1,12 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Palette, Code, Globe, Video, Camera, TrendingUp, FileText, DollarSign, Atom, Share2 } from 'lucide-react';
 
-interface TopCategoriesProps {
-  onSelectCategory: (categoryName: string) => void;
-  onViewAll: () => void;
-}
-
-const TopCategories: React.FC<TopCategoriesProps> = ({ onSelectCategory, onViewAll }) => {
+const TopCategories: React.FC = () => {
+  const navigate = useNavigate();
+  const onSelectCategory = (_categoryName: string) => navigate('/courses');
+  const onViewAll = () => navigate('/courses');
   const categoriesList = [
     { name: 'Art & Design', icon: Palette, count: 38 },
     { name: 'Development', icon: Code, count: 38 },

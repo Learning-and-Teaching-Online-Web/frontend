@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { Clock, Users, BookOpen, HelpCircle, Star, Award } from 'lucide-react';
 import { mockCourses } from '../data/mockData';
 import '../styles/CourseDetail.css';
 
-interface CourseDetailProps {
-  courseId: string;
-  onBack: () => void;
-}
-
-const CourseDetail: React.FC<CourseDetailProps> = ({ courseId, onBack }) => {
+const CourseDetail: React.FC = () => {
+  const { courseId } = useParams<{ courseId: string }>();
   const [activeTab, setActiveTab] = useState<'overview' | 'curriculum' | 'instructor' | 'faqs' | 'reviews'>('overview');
   const [commentForm, setCommentForm] = useState({ name: '', email: '', comment: '', saveDetails: false });
 
@@ -18,9 +15,9 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ courseId, onBack }) => {
     return (
       <div className="container" style={{ padding: '80px 0', textAlign: 'center' }}>
         <h2>Không tìm thấy khóa học</h2>
-        <button className="submit-comment-btn" style={{ marginTop: '20px' }} onClick={onBack}>
+        <Link to="/courses" className="submit-comment-btn" style={{ display: 'inline-block', marginTop: '20px', textDecoration: 'none' }}>
           Quay lại danh sách
-        </button>
+        </Link>
       </div>
     );
   }
@@ -51,9 +48,9 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ courseId, onBack }) => {
       {/* 1. Breadcrumbs */}
       <div className="breadcrumbs">
         <div className="container breadcrumbs-container">
-          <a href="#" onClick={(e) => { e.preventDefault(); onBack(); }}>Homepage</a>
+          <Link to="/">Homepage</Link>
           <span className="breadcrumbs-separator">/</span>
-          <a href="#" onClick={(e) => { e.preventDefault(); onBack(); }}>Course</a>
+          <Link to="/courses">Course</Link>
           <span className="breadcrumbs-separator">/</span>
           <span className="breadcrumbs-current" style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {course.title}

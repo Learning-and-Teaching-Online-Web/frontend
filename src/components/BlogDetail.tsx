@@ -1,17 +1,14 @@
 import React, { useState, useMemo } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { User, Calendar, MessageCircle, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Facebook, Twitter, Instagram, Youtube, Compass } from 'lucide-react';
 import { mockArticles, mockComments } from '../data/blogData';
 import type { BlogComment } from '../data/blogData';
 import { renderBlogIllustration } from './BlogList';
 import '../styles/Blog.css';
 
-interface BlogDetailProps {
-  articleId: string;
-  onSelectArticle: (id: string) => void;
-  onBack: () => void;
-}
+const BlogDetail: React.FC = () => {
+  const { articleId } = useParams<{ articleId: string }>();
 
-const BlogDetail: React.FC<BlogDetailProps> = ({ articleId, onSelectArticle, onBack }) => {
   // Find current article
   const article = useMemo(() => {
     return mockArticles.find(a => a.id === articleId) || mockArticles[0];
@@ -89,9 +86,9 @@ const BlogDetail: React.FC<BlogDetailProps> = ({ articleId, onSelectArticle, onB
       {/* 1. Breadcrumbs */}
       <div className="breadcrumbs">
         <div className="container breadcrumbs-container">
-          <a href="#" onClick={(e) => { e.preventDefault(); onBack(); }}>Homepage</a>
+          <Link to="/">Homepage</Link>
           <span className="breadcrumbs-separator">/</span>
-          <a href="#" onClick={(e) => { e.preventDefault(); onBack(); }}>Blog</a>
+          <Link to="/blog">Blog</Link>
           <span className="breadcrumbs-separator">/</span>
           <span className="breadcrumbs-current">{article.title}</span>
         </div>
@@ -158,9 +155,10 @@ const BlogDetail: React.FC<BlogDetailProps> = ({ articleId, onSelectArticle, onB
 
               {/* Prev / Next Article navigators */}
               <div className="prev-next-articles">
-                <button 
+                <Link 
+                  to={`/blog/${prevArticle.id}`}
                   className="prev-next-card"
-                  onClick={() => onSelectArticle(prevArticle.id)}
+                  style={{ textDecoration: 'none' }}
                 >
                   <div className="prev-next-arrow-btn">
                     <ChevronLeft size={16} />
@@ -169,12 +167,12 @@ const BlogDetail: React.FC<BlogDetailProps> = ({ articleId, onSelectArticle, onB
                     <span className="prev-next-label">Prev Articles</span>
                     <h4 className="prev-next-title">{prevArticle.title}</h4>
                   </div>
-                </button>
+                </Link>
 
-                <button 
+                <Link 
+                  to={`/blog/${nextArticle.id}`}
                   className="prev-next-card"
-                  onClick={() => onSelectArticle(nextArticle.id)}
-                  style={{ flexDirection: 'row-reverse', textAlign: 'right' }}
+                  style={{ flexDirection: 'row-reverse', textAlign: 'right', textDecoration: 'none' }}
                 >
                   <div className="prev-next-arrow-btn">
                     <ChevronRight size={16} />
@@ -183,7 +181,7 @@ const BlogDetail: React.FC<BlogDetailProps> = ({ articleId, onSelectArticle, onB
                     <span className="prev-next-label">Next Articles</span>
                     <h4 className="prev-next-title">{nextArticle.title}</h4>
                   </div>
-                </button>
+                </Link>
               </div>
 
               {/* Comments list */}

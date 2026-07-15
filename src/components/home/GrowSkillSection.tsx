@@ -1,11 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
 
-interface GrowSkillSectionProps {
-  onExplore: () => void;
-}
-
-const GrowSkillSection: React.FC<GrowSkillSectionProps> = ({ onExplore }) => {
+const GrowSkillSection: React.FC = () => {
+  const navigate = useNavigate();
+  const onExplore = () => navigate('/courses');
   return (
     <section className="grow-skill-section" style={{ padding: '40px 0' }}>
       <div className="container">

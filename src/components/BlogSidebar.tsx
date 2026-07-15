@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Search, Calendar } from 'lucide-react';
 import { mockCategories, mockTags, mockRecentPosts } from '../data/blogData';
 
@@ -9,7 +10,6 @@ interface BlogSidebarProps {
   onToggleCategory: (category: string) => void;
   selectedTag: string | null;
   onSelectTag: (tag: string | null) => void;
-  onSelectArticle: (id: string) => void;
 }
 
 const BlogSidebar: React.FC<BlogSidebarProps> = ({
@@ -18,8 +18,7 @@ const BlogSidebar: React.FC<BlogSidebarProps> = ({
   selectedCategories,
   onToggleCategory,
   selectedTag,
-  onSelectTag,
-  onSelectArticle
+  onSelectTag
 }) => {
 
   const renderThumbnail = (imageType: 'globe' | 'classroom' | 'office') => {
@@ -95,10 +94,11 @@ const BlogSidebar: React.FC<BlogSidebarProps> = ({
         <h3 className="filter-title">Recent Posts</h3>
         <div className="recent-posts-list" style={{ marginTop: '12px' }}>
           {mockRecentPosts.map((post) => (
-            <div
+            <Link
               key={post.id}
+              to={`/blog/${post.id}`}
               className="recent-post-item"
-              onClick={() => onSelectArticle(post.id)}
+              style={{ textDecoration: 'none', display: 'flex' }}
             >
               <div className="recent-post-thumb">
                 {renderThumbnail(post.imageType)}
@@ -110,7 +110,7 @@ const BlogSidebar: React.FC<BlogSidebarProps> = ({
                   {post.date}
                 </span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

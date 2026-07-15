@@ -1,10 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-interface AddonsBannerProps {
-  onExplore: () => void;
-}
-
-const AddonsBanner: React.FC<AddonsBannerProps> = ({ onExplore }) => {
+const AddonsBanner: React.FC = () => {
+  const navigate = useNavigate();
+  const onExplore = () => navigate('/courses');
   return (
     <section className="addons-banner-section-wrapper" style={{ padding: '20px 0' }}>
       <div className="container">

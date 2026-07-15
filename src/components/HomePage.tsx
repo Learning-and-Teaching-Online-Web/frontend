@@ -11,57 +11,38 @@ import CallToAction from './home/CallToAction';
 import LatestArticles from './home/LatestArticles';
 import '../styles/HomePage.css';
 
-interface HomePageProps {
-  onNavigate: (page: 'list' | 'detail' | 'auth' | 'faq' | 'contact' | 'blog_list' | 'blog_detail') => void;
-  onSelectCourse: (courseId: string) => void;
-  onSelectArticle: (articleId: string) => void;
-}
-
-const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectCourse, onSelectArticle }) => {
-  const handleExploreCourses = () => {
-    onNavigate('list');
-  };
-
-  const handleSelectCategory = (_categoryName: string) => {
-    // We can navigate to Courses page ('list')
-    onNavigate('list');
-  };
-
-  const handleJoinAuth = () => {
-    onNavigate('auth');
-  };
-
+const HomePage: React.FC = () => {
   return (
     <div className="home-page-container-main">
       {/* 1. Hero Section */}
-      <HeroSection onExplore={handleExploreCourses} />
+      <HeroSection />
 
       {/* 2. Top Categories */}
-      <TopCategories onSelectCategory={handleSelectCategory} onViewAll={handleExploreCourses} />
+      <TopCategories />
 
       {/* 3. Featured Courses */}
-      <FeaturedCourses onSelectCourse={onSelectCourse} onViewAll={handleExploreCourses} />
+      <FeaturedCourses />
 
       {/* 4. LearnPress Addons Banner */}
-      <AddonsBanner onExplore={handleExploreCourses} />
+      <AddonsBanner />
 
       {/* 5. Statistics Section */}
       <StatsSection />
 
       {/* 6. Grow Skill Section */}
-      <GrowSkillSection onExplore={handleExploreCourses} />
+      <GrowSkillSection />
 
       {/* 7. Banner Theme */}
-      <BannerTheme onExplore={handleExploreCourses} />
+      <BannerTheme />
 
       {/* 8. Student Feedbacks */}
       <StudentFeedbacks />
 
       {/* 9. Call To Action */}
-      <CallToAction onJoinAsStudent={handleJoinAuth} onJoinAsInstructor={handleJoinAuth} />
+      <CallToAction />
 
       {/* 10. Latest Articles */}
-      <LatestArticles onSelectArticle={onSelectArticle} onViewAll={() => onNavigate('blog_list')} />
+      <LatestArticles />
     </div>
   );
 };

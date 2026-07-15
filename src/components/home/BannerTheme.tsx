@@ -1,10 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-interface BannerThemeProps {
-  onExplore: () => void;
-}
-
-const BannerTheme: React.FC<BannerThemeProps> = ({ onExplore }) => {
+const BannerTheme: React.FC = () => {
+  const navigate = useNavigate();
+  const onExplore = () => navigate('/courses');
   return (
     <section className="banner-theme-section-wrapper" style={{ padding: '20px 0' }}>
       <div className="container">

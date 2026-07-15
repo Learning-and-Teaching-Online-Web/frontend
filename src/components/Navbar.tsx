@@ -1,81 +1,61 @@
 import React from 'react';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { BookOpen, Search } from 'lucide-react';
 import '../styles/Navbar.css';
 
-interface NavbarProps {
-  currentPage: 'home' | 'list' | 'detail' | 'auth' | 'faq' | 'contact' | 'blog_list' | 'blog_detail';
-  onNavigate: (page: 'home' | 'list' | 'detail' | 'auth' | 'faq' | 'contact' | 'blog_list' | 'blog_detail') => void;
-}
+const Navbar: React.FC = () => {
+  const location = useLocation();
+  const isPageActive = location.pathname === '/faq' || location.pathname === '/contact';
 
-const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
   return (
     <nav className="navbar">
       <div className="container navbar-container">
         {/* Brand Logo */}
-        <a href="#" className="brand-logo" onClick={(e) => { e.preventDefault(); onNavigate('home'); }}>
+        <Link to="/" className="brand-logo">
           <BookOpen className="brand-icon" size={28} strokeWidth={2.5} />
           Nova<span>Learn</span>
-        </a>
+        </Link>
 
         {/* Navigation Links */}
         <ul className="nav-links">
           <li>
-            <a 
-              href="#" 
-              className={`nav-link ${currentPage === 'home' ? 'active' : ''}`} 
-              onClick={(e) => { e.preventDefault(); onNavigate('home'); }}
+            <NavLink 
+              to="/" 
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             >
               Home
-            </a>
+            </NavLink>
           </li>
           <li>
-            <a 
-              href="#" 
-              className={`nav-link ${currentPage === 'list' || currentPage === 'detail' ? 'active' : ''}`} 
-              onClick={(e) => { e.preventDefault(); onNavigate('list'); }}
+            <NavLink 
+              to="/courses" 
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             >
               Courses
-            </a>
+            </NavLink>
           </li>
           <li>
-            <a 
-              href="#" 
-              className={`nav-link ${currentPage === 'blog_list' || currentPage === 'blog_detail' ? 'active' : ''}`} 
-              onClick={(e) => { e.preventDefault(); onNavigate('blog_list'); }}
+            <NavLink 
+              to="/blog" 
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             >
               Blog
-            </a>
+            </NavLink>
           </li>
           <li className="nav-dropdown-wrapper">
             <a 
               href="#" 
-              className={`nav-link ${currentPage === 'faq' || currentPage === 'contact' ? 'active' : ''}`} 
+              className={`nav-link ${isPageActive ? 'active' : ''}`} 
               onClick={(e) => e.preventDefault()}
             >
               Page <span className="dropdown-arrow">⌵</span>
             </a>
             <ul className="dropdown-menu">
               <li>
-                <a 
-                  href="#" 
-                  onClick={(e) => { 
-                    e.preventDefault(); 
-                    onNavigate('faq'); 
-                  }}
-                >
-                  FAQs
-                </a>
+                <Link to="/faq">FAQs</Link>
               </li>
               <li>
-                <a 
-                  href="#" 
-                  onClick={(e) => { 
-                    e.preventDefault(); 
-                    onNavigate('contact'); 
-                  }}
-                >
-                  Contact
-                </a>
+                <Link to="/contact">Contact</Link>
               </li>
             </ul>
           </li>
@@ -88,13 +68,12 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
 
         {/* Actions */}
         <div className="navbar-actions">
-          <a 
-            href="#" 
-            className={`auth-link ${currentPage === 'auth' ? 'active' : ''}`} 
-            onClick={(e) => { e.preventDefault(); onNavigate('auth'); }}
+          <NavLink 
+            to="/auth" 
+            className={({ isActive }) => `auth-link ${isActive ? 'active' : ''}`}
           >
             Login / Register
-          </a>
+          </NavLink>
           <button className="search-trigger" aria-label="Search">
             <Search size={18} />
           </button>

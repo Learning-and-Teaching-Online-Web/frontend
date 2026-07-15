@@ -1,10 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-interface HeroSectionProps {
-  onExplore: () => void;
-}
-
-const HeroSection: React.FC<HeroSectionProps> = ({ onExplore }) => {
+const HeroSection: React.FC = () => {
+  const navigate = useNavigate();
+  const onExplore = () => navigate('/courses');
   return (
     <header className="hero-section">
       {/* Hand-drawn educational doodles background */}

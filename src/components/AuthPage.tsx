@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
 import '../styles/AuthPage.css';
 
 interface AuthPageProps {
   initialMode?: 'login' | 'register';
-  onBack: () => void;
 }
 
-const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login', onBack }) => {
+const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>(initialMode);
   
   // Login states
@@ -109,7 +109,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login', onBack }) =>
       {/* 1. Breadcrumbs */}
       <div className="breadcrumbs">
         <div className="container breadcrumbs-container">
-          <a href="#" onClick={(e) => { e.preventDefault(); onBack(); }}>Homepage</a>
+          <Link to="/">Homepage</Link>
           <span className="breadcrumbs-separator">/</span>
           <span className="breadcrumbs-current">Login / Register</span>
         </div>

@@ -1,13 +1,9 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { BookOpen, Facebook, Twitter, Instagram, Youtube, Compass } from 'lucide-react';
 import '../styles/Footer.css';
 
-interface FooterProps {
-  onNavigateFAQ?: () => void;
-  onNavigateContact?: () => void;
-}
-
-const Footer: React.FC<FooterProps> = ({ onNavigateFAQ, onNavigateContact }) => {
+const Footer: React.FC = () => {
   return (
     <footer className="footer">
       <div className="container">
@@ -46,27 +42,13 @@ const Footer: React.FC<FooterProps> = ({ onNavigateFAQ, onNavigateContact }) => 
             <h3>Get Help</h3>
             <ul className="footer-links">
               <li>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (onNavigateContact) onNavigateContact();
-                  }}
-                >
-                  Contact Us
-                </a>
+                <Link to="/contact">Contact Us</Link>
               </li>
-              <li><a href="#" onClick={(e) => e.preventDefault()}>Latest Articles</a></li>
               <li>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (onNavigateFAQ) onNavigateFAQ();
-                  }}
-                >
-                  FAQ
-                </a>
+                <Link to="/blog">Latest Articles</Link>
+              </li>
+              <li>
+                <Link to="/faq">FAQ</Link>
               </li>
             </ul>
           </div>
