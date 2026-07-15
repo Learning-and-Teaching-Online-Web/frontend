@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { authApi } from '../api/authApi';
+import { authApi } from '../services/authApi';
 import '../styles/AuthPage.css';
 
 interface AuthPageProps {

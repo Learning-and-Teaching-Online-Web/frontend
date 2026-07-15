@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar } from 'lucide-react';
 import { mockArticles } from '../../data/blogData';
-import { renderBlogIllustration } from '../BlogList';
+import { renderBlogIllustration } from '../../pages/BlogList';
 
 const LatestArticles: React.FC = () => {
   // Take the first 3 articles for the home page display

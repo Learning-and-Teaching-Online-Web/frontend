@@ -1,0 +1,45 @@
+/* Quizzes Tab CSS */
+.quiz-list-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.quiz-list-table th,
+.quiz-list-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.quiz-list-table th {
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.quiz-list-table td {
+  font-size: 14px;
+  color: var(--text-main);
+}
+
+.badge-pass {
+  background-color: #d1fae5;
+  color: #065f46;
+  font-weight: 600;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.badge-fail {
+  background-color: #fee2e2;
+  color: #991b1b;
+  font-weight: 600;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}

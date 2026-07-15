@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Grid, List, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { mockArticles } from '../data/blogData';
 import type { Article } from '../data/blogData';
-import BlogSidebar from './BlogSidebar';
+import BlogSidebar from '../components/BlogSidebar';
 import '../styles/Blog.css';
 
 export const renderBlogIllustration = (type: Article['imageType']) => {

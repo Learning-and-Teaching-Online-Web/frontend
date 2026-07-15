@@ -84,9 +84,14 @@ const Navbar: React.FC = () => {
         {/* Actions */}
         <div className="navbar-actions">
           {isAuthenticated ? (
-            <a href="#" onClick={handleLogout} className="auth-link">
-              Đăng xuất
-            </a>
+            <>
+              <Link to="/student/dashboard" className="auth-link" style={{ marginRight: '16px', fontWeight: 600 }}>
+                Bảng điều khiển
+              </Link>
+              <a href="#" onClick={handleLogout} className="auth-link">
+                Đăng xuất
+              </a>
+            </>
           ) : (
             <NavLink
               to="/auth"

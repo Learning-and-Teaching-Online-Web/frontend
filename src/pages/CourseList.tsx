@@ -2,9 +2,9 @@ import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Grid, List, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { mockCourses } from '../data/mockData';
-import SidebarFilters from './SidebarFilters';
-import type { FilterState } from './SidebarFilters';
-import CourseCard from './CourseCard';
+import SidebarFilters from '../components/SidebarFilters';
+import type { FilterState } from '../components/SidebarFilters';
+import CourseCard from '../components/CourseCard';
 import '../styles/CourseList.css';
 
 const CourseList: React.FC = () => {

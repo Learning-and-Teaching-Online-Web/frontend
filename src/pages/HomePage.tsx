@@ -1,14 +1,14 @@
 import React from 'react';
-import HeroSection from './home/HeroSection';
-import TopCategories from './home/TopCategories';
-import FeaturedCourses from './home/FeaturedCourses';
-import AddonsBanner from './home/AddonsBanner';
-import StatsSection from './home/StatsSection';
-import GrowSkillSection from './home/GrowSkillSection';
-import BannerTheme from './home/BannerTheme';
-import StudentFeedbacks from './home/StudentFeedbacks';
-import CallToAction from './home/CallToAction';
-import LatestArticles from './home/LatestArticles';
+import HeroSection from '../components/home/HeroSection';
+import TopCategories from '../components/home/TopCategories';
+import FeaturedCourses from '../components/home/FeaturedCourses';
+import AddonsBanner from '../components/home/AddonsBanner';
+import StatsSection from '../components/home/StatsSection';
+import GrowSkillSection from '../components/home/GrowSkillSection';
+import BannerTheme from '../components/home/BannerTheme';
+import StudentFeedbacks from '../components/home/StudentFeedbacks';
+import CallToAction from '../components/home/CallToAction';
+import LatestArticles from '../components/home/LatestArticles';
 import '../styles/HomePage.css';
 
 const HomePage: React.FC = () => {
