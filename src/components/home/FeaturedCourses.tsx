@@ -1,13 +1,9 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Clock, User } from 'lucide-react';
 import { mockCourses } from '../../data/mockData';
 
-interface FeaturedCoursesProps {
-  onSelectCourse: (courseId: string) => void;
-  onViewAll: () => void;
-}
-
-const FeaturedCourses: React.FC<FeaturedCoursesProps> = ({ onSelectCourse, onViewAll }) => {
+const FeaturedCourses: React.FC = () => {
   return (
     <section className="featured-courses-section" style={{ padding: '40px 0 80px 0', backgroundColor: '#ffffff' }}>
       <div className="container">
@@ -15,12 +11,12 @@ const FeaturedCourses: React.FC<FeaturedCoursesProps> = ({ onSelectCourse, onVie
         {/* Section Header */}
         <div className="section-header-row">
           <div className="section-title-group">
-            <h2>Featured Courses</h2>
-            <p>Explore our Popular Courses</p>
+            <h2>Khóa học nổi bật</h2>
+            <p>Khám phá các khóa học phổ biến của chúng tôi</p>
           </div>
-          <button className="section-header-btn" onClick={onViewAll}>
-            All Courses
-          </button>
+          <Link to="/courses" className="section-header-btn">
+            Tất cả khóa học
+          </Link>
         </div>
 
         {/* Courses Grid */}
@@ -28,25 +24,25 @@ const FeaturedCourses: React.FC<FeaturedCoursesProps> = ({ onSelectCourse, onVie
           {mockCourses.map((course) => (
             <div key={course.course_id} className="course-card-home">
               {/* Thumbnail */}
-              <div 
+              <Link 
+                to={`/courses/${course.course_id}`}
                 className="course-thumb-home" 
-                onClick={() => onSelectCourse(course.course_id)}
-                style={{ cursor: 'pointer' }}
+                style={{ display: 'block', cursor: 'pointer' }}
               >
                 <img src={course.thumbnail} alt={course.title} />
                 <span className="course-tag-badge">{course.subject}</span>
-              </div>
+              </Link>
 
               {/* Course Info */}
               <div className="course-info-home">
                 <span className="course-author-home">
-                  by <span>{course.instructor}</span>
+                  bởi <span>{course.instructor}</span>
                 </span>
                 
                 <h3 className="course-title-home">
-                  <a href="#" onClick={(e) => { e.preventDefault(); onSelectCourse(course.course_id); }}>
+                  <Link to={`/courses/${course.course_id}`}>
                     {course.title}
-                  </a>
+                  </Link>
                 </h3>
 
                 {/* Duration and Students count */}
@@ -57,7 +53,7 @@ const FeaturedCourses: React.FC<FeaturedCoursesProps> = ({ onSelectCourse, onVie
                   </div>
                   <div className="course-meta-item">
                     <User size={14} style={{ color: 'var(--primary)' }} />
-                    <span>{course.studentsCount} Students</span>
+                    <span>{course.studentsCount} Học viên</span>
                   </div>
                 </div>
 
@@ -68,16 +64,15 @@ const FeaturedCourses: React.FC<FeaturedCoursesProps> = ({ onSelectCourse, onVie
                       <span className="price-original-home">${course.oldPrice.toFixed(1)}</span>
                     )}
                     <span className={`price-current-home ${course.isFree ? 'free-price' : ''}`}>
-                      {course.isFree ? 'Free' : `$${course.price.toFixed(1)}`}
+                      {course.isFree ? 'Miễn phí' : `$${course.price.toFixed(1)}`}
                     </span>
                   </div>
-                  <a 
-                    href="#" 
+                  <Link 
+                    to={`/courses/${course.course_id}`}
                     className="view-more-link-home"
-                    onClick={(e) => { e.preventDefault(); onSelectCourse(course.course_id); }}
                   >
-                    View More
-                  </a>
+                    Xem thêm
+                  </Link>
                 </div>
               </div>
             </div>

@@ -31,8 +31,8 @@ const StudentFeedbacks: React.FC = () => {
         {/* Section Header */}
         <div className="section-header-row" style={{ justifyContent: 'center', textAlign: 'center', marginBottom: '50px' }}>
           <div className="section-title-group" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <h2>Student Feedbacks</h2>
-            <p>What Students Say About Academy LMS</p>
+            <h2>Phản hồi của học viên</h2>
+            <p>Học viên nói gì về Academy LMS</p>
           </div>
         </div>
 

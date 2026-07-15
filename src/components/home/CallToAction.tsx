@@ -1,12 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { GraduationCap } from 'lucide-react';
 
-interface CallToActionProps {
-  onJoinAsStudent: () => void;
-  onJoinAsInstructor: () => void;
-}
-
-const CallToAction: React.FC<CallToActionProps> = ({ onJoinAsStudent, onJoinAsInstructor }) => {
+const CallToAction: React.FC = () => {
+  const navigate = useNavigate();
+  const onJoinAsStudent = () => navigate('/auth');
+  const onJoinAsInstructor = () => navigate('/auth');
   return (
     <section className="cta-banner-section-wrapper" style={{ padding: '20px 0' }}>
       <div className="container">
@@ -17,16 +16,16 @@ const CallToAction: React.FC<CallToActionProps> = ({ onJoinAsStudent, onJoinAsIn
               <div className="cta-icon-circle">
                 <GraduationCap size={28} />
               </div>
-              <h3 className="cta-title">Let's Start With Academy LMS</h3>
+              <h3 className="cta-title">Bắt đầu cùng Academy LMS</h3>
             </div>
 
             {/* Right side: Action buttons */}
             <div className="cta-right-btns">
               <button className="cta-student-btn" onClick={onJoinAsStudent}>
-                I'm A Student
+                Tôi là học viên
               </button>
               <button className="cta-instructor-btn" onClick={onJoinAsInstructor}>
-                Become An Instructor
+                Trở thành giảng viên
               </button>
             </div>
           </div>

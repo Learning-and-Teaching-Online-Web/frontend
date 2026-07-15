@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Phone, Mail, AlertCircle, CheckCircle2 } from 'lucide-react';
 import '../styles/ContactPage.css';
 
-interface ContactPageProps {
-  onBack: () => void;
-}
-
-const ContactPage: React.FC<ContactPageProps> = ({ onBack }) => {
+const ContactPage: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [comment, setComment] = useState('');
@@ -40,8 +37,8 @@ const ContactPage: React.FC<ContactPageProps> = ({ onBack }) => {
       return;
     }
 
-    // Success Simulation
-    setSuccessMsg('Gửi bình luận thành công! Cảm ơn bạn đã đóng góp ý kiến.');
+    // Mock success
+    setSuccessMsg('Gửi tin nhắn liên hệ thành công! Chúng tôi sẽ phản hồi sớm.');
     setName('');
     setEmail('');
     setComment('');
@@ -52,7 +49,7 @@ const ContactPage: React.FC<ContactPageProps> = ({ onBack }) => {
       {/* 1. Breadcrumbs */}
       <div className="breadcrumbs">
         <div className="container breadcrumbs-container">
-          <a href="#" onClick={(e) => { e.preventDefault(); onBack(); }}>Homepage</a>
+          <Link to="/">Homepage</Link>
           <span className="breadcrumbs-separator">/</span>
           <span className="breadcrumbs-current">Contact</span>
         </div>

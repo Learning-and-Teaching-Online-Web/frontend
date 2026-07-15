@@ -1,14 +1,10 @@
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { Grid, List, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { mockArticles } from '../data/blogData';
 import type { Article } from '../data/blogData';
 import BlogSidebar from './BlogSidebar';
 import '../styles/Blog.css';
-
-interface BlogListProps {
-  onSelectArticle: (articleId: string) => void;
-  onBack: () => void;
-}
 
 export const renderBlogIllustration = (type: Article['imageType']) => {
   switch (type) {
@@ -213,7 +209,7 @@ export const renderBlogIllustration = (type: Article['imageType']) => {
   }
 };
 
-const BlogList: React.FC<BlogListProps> = ({ onSelectArticle, onBack }) => {
+const BlogList: React.FC = () => {
   const [layout, setLayout] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<string>('default');
   
@@ -291,16 +287,16 @@ const BlogList: React.FC<BlogListProps> = ({ onSelectArticle, onBack }) => {
       {/* 1. Breadcrumbs */}
       <div className="breadcrumbs">
         <div className="container breadcrumbs-container">
-          <a href="#" onClick={(e) => { e.preventDefault(); onBack(); }}>Homepage</a>
+          <Link to="/">Trang chủ</Link>
           <span className="breadcrumbs-separator">/</span>
-          <span className="breadcrumbs-current">Blog</span>
+          <span className="breadcrumbs-current">Bài viết</span>
         </div>
       </div>
 
       <div className="container">
         {/* Title */}
         <div className="listing-title-section" style={{ padding: '40px 0 20px 0' }}>
-          <h1 style={{ fontSize: '36px', fontWeight: 700, fontFamily: 'var(--outfit)', color: 'var(--text-dark)' }}>All Articles</h1>
+          <h1 style={{ fontSize: '36px', fontWeight: 700, fontFamily: 'var(--outfit)', color: 'var(--text-dark)' }}>Tất cả bài viết</h1>
         </div>
         
         {/* Layout split with Left Sidebar */}
@@ -314,7 +310,6 @@ const BlogList: React.FC<BlogListProps> = ({ onSelectArticle, onBack }) => {
             onToggleCategory={handleToggleCategory}
             selectedTag={selectedTag}
             onSelectTag={handleTagSelect}
-            onSelectArticle={onSelectArticle}
           />
 
           {/* Right Column: Main Articles Content */}
@@ -323,8 +318,8 @@ const BlogList: React.FC<BlogListProps> = ({ onSelectArticle, onBack }) => {
             {/* Control Bar (styled EXACTLY like Courses) */}
             <div className="blog-control-bar">
               <span className="results-count">
-                Showing {sortedArticles.length > 0 ? (currentPageNum - 1) * itemsPerPage + 1 : 0}-
-                {Math.min(currentPageNum * itemsPerPage, sortedArticles.length)} of {sortedArticles.length} results
+                Hiển thị {sortedArticles.length > 0 ? (currentPageNum - 1) * itemsPerPage + 1 : 0}-
+                {Math.min(currentPageNum * itemsPerPage, sortedArticles.length)} trong tổng số {sortedArticles.length} kết quả
               </span>
               
               <div className="blog-control-bar-right">
@@ -334,9 +329,9 @@ const BlogList: React.FC<BlogListProps> = ({ onSelectArticle, onBack }) => {
                   value={sortBy}
                   onChange={(e) => { setSortBy(e.target.value); setCurrentPageNum(1); }}
                 >
-                  <option value="default">Default Sorter</option>
-                  <option value="comments-desc">Popularity: Comments Count</option>
-                  <option value="title-asc">Title: A to Z</option>
+                  <option value="default">Mặc định</option>
+                  <option value="comments-desc">Nhiều bình luận nhất</option>
+                  <option value="title-asc">Tiêu đề: A đến Z</option>
                 </select>
 
                 {/* Grid / List Layout switches */}
@@ -344,14 +339,14 @@ const BlogList: React.FC<BlogListProps> = ({ onSelectArticle, onBack }) => {
                   <button 
                     className={`layout-btn ${layout === 'grid' ? 'active' : ''}`}
                     onClick={() => setLayout('grid')}
-                    aria-label="Grid layout"
+                    aria-label="Giao diện dạng lưới"
                   >
                     <Grid size={18} />
                   </button>
                   <button 
                     className={`layout-btn ${layout === 'list' ? 'active' : ''}`}
                     onClick={() => setLayout('list')}
-                    aria-label="List layout"
+                    aria-label="Giao diện dạng danh sách"
                   >
                     <List size={18} />
                   </button>
@@ -364,9 +359,9 @@ const BlogList: React.FC<BlogListProps> = ({ onSelectArticle, onBack }) => {
               <div className={`blog-grid ${layout === 'list' ? 'list-view' : ''}`}>
                 {paginatedArticles.map((article) => (
                   <article className="blog-card" key={article.id}>
-                    <div className="blog-card-image" onClick={() => onSelectArticle(article.id)} style={{ cursor: 'pointer' }}>
+                    <Link to={`/blog/${article.id}`} className="blog-card-image" style={{ display: 'block', cursor: 'pointer' }}>
                       {renderBlogIllustration(article.imageType)}
-                    </div>
+                    </Link>
                     
                     <div className="blog-card-content">
                       {/* Meta info */}
@@ -379,9 +374,9 @@ const BlogList: React.FC<BlogListProps> = ({ onSelectArticle, onBack }) => {
 
                       {/* Title */}
                       <h3 className="blog-card-title">
-                        <a href="#" onClick={(e) => { e.preventDefault(); onSelectArticle(article.id); }}>
+                        <Link to={`/blog/${article.id}`}>
                           {article.title}
-                        </a>
+                        </Link>
                       </h3>
 
                       {/* Excerpt */}
@@ -403,7 +398,7 @@ const BlogList: React.FC<BlogListProps> = ({ onSelectArticle, onBack }) => {
                   className="pagination-btn"
                   disabled={currentPageNum === 1}
                   onClick={() => setCurrentPageNum(prev => Math.max(prev - 1, 1))}
-                  aria-label="Previous page"
+                  aria-label="Trang trước"
                 >
                   <ChevronLeft size={16} />
                 </button>
@@ -422,7 +417,7 @@ const BlogList: React.FC<BlogListProps> = ({ onSelectArticle, onBack }) => {
                   className="pagination-btn"
                   disabled={currentPageNum === totalPages}
                   onClick={() => setCurrentPageNum(prev => Math.min(prev + 1, totalPages))}
-                  aria-label="Next page"
+                  aria-label="Trang tiếp"
                 >
                   <ChevronRight size={16} />
                 </button>

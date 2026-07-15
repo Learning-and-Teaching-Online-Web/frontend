@@ -1,10 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-interface AddonsBannerProps {
-  onExplore: () => void;
-}
-
-const AddonsBanner: React.FC<AddonsBannerProps> = ({ onExplore }) => {
+const AddonsBanner: React.FC = () => {
+  const navigate = useNavigate();
+  const onExplore = () => navigate('/courses');
   return (
     <section className="addons-banner-section-wrapper" style={{ padding: '20px 0' }}>
       <div className="container">
@@ -12,13 +11,13 @@ const AddonsBanner: React.FC<AddonsBannerProps> = ({ onExplore }) => {
           <div className="addons-banner-container">
             {/* Left Content */}
             <div className="addons-content">
-              <span className="addons-tag">Get More Power From</span>
-              <h2 className="addons-title">LearnPress Add-Ons</h2>
+              <span className="addons-tag">Nâng cao hiệu suất với</span>
+              <h2 className="addons-title">Tiện ích mở rộng LearnPress</h2>
               <p className="addons-desc">
-                The next level of LearnPress - LMS WordPress Plugin. More Powerful, Flexible and Magical Inside.
+                Nâng tầm LearnPress - Plugin LMS cho WordPress. Mạnh mẽ hơn, linh hoạt hơn và tuyệt vời hơn.
               </p>
               <button className="addons-btn" onClick={onExplore}>
-                Explorer Course
+                Khám phá khóa học
               </button>
             </div>
 

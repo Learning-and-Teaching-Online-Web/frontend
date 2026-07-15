@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Clock, Users, ChevronRight, Star } from 'lucide-react';
 import type { Course } from '../data/mockData';
 import '../styles/CourseCard.css';
@@ -6,10 +7,9 @@ import '../styles/CourseCard.css';
 interface CourseCardProps {
   course: Course;
   layout: 'grid' | 'list';
-  onSelect: (courseId: string) => void;
 }
 
-const CourseCard: React.FC<CourseCardProps> = ({ course, layout, onSelect }) => {
+const CourseCard: React.FC<CourseCardProps> = ({ course, layout }) => {
   const renderStars = (rating: number) => {
     return (
       <div className="stars-row" style={{ display: 'inline-flex', gap: '2px', marginRight: '6px' }}>
@@ -28,10 +28,10 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, layout, onSelect }) => 
   return (
     <div className={`course-card ${layout}-view`}>
       {/* Image Area */}
-      <div className="card-image-wrapper">
+      <Link to={`/courses/${course.course_id}`} className="card-image-wrapper" style={{ display: 'block' }}>
         <img src={course.thumbnail} alt={course.title} className="card-image" />
         <span className="card-category-badge">{course.subject}</span>
-      </div>
+      </Link>
 
       {/* Body Area */}
       <div className="card-body">
@@ -40,9 +40,9 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, layout, onSelect }) => 
         </div>
         
         <h3 className="card-title">
-          <a href="#" onClick={(e) => { e.preventDefault(); onSelect(course.course_id); }}>
+          <Link to={`/courses/${course.course_id}`}>
             {course.title}
-          </a>
+          </Link>
         </h3>
 
         {/* Course Card Rating for List View or Grid Detail */}
@@ -76,13 +76,12 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, layout, onSelect }) => 
             )}
           </div>
 
-          <a 
-            href="#" 
+          <Link 
+            to={`/courses/${course.course_id}`}
             className="view-more-btn"
-            onClick={(e) => { e.preventDefault(); onSelect(course.course_id); }}
           >
             View More <ChevronRight size={16} />
-          </a>
+          </Link>
         </div>
       </div>
     </div>

@@ -1,13 +1,9 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { BookOpen, Facebook, Twitter, Instagram, Youtube, Compass } from 'lucide-react';
 import '../styles/Footer.css';
 
-interface FooterProps {
-  onNavigateFAQ?: () => void;
-  onNavigateContact?: () => void;
-}
-
-const Footer: React.FC<FooterProps> = ({ onNavigateFAQ, onNavigateContact }) => {
+const Footer: React.FC = () => {
   return (
     <footer className="footer">
       <div className="container">
@@ -19,8 +15,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigateFAQ, onNavigateContact }) => 
               Nova<span>Learn</span>
             </div>
             <p>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-              incididunt ut labore et dolore magna aliqua.
+              NovaLearn là nền tảng học tập trực tuyến hàng đầu, mang đến cho bạn cơ hội tiếp cận tri thức chất lượng cao mọi lúc, mọi nơi.
             </p>
             <div className="footer-socials">
               <a href="#" className="social-icon-btn" aria-label="Facebook">
@@ -43,54 +38,40 @@ const Footer: React.FC<FooterProps> = ({ onNavigateFAQ, onNavigateContact }) => 
 
           {/* Column 2 */}
           <div className="footer-column">
-            <h3>Get Help</h3>
+            <h3>Hỗ trợ</h3>
             <ul className="footer-links">
               <li>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (onNavigateContact) onNavigateContact();
-                  }}
-                >
-                  Contact Us
-                </a>
+                <Link to="/contact">Liên hệ</Link>
               </li>
-              <li><a href="#" onClick={(e) => e.preventDefault()}>Latest Articles</a></li>
               <li>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (onNavigateFAQ) onNavigateFAQ();
-                  }}
-                >
-                  FAQ
-                </a>
+                <Link to="/blog">Bài viết mới nhất</Link>
+              </li>
+              <li>
+                <Link to="/faq">Hỏi đáp</Link>
               </li>
             </ul>
           </div>
 
           {/* Column 3 */}
           <div className="footer-column">
-            <h3>Programs</h3>
+            <h3>Chương trình</h3>
             <ul className="footer-links">
-              <li><a href="#" onClick={(e) => e.preventDefault()}>Art & Design</a></li>
-              <li><a href="#" onClick={(e) => e.preventDefault()}>Business</a></li>
-              <li><a href="#" onClick={(e) => e.preventDefault()}>IT & Software</a></li>
-              <li><a href="#" onClick={(e) => e.preventDefault()}>Languages</a></li>
-              <li><a href="#" onClick={(e) => e.preventDefault()}>Programming</a></li>
+              <li><a href="#" onClick={(e) => e.preventDefault()}>Nghệ thuật & Thiết kế</a></li>
+              <li><a href="#" onClick={(e) => e.preventDefault()}>Kinh doanh</a></li>
+              <li><a href="#" onClick={(e) => e.preventDefault()}>CNTT & Phần mềm</a></li>
+              <li><a href="#" onClick={(e) => e.preventDefault()}>Ngoại ngữ</a></li>
+              <li><a href="#" onClick={(e) => e.preventDefault()}>Lập trình</a></li>
             </ul>
           </div>
 
           {/* Column 4 */}
           <div className="footer-column">
-            <h3>Contact Us</h3>
+            <h3>Liên hệ</h3>
             <p style={{ lineHeight: '1.6' }}>
-              Address: Khu Cong Nghe Cao, Thu Duc, TP.HCM
+              Địa chỉ: Khu Công Nghệ Cao, Thủ Đức, TP.HCM
             </p>
             <p style={{ marginTop: '8px' }}>
-              Tel: + 84 93 808 1475
+              SĐT: + 84 93 808 1475
             </p>
             <p style={{ marginTop: '4px' }}>
               Mail: supportlms@gmail.com

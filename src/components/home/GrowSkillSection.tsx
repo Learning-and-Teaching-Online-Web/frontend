@@ -1,11 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
 
-interface GrowSkillSectionProps {
-  onExplore: () => void;
-}
-
-const GrowSkillSection: React.FC<GrowSkillSectionProps> = ({ onExplore }) => {
+const GrowSkillSection: React.FC = () => {
+  const navigate = useNavigate();
+  const onExplore = () => navigate('/courses');
   return (
     <section className="grow-skill-section" style={{ padding: '40px 0' }}>
       <div className="container">
@@ -92,34 +91,33 @@ const GrowSkillSection: React.FC<GrowSkillSectionProps> = ({ onExplore }) => {
 
           {/* Right Column: Text & Checklist */}
           <div className="grow-skill-content">
-            <h2 className="grow-title">Grow Us Your Skill With LearnPress LMS</h2>
+            <h2 className="grow-title">Phát triển kỹ năng cùng LearnPress LMS</h2>
             <p className="grow-desc">
-              We denounce with righteous indignation and dislike men who are
-              so beguiled and demoralized that cannot trouble.
+              Chúng tôi luôn nỗ lực đem lại những giá trị tốt nhất cho sự phát triển kỹ năng của bạn.
             </p>
             
             {/* Checklist */}
             <div className="grow-checklist">
               <div className="grow-check-item">
                 <Check className="grow-check-icon" size={18} />
-                <span>Certification</span>
+                <span>Chứng chỉ</span>
               </div>
               <div className="grow-check-item">
                 <Check className="grow-check-icon" size={18} />
-                <span>Certification</span>
+                <span>Chứng chỉ</span>
               </div>
               <div className="grow-check-item">
                 <Check className="grow-check-icon" size={18} />
-                <span>Certification</span>
+                <span>Chứng chỉ</span>
               </div>
               <div className="grow-check-item">
                 <Check className="grow-check-icon" size={18} />
-                <span>Certification</span>
+                <span>Chứng chỉ</span>
               </div>
             </div>
 
             <button className="grow-btn" onClick={onExplore}>
-              Explorer Course
+              Khám phá khóa học
             </button>
           </div>
 

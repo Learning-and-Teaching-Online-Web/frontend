@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { ChevronUp } from 'lucide-react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -11,10 +12,18 @@ import ContactPage from './components/ContactPage';
 import BlogList from './components/BlogList';
 import BlogDetail from './components/BlogDetail';
 
+// Helper component to auto-scroll to top on route change
+function ScrollToTopOnNavigate() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+  }, [pathname]);
+
+  return null;
+}
+
 function App() {
-  const [currentPage, setCurrentPage] = useState<'home' | 'list' | 'detail' | 'auth' | 'faq' | 'contact' | 'blog_list' | 'blog_detail'>('home');
-  const [selectedCourseId, setSelectedCourseId] = useState<string>('course-1');
-  const [selectedArticleId, setSelectedArticleId] = useState<string>('post-1');
   const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
 
   // Handle scroll event to display scroll-to-top button
@@ -34,65 +43,29 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleNavigate = (page: 'home' | 'list' | 'detail' | 'auth' | 'faq' | 'contact' | 'blog_list' | 'blog_detail') => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
-  };
-
-  const handleSelectCourse = (courseId: string) => {
-    setSelectedCourseId(courseId);
-    setCurrentPage('detail');
-    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
-  };
-
-  const handleSelectArticle = (articleId: string) => {
-    setSelectedArticleId(articleId);
-    setCurrentPage('blog_detail');
-    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
-  };
-
   return (
     <div className="app-container">
+      <ScrollToTopOnNavigate />
+
       {/* 1. Navigation Bar */}
-      <Navbar currentPage={currentPage} onNavigate={handleNavigate} />
+      <Navbar />
 
       {/* 2. Main Page Render */}
       <div className="main-content">
-        {currentPage === 'home' && (
-          <HomePage 
-            onNavigate={handleNavigate} 
-            onSelectCourse={handleSelectCourse} 
-            onSelectArticle={handleSelectArticle} 
-          />
-        )}
-        {currentPage === 'list' && (
-          <CourseList onSelectCourse={handleSelectCourse} />
-        )}
-        {currentPage === 'detail' && (
-          <CourseDetail courseId={selectedCourseId} onBack={() => handleNavigate('list')} />
-        )}
-        {currentPage === 'auth' && (
-          <AuthPage onBack={() => handleNavigate('home')} />
-        )}
-        {currentPage === 'faq' && (
-          <FaqPage onBack={() => handleNavigate('home')} />
-        )}
-        {currentPage === 'contact' && (
-          <ContactPage onBack={() => handleNavigate('home')} />
-        )}
-        {currentPage === 'blog_list' && (
-          <BlogList onSelectArticle={handleSelectArticle} onBack={() => handleNavigate('home')} />
-        )}
-        {currentPage === 'blog_detail' && (
-          <BlogDetail articleId={selectedArticleId} onSelectArticle={handleSelectArticle} onBack={() => handleNavigate('blog_list')} />
-        )}
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/courses" element={<CourseList />} />
+          <Route path="/courses/:courseId" element={<CourseDetail />} />
+          <Route path="/blog" element={<BlogList />} />
+          <Route path="/blog/:articleId" element={<BlogDetail />} />
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/faq" element={<FaqPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+        </Routes>
       </div>
 
       {/* 3. Footer */}
-      <Footer 
-        onNavigateFAQ={() => handleNavigate('faq')} 
-        onNavigateContact={() => handleNavigate('contact')} 
-      />
+      <Footer />
 
       {/* 4. Scroll To Top Button */}
       {showScrollTop && (

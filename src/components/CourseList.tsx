@@ -1,20 +1,17 @@
 import React, { useState, useMemo } from 'react';
-import { Grid, List, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Grid, List, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { mockCourses } from '../data/mockData';
 import SidebarFilters from './SidebarFilters';
 import type { FilterState } from './SidebarFilters';
 import CourseCard from './CourseCard';
 import '../styles/CourseList.css';
 
-interface CourseListProps {
-  onSelectCourse: (courseId: string) => void;
-}
-
-const CourseList: React.FC<CourseListProps> = ({ onSelectCourse }) => {
+const CourseList: React.FC = () => {
   const [layout, setLayout] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<string>('default');
   const [currentPage, setCurrentPage] = useState<number>(1);
-  
+
   const [filters, setFilters] = useState<FilterState>({
     search: '',
     categories: [],
@@ -102,64 +99,71 @@ const CourseList: React.FC<CourseListProps> = ({ onSelectCourse }) => {
       {/* Breadcrumbs Header */}
       <div className="breadcrumbs">
         <div className="container breadcrumbs-container">
-          <a href="#" onClick={(e) => e.preventDefault()}>Homepage</a>
+          <Link to="/">Trang chủ</Link>
           <span className="breadcrumbs-separator">/</span>
-          <span className="breadcrumbs-current">Course</span>
+          <span className="breadcrumbs-current">Khóa học</span>
         </div>
       </div>
 
       <div className="container">
         {/* Title */}
         <div className="listing-title-section">
-          <h1>All Courses</h1>
+          <h1 className="listing-title">Tất cả khóa học</h1>
         </div>
 
         {/* Layout Bipartite Split */}
         <div className="layout-wrapper">
-          
+
           {/* Left Column (Filters) */}
-          <SidebarFilters 
-            filters={filters} 
-            onFilterChange={handleFilterChange} 
+          <SidebarFilters
+            filters={filters}
+            onFilterChange={handleFilterChange}
           />
 
           {/* Right Column (Courses + Control) */}
           <div className="listing-content">
-            
+
             {/* Control Bar */}
             <div className="control-bar">
               <span className="results-count">
-                Showing {sortedCourses.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}-
-                {Math.min(currentPage * itemsPerPage, sortedCourses.length)} of {sortedCourses.length} results
+                Hiển thị {sortedCourses.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}-
+                {Math.min(currentPage * itemsPerPage, sortedCourses.length)} trong tổng số {sortedCourses.length} kết quả
               </span>
 
               <div className="control-bar-right">
+                <Search className="search-icon" size={18} />
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm khóa học..."
+                  className="search-input"
+                  onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                />
                 {/* Sort */}
-                <select 
-                  className="sort-select" 
+                <select
+                  className="sort-select"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
                 >
-                  <option value="default">Default Sorter</option>
-                  <option value="price-asc">Price: Low to High</option>
-                  <option value="price-desc">Price: High to Low</option>
-                  <option value="rating">Rating: High to Low</option>
-                  <option value="students">Popularity: Students Count</option>
+                  <option value="default">Mặc định</option>
+                  <option value="price-asc">Giá (Thấp đến cao)</option>
+                  <option value="price-desc">Giá (Cao đến thấp)</option>
+                  <option value="rating">Đánh giá tốt nhất</option>
+                  <option value="students">Nhiều học viên nhất</option>
                 </select>
 
                 {/* Grid / List switches */}
                 <div className="layout-toggle-buttons">
-                  <button 
+                  <button
                     className={`layout-btn ${layout === 'grid' ? 'active' : ''}`}
                     onClick={() => setLayout('grid')}
-                    aria-label="Grid layout"
+                    aria-label="Giao diện dạng lưới"
                   >
                     <Grid size={18} />
                   </button>
-                  <button 
+                  <button
                     className={`layout-btn ${layout === 'list' ? 'active' : ''}`}
                     onClick={() => setLayout('list')}
-                    aria-label="List layout"
+                    aria-label="Giao diện dạng danh sách"
                   >
                     <List size={18} />
                   </button>
@@ -171,11 +175,10 @@ const CourseList: React.FC<CourseListProps> = ({ onSelectCourse }) => {
             {paginatedCourses.length > 0 ? (
               <div className={`course-grid ${layout === 'list' ? 'list-view' : ''}`}>
                 {paginatedCourses.map(course => (
-                  <CourseCard 
+                  <CourseCard
                     key={course.course_id}
                     course={course}
                     layout={layout}
-                    onSelect={onSelectCourse}
                   />
                 ))}
               </div>
@@ -188,17 +191,17 @@ const CourseList: React.FC<CourseListProps> = ({ onSelectCourse }) => {
             {/* Pagination Controls */}
             {totalPages > 1 && (
               <div className="pagination">
-                <button 
+                <button
                   className="pagination-btn"
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  aria-label="Previous page"
+                  aria-label="Trang trước"
                 >
                   <ChevronLeft size={16} />
                 </button>
-                
+
                 {[...Array(totalPages)].map((_, i) => (
-                  <button 
+                  <button
                     key={i}
                     className={`pagination-btn ${currentPage === i + 1 ? 'active' : ''}`}
                     onClick={() => setCurrentPage(i + 1)}
@@ -207,11 +210,11 @@ const CourseList: React.FC<CourseListProps> = ({ onSelectCourse }) => {
                   </button>
                 ))}
 
-                <button 
+                <button
                   className="pagination-btn"
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  aria-label="Next page"
+                  aria-label="Trang tiếp"
                 >
                   <ChevronRight size={16} />
                 </button>

@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
 import '../styles/FaqPage.css';
-
-interface FaqPageProps {
-  onBack: () => void;
-}
 
 interface FaqItem {
   id: string;
@@ -12,7 +9,7 @@ interface FaqItem {
   answer: string;
 }
 
-const FaqPage: React.FC<FaqPageProps> = ({ onBack }) => {
+const FaqPage: React.FC = () => {
   // We keep track of multiple open items, with 'left-2' (the second item on the left) open by default to match the screenshot
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({
     'left-2': true,
@@ -97,7 +94,7 @@ const FaqPage: React.FC<FaqPageProps> = ({ onBack }) => {
       {/* 1. Breadcrumbs */}
       <div className="breadcrumbs">
         <div className="container breadcrumbs-container">
-          <a href="#" onClick={(e) => { e.preventDefault(); onBack(); }}>Homepage</a>
+          <Link to="/">Homepage</Link>
           <span className="breadcrumbs-separator">/</span>
           <span className="breadcrumbs-current">FAQs</span>
         </div>

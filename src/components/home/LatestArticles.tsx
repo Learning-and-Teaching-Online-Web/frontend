@@ -1,14 +1,10 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Calendar } from 'lucide-react';
 import { mockArticles } from '../../data/blogData';
 import { renderBlogIllustration } from '../BlogList';
 
-interface LatestArticlesProps {
-  onSelectArticle: (articleId: string) => void;
-  onViewAll: () => void;
-}
-
-const LatestArticles: React.FC<LatestArticlesProps> = ({ onSelectArticle, onViewAll }) => {
+const LatestArticles: React.FC = () => {
   // Take the first 3 articles for the home page display
   const latestThree = mockArticles.slice(0, 3);
 
@@ -19,12 +15,12 @@ const LatestArticles: React.FC<LatestArticlesProps> = ({ onSelectArticle, onView
         {/* Section Header */}
         <div className="section-header-row">
           <div className="section-title-group">
-            <h2>Latest Articles</h2>
-            <p>Explore our Free Articles</p>
+            <h2>Bài viết mới nhất</h2>
+            <p>Khám phá các bài viết miễn phí của chúng tôi</p>
           </div>
-          <button className="section-header-btn" onClick={onViewAll}>
-            All Articles
-          </button>
+          <Link to="/blog" className="section-header-btn">
+            Tất cả bài viết
+          </Link>
         </div>
 
         {/* Articles Grid */}
@@ -32,13 +28,13 @@ const LatestArticles: React.FC<LatestArticlesProps> = ({ onSelectArticle, onView
           {latestThree.map((article) => (
             <article key={article.id} className="blog-card">
               {/* Image */}
-              <div 
+              <Link 
+                to={`/blog/${article.id}`}
                 className="blog-card-image" 
-                onClick={() => onSelectArticle(article.id)}
-                style={{ cursor: 'pointer', height: '180px' }}
+                style={{ display: 'block', height: '180px', cursor: 'pointer' }}
               >
                 {renderBlogIllustration(article.imageType)}
-              </div>
+              </Link>
 
               {/* Content */}
               <div className="blog-card-content" style={{ padding: '20px' }}>
@@ -52,9 +48,9 @@ const LatestArticles: React.FC<LatestArticlesProps> = ({ onSelectArticle, onView
 
                 {/* Title */}
                 <h3 className="blog-card-title" style={{ fontSize: '16px', marginBottom: '8px' }}>
-                  <a href="#" onClick={(e) => { e.preventDefault(); onSelectArticle(article.id); }}>
+                  <Link to={`/blog/${article.id}`}>
                     {article.title}
-                  </a>
+                  </Link>
                 </h3>
 
                 {/* Excerpt */}

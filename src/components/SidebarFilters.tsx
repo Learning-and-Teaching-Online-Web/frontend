@@ -87,7 +87,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({ filters, onFilterChange
       <div className="search-filter-box">
         <input 
           type="text" 
-          placeholder="Search courses..." 
+          placeholder="Tìm kiếm khóa học..." 
           className="search-filter-input"
           value={filters.search}
           onChange={handleSearchChange}
@@ -97,7 +97,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({ filters, onFilterChange
 
       {/* 2. Course Category */}
       <div className="filter-group">
-        <h3 className="filter-title">Course Category</h3>
+        <h3 className="filter-title">Danh mục khóa học</h3>
         <div className="filter-options">
           {["Academy", "Commercial", "Office", "Shop", "Studio", "University"].map(cat => {
             const count = getCategoryCount(cat);
@@ -121,7 +121,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({ filters, onFilterChange
 
       {/* 3. Instructors */}
       <div className="filter-group">
-        <h3 className="filter-title">Instructors</h3>
+        <h3 className="filter-title">Giảng viên</h3>
         <div className="filter-options">
           {["Kenny White", "John Doe", "Determined-Poitras"].map(inst => {
             const count = getInstructorCount(inst);
@@ -145,7 +145,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({ filters, onFilterChange
 
       {/* 4. Price */}
       <div className="filter-group">
-        <h3 className="filter-title">Price</h3>
+        <h3 className="filter-title">Giá</h3>
         <div className="filter-options">
           <label className="filter-checkbox-label">
             <div className="filter-checkbox-left">
@@ -155,7 +155,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({ filters, onFilterChange
                 checked={filters.priceTypes.length === 0}
                 onChange={() => onFilterChange({ ...filters, priceTypes: [] })}
               />
-              <span>All</span>
+              <span>Tất cả</span>
             </div>
             <span className="filter-checkbox-count">{mockCourses.length}</span>
           </label>
@@ -167,7 +167,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({ filters, onFilterChange
                 checked={filters.priceTypes.includes('free')}
                 onChange={() => handleCheckboxChange('priceTypes', 'free')}
               />
-              <span>Free</span>
+              <span>Miễn phí</span>
             </div>
             <span className="filter-checkbox-count">{getPriceCount('free')}</span>
           </label>
@@ -179,7 +179,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({ filters, onFilterChange
                 checked={filters.priceTypes.includes('paid')}
                 onChange={() => handleCheckboxChange('priceTypes', 'paid')}
               />
-              <span>Paid</span>
+              <span>Trả phí</span>
             </div>
             <span className="filter-checkbox-count">{getPriceCount('paid')}</span>
           </label>
@@ -188,7 +188,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({ filters, onFilterChange
 
       {/* 5. Review */}
       <div className="filter-group">
-        <h3 className="filter-title">Review</h3>
+        <h3 className="filter-title">Đánh giá</h3>
         <div className="filter-options">
           {[5, 4, 3, 2, 1].map(stars => {
             const count = getRatingCount(stars);
@@ -212,7 +212,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({ filters, onFilterChange
 
       {/* 6. Level */}
       <div className="filter-group">
-        <h3 className="filter-title">Level</h3>
+        <h3 className="filter-title">Trình độ</h3>
         <div className="filter-options">
           {["Beginner", "Intermediate", "Expert"].map(lvl => {
             const count = getLevelCount(lvl);
@@ -225,7 +225,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({ filters, onFilterChange
                     checked={filters.levels.includes(lvl)}
                     onChange={() => handleCheckboxChange('levels', lvl)}
                   />
-                  <span>{lvl}</span>
+                  <span>{lvl === 'Beginner' ? 'Cơ bản' : lvl === 'Intermediate' ? 'Trung cấp' : 'Chuyên gia'}</span>
                 </div>
                 <span className="filter-checkbox-count">{count}</span>
               </label>
