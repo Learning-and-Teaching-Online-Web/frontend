@@ -48,9 +48,9 @@ const CourseDetail: React.FC = () => {
       {/* 1. Breadcrumbs */}
       <div className="breadcrumbs">
         <div className="container breadcrumbs-container">
-          <Link to="/">Homepage</Link>
+          <Link to="/">Trang chủ</Link>
           <span className="breadcrumbs-separator">/</span>
-          <Link to="/courses">Course</Link>
+          <Link to="/courses">Khóa học</Link>
           <span className="breadcrumbs-separator">/</span>
           <span className="breadcrumbs-current" style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {course.title}
@@ -64,7 +64,7 @@ const CourseDetail: React.FC = () => {
           <div className="detail-hero-left">
             <span className="detail-category-tag">{course.subject}</span>
             <div className="detail-tutor-meta">
-              by <span style={{ fontWeight: 600 }}>{course.instructor}</span>
+              bởi <span style={{ fontWeight: 600 }}>{course.instructor}</span>
             </div>
             <h1 className="detail-title">{course.title}</h1>
             
@@ -75,7 +75,7 @@ const CourseDetail: React.FC = () => {
               </div>
               <div className="detail-meta-item">
                 <Users size={16} />
-                <span>{course.studentsCount} Students</span>
+                <span>{course.studentsCount} Học viên</span>
               </div>
               <div className="detail-meta-item">
                 <Award size={16} />
@@ -83,11 +83,11 @@ const CourseDetail: React.FC = () => {
               </div>
               <div className="detail-meta-item">
                 <BookOpen size={16} />
-                <span>{course.lessonsCount} Lessons</span>
+                <span>{course.lessonsCount} Bài học</span>
               </div>
               <div className="detail-meta-item">
                 <HelpCircle size={16} />
-                <span>{course.quizzesCount} Quizzes</span>
+                <span>{course.quizzesCount} Bài kiểm tra</span>
               </div>
             </div>
           </div>
@@ -106,7 +106,7 @@ const CourseDetail: React.FC = () => {
             <div className="detail-sidebar-body">
               <div className="detail-price-row">
                 {course.isFree ? (
-                  <span className="detail-price-main" style={{ color: '#10b981' }}>Free</span>
+                  <span className="detail-price-main" style={{ color: '#10b981' }}>Miễn phí</span>
                 ) : (
                   <span className="detail-price-main">${course.price.toFixed(1)}</span>
                 )}
@@ -119,7 +119,7 @@ const CourseDetail: React.FC = () => {
                 className="start-now-btn"
                 onClick={() => alert(`Đăng ký khóa học "${course.title}" thành công!`)}
               >
-                Start Now
+                Bắt đầu ngay
               </button>
             </div>
           </div>
@@ -137,31 +137,31 @@ const CourseDetail: React.FC = () => {
                 className={`tab-button ${activeTab === 'overview' ? 'active' : ''}`}
                 onClick={() => setActiveTab('overview')}
               >
-                Overview
+                Tổng quan
               </button>
               <button 
                 className={`tab-button ${activeTab === 'curriculum' ? 'active' : ''}`}
                 onClick={() => setActiveTab('curriculum')}
               >
-                Curriculum
+                Chương trình học
               </button>
               <button 
                 className={`tab-button ${activeTab === 'instructor' ? 'active' : ''}`}
                 onClick={() => setActiveTab('instructor')}
               >
-                Instructor
+                Giảng viên
               </button>
               <button 
                 className={`tab-button ${activeTab === 'faqs' ? 'active' : ''}`}
                 onClick={() => setActiveTab('faqs')}
               >
-                FAQs
+                Hỏi đáp
               </button>
               <button 
                 className={`tab-button ${activeTab === 'reviews' ? 'active' : ''}`}
                 onClick={() => setActiveTab('reviews')}
               >
-                Reviews
+                Đánh giá
               </button>
             </div>
 
@@ -227,15 +227,15 @@ const CourseDetail: React.FC = () => {
 
             {/* Leave A Comment Form */}
             <div className="comments-section">
-              <h3 className="comments-title">Leave A Comment</h3>
+              <h3 className="comments-title">Để lại bình luận</h3>
               <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '24px' }}>
-                Your email address will not be published. Required fields are marked *
+                Địa chỉ email của bạn sẽ không được công bố. Các trường bắt buộc được đánh dấu *
               </p>
 
               <form className="comment-form" onSubmit={handleFormSubmit}>
                 <div className="comment-form-row">
                   <div className="form-group">
-                    <label className="form-label" htmlFor="comment-name">Name*</label>
+                    <label className="form-label" htmlFor="comment-name">Tên*</label>
                     <input 
                       type="text" 
                       id="comment-name" 
@@ -259,7 +259,7 @@ const CourseDetail: React.FC = () => {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label" htmlFor="comment-text">Comment*</label>
+                  <label className="form-label" htmlFor="comment-text">Bình luận*</label>
                   <textarea 
                     id="comment-text" 
                     className="form-input form-textarea" 
@@ -276,11 +276,11 @@ const CourseDetail: React.FC = () => {
                     onChange={(e) => setCommentForm({ ...commentForm, saveDetails: e.target.checked })}
                     style={{ cursor: 'pointer' }}
                   />
-                  <span>Save my name, email in this browser for the next time I comment</span>
+                  <span>Lưu tên và email của tôi trong trình duyệt này cho lần bình luận tiếp theo</span>
                 </label>
 
                 <button type="submit" className="submit-comment-btn">
-                  Post Comment
+                  Đăng bình luận
                 </button>
               </form>
             </div>

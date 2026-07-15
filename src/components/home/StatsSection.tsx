@@ -2,10 +2,10 @@ import React from 'react';
 
 const StatsSection: React.FC = () => {
   const statsList = [
-    { number: '25K+', label: 'Active Students' },
-    { number: '899', label: 'Total Courses' },
-    { number: '158', label: 'Instructor' },
-    { number: '100%', label: 'Satisfaction Rate' }
+    { number: '25K+', label: 'Học viên đang học' },
+    { number: '899', label: 'Tổng số khóa học' },
+    { number: '158', label: 'Giảng viên' },
+    { number: '100%', label: 'Mức độ hài lòng' }
   ];
 
   return (

@@ -86,9 +86,9 @@ const BlogDetail: React.FC = () => {
       {/* 1. Breadcrumbs */}
       <div className="breadcrumbs">
         <div className="container breadcrumbs-container">
-          <Link to="/">Homepage</Link>
+          <Link to="/">Trang chủ</Link>
           <span className="breadcrumbs-separator">/</span>
-          <Link to="/blog">Blog</Link>
+          <Link to="/blog">Bài viết</Link>
           <span className="breadcrumbs-separator">/</span>
           <span className="breadcrumbs-current">{article.title}</span>
         </div>
@@ -135,7 +135,7 @@ const BlogDetail: React.FC = () => {
 
               {/* Tags */}
               <div className="blog-detail-tags">
-                <span className="blog-detail-tags-title">Tags:</span>
+                <span className="blog-detail-tags-title">Thẻ:</span>
                 {article.tags.map((tag, idx) => (
                   <span className="blog-detail-tag" key={idx}>{tag}</span>
                 ))}
@@ -143,7 +143,7 @@ const BlogDetail: React.FC = () => {
 
               {/* Social Share */}
               <div className="blog-detail-share">
-                <span className="blog-detail-share-title">Share:</span>
+                <span className="blog-detail-share-title">Chia sẻ:</span>
                 <div className="footer-socials" style={{ margin: 0, display: 'inline-flex' }}>
                   <a href="#" className="social-icon-btn" aria-label="Facebook"><Facebook size={14} /></a>
                   <a href="#" className="social-icon-btn" aria-label="Pinterest"><Compass size={14} /></a>
@@ -164,7 +164,7 @@ const BlogDetail: React.FC = () => {
                     <ChevronLeft size={16} />
                   </div>
                   <div className="prev-next-content">
-                    <span className="prev-next-label">Prev Articles</span>
+                    <span className="prev-next-label">Bài viết trước</span>
                     <h4 className="prev-next-title">{prevArticle.title}</h4>
                   </div>
                 </Link>
@@ -178,7 +178,7 @@ const BlogDetail: React.FC = () => {
                     <ChevronRight size={16} />
                   </div>
                   <div className="prev-next-content" style={{ alignItems: 'flex-end' }}>
-                    <span className="prev-next-label">Next Articles</span>
+                    <span className="prev-next-label">Bài viết tiếp theo</span>
                     <h4 className="prev-next-title">{nextArticle.title}</h4>
                   </div>
                 </Link>
@@ -186,7 +186,7 @@ const BlogDetail: React.FC = () => {
 
               {/* Comments list */}
               <div className="blog-comments-section">
-                <h3 className="comments-title">{commentsList.length} Comments</h3>
+                <h3 className="comments-title">{commentsList.length} Bình luận</h3>
                 
                 <div className="comments-list">
                   {commentsList.map((comment) => (
@@ -208,7 +208,7 @@ const BlogDetail: React.FC = () => {
                             document.getElementById('comment-form-title')?.scrollIntoView({ behavior: 'smooth' });
                           }}
                         >
-                          Reply
+                          Trả lời
                         </span>
                       </div>
                     </div>
@@ -218,8 +218,8 @@ const BlogDetail: React.FC = () => {
 
               {/* Leave A Comment Form */}
               <div className="leave-comment-section" id="comment-form-container">
-                <h3 className="form-title" id="comment-form-title">Leave A Comment</h3>
-                <p className="form-subtitle">Your email address will not be published. Required fields are marked *</p>
+                <h3 className="form-title" id="comment-form-title">Để lại bình luận</h3>
+                <p className="form-subtitle">Địa chỉ email của bạn sẽ không được công bố. Các trường bắt buộc được đánh dấu *</p>
 
                 {errorMsg && (
                   <div className="contact-alert contact-alert-error">
@@ -241,7 +241,7 @@ const BlogDetail: React.FC = () => {
                       <input 
                         type="text" 
                         className="form-input" 
-                        placeholder="Name*" 
+                        placeholder="Tên*" 
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         required
@@ -263,7 +263,7 @@ const BlogDetail: React.FC = () => {
                   <div className="contact-form-textarea">
                     <textarea 
                       className="form-input" 
-                      placeholder="Comment" 
+                      placeholder="Bình luận" 
                       rows={6}
                       value={commentText}
                       onChange={(e) => setCommentText(e.target.value)}
@@ -277,11 +277,11 @@ const BlogDetail: React.FC = () => {
                       checked={saveInfo}
                       onChange={(e) => setSaveInfo(e.target.checked)}
                     />
-                    <span>Save my name, email in this browser for the next time I comment</span>
+                    <span>Lưu tên và email của tôi trong trình duyệt này cho lần bình luận tiếp theo</span>
                   </label>
 
                   <button type="submit" className="contact-submit-btn">
-                    Posts Comment
+                    Đăng bình luận
                   </button>
                 </form>
               </div>

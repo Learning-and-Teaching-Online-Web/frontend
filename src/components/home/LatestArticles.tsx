@@ -15,11 +15,11 @@ const LatestArticles: React.FC = () => {
         {/* Section Header */}
         <div className="section-header-row">
           <div className="section-title-group">
-            <h2>Latest Articles</h2>
-            <p>Explore our Free Articles</p>
+            <h2>Bài viết mới nhất</h2>
+            <p>Khám phá các bài viết miễn phí của chúng tôi</p>
           </div>
           <Link to="/blog" className="section-header-btn">
-            All Articles
+            Tất cả bài viết
           </Link>
         </div>
 

@@ -11,13 +11,13 @@ const AddonsBanner: React.FC = () => {
           <div className="addons-banner-container">
             {/* Left Content */}
             <div className="addons-content">
-              <span className="addons-tag">Get More Power From</span>
-              <h2 className="addons-title">LearnPress Add-Ons</h2>
+              <span className="addons-tag">Nâng cao hiệu suất với</span>
+              <h2 className="addons-title">Tiện ích mở rộng LearnPress</h2>
               <p className="addons-desc">
-                The next level of LearnPress - LMS WordPress Plugin. More Powerful, Flexible and Magical Inside.
+                Nâng tầm LearnPress - Plugin LMS cho WordPress. Mạnh mẽ hơn, linh hoạt hơn và tuyệt vời hơn.
               </p>
               <button className="addons-btn" onClick={onExplore}>
-                Explorer Course
+                Khám phá khóa học
               </button>
             </div>
 

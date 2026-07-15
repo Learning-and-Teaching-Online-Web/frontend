@@ -61,7 +61,7 @@ const BlogSidebar: React.FC<BlogSidebarProps> = ({
         <input
           type="text"
           className="search-filter-input"
-          placeholder="Search articles..."
+          placeholder="Tìm kiếm bài viết..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
         />
@@ -70,7 +70,7 @@ const BlogSidebar: React.FC<BlogSidebarProps> = ({
 
       {/* 2. Category Widget (styled with Checkboxes like Courses) */}
       <div className="filter-group">
-        <h3 className="filter-title">Category</h3>
+        <h3 className="filter-title">Danh mục</h3>
         <div className="filter-options">
           {mockCategories.map((cat, idx) => (
             <label key={idx} className="filter-checkbox-label">
@@ -91,7 +91,7 @@ const BlogSidebar: React.FC<BlogSidebarProps> = ({
 
       {/* 3. Recent Posts Widget */}
       <div className="filter-group">
-        <h3 className="filter-title">Recent Posts</h3>
+        <h3 className="filter-title">Bài viết gần đây</h3>
         <div className="recent-posts-list" style={{ marginTop: '12px' }}>
           {mockRecentPosts.map((post) => (
             <Link
@@ -117,13 +117,13 @@ const BlogSidebar: React.FC<BlogSidebarProps> = ({
 
       {/* 4. Tags Widget */}
       <div className="filter-group" style={{ borderBottom: 'none', paddingBottom: 0 }}>
-        <h3 className="filter-title">Tags</h3>
+        <h3 className="filter-title">Thẻ</h3>
         <div className="sidebar-tags-container" style={{ marginTop: '12px' }}>
           <button
             className={`sidebar-tag-btn ${selectedTag === null ? 'active' : ''}`}
             onClick={() => onSelectTag(null)}
           >
-            All Tags
+            Tất cả thẻ
           </button>
           {mockTags.map((tag, idx) => (
             <button

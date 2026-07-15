@@ -109,16 +109,16 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
       {/* 1. Breadcrumbs */}
       <div className="breadcrumbs">
         <div className="container breadcrumbs-container">
-          <Link to="/">Homepage</Link>
+          <Link to="/">Trang chủ</Link>
           <span className="breadcrumbs-separator">/</span>
-          <span className="breadcrumbs-current">Login / Register</span>
+          <span className="breadcrumbs-current">Đăng nhập / Đăng ký</span>
         </div>
       </div>
 
       {/* 2. Page Title Banner */}
       <div className="page-title-banner">
         <div className="container">
-          <h1>Login / Register</h1>
+          <h1>Đăng nhập / Đăng ký</h1>
         </div>
       </div>
 
@@ -132,13 +132,13 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
               className={`auth-tab-btn ${activeTab === 'login' ? 'active' : ''}`}
               onClick={() => handleTabSwitch('login')}
             >
-              Login
+              Đăng nhập
             </button>
             <button 
               className={`auth-tab-btn ${activeTab === 'register' ? 'active' : ''}`}
               onClick={() => handleTabSwitch('register')}
             >
-              Register
+              Đăng ký
             </button>
           </div>
 
@@ -161,13 +161,13 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
             {activeTab === 'login' ? (
               /* LOGIN FORM */
               <form onSubmit={handleLoginSubmit} noValidate>
-                <h2 className="auth-form-title">Login</h2>
+                <h2 className="auth-form-title">Đăng nhập</h2>
                 
                 <div className="form-group">
                   <input 
                     type="text" 
                     className="form-input" 
-                    placeholder="Email or username*" 
+                    placeholder="Email hoặc Tên đăng nhập*" 
                     value={loginIdentifier}
                     onChange={(e) => setLoginIdentifier(e.target.value)}
                     required
@@ -179,7 +179,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                     <input 
                       type={showLoginPassword ? 'text' : 'password'} 
                       className="form-input" 
-                      placeholder="Password*" 
+                      placeholder="Mật khẩu*" 
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
                       required
@@ -188,7 +188,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                       type="button" 
                       className="password-toggle-btn"
                       onClick={() => setShowLoginPassword(!showLoginPassword)}
-                      aria-label={showLoginPassword ? 'Hide password' : 'Show password'}
+                      aria-label={showLoginPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
                     >
                       {showLoginPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
@@ -202,7 +202,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                       checked={rememberMe}
                       onChange={(e) => setRememberMe(e.target.checked)}
                     />
-                    <span>Remember me</span>
+                    <span>Ghi nhớ đăng nhập</span>
                   </label>
                   <a 
                     href="#" 
@@ -212,28 +212,28 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                       setErrorMsg('Tính năng khôi phục mật khẩu đang được phát triển.');
                     }}
                   >
-                    Lost your password?
+                    Quên mật khẩu?
                   </a>
                 </div>
 
                 <button type="submit" className="auth-submit-btn">
-                  Login
+                  Đăng nhập
                 </button>
 
                 <div className="auth-footer-prompt">
-                  Don't have an account? 
+                  Chưa có tài khoản? 
                   <span 
                     className="auth-switch-link"
                     onClick={() => handleTabSwitch('register')}
                   >
-                    Register
+                    Đăng ký
                   </span>
                 </div>
               </form>
             ) : (
               /* REGISTER FORM */
               <form onSubmit={handleRegisterSubmit} noValidate>
-                <h2 className="auth-form-title">Register</h2>
+                <h2 className="auth-form-title">Đăng ký</h2>
 
                 <div className="form-group">
                   <input 
@@ -250,7 +250,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                   <input 
                     type="text" 
                     className="form-input" 
-                    placeholder="Username*" 
+                    placeholder="Tên đăng nhập*" 
                     value={registerUsername}
                     onChange={(e) => setRegisterUsername(e.target.value)}
                     required
@@ -262,7 +262,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                     <input 
                       type={showRegisterPassword ? 'text' : 'password'} 
                       className="form-input" 
-                      placeholder="Password*" 
+                      placeholder="Mật khẩu*" 
                       value={registerPassword}
                       onChange={(e) => setRegisterPassword(e.target.value)}
                       required
@@ -271,7 +271,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                       type="button" 
                       className="password-toggle-btn"
                       onClick={() => setShowRegisterPassword(!showRegisterPassword)}
-                      aria-label={showRegisterPassword ? 'Hide password' : 'Show password'}
+                      aria-label={showRegisterPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
                     >
                       {showRegisterPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
@@ -283,7 +283,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                     <input 
                       type={showRegisterConfirmPassword ? 'text' : 'password'} 
                       className="form-input" 
-                      placeholder="Confirm Password*" 
+                      placeholder="Xác nhận mật khẩu*" 
                       value={registerConfirmPassword}
                       onChange={(e) => setRegisterConfirmPassword(e.target.value)}
                       required
@@ -292,7 +292,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                       type="button" 
                       className="password-toggle-btn"
                       onClick={() => setShowRegisterConfirmPassword(!showRegisterConfirmPassword)}
-                      aria-label={showRegisterConfirmPassword ? 'Hide password' : 'Show password'}
+                      aria-label={showRegisterConfirmPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
                     >
                       {showRegisterConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
@@ -300,16 +300,16 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                 </div>
 
                 <button type="submit" className="auth-submit-btn">
-                  Register
+                  Đăng ký
                 </button>
 
                 <div className="auth-footer-prompt">
-                  Already have an account? 
+                  Đã có tài khoản? 
                   <span 
                     className="auth-switch-link"
                     onClick={() => handleTabSwitch('login')}
                   >
-                    Login
+                    Đăng nhập
                   </span>
                 </div>
               </form>

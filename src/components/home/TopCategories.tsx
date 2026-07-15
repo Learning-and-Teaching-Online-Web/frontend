@@ -7,16 +7,16 @@ const TopCategories: React.FC = () => {
   const onSelectCategory = (_categoryName: string) => navigate('/courses');
   const onViewAll = () => navigate('/courses');
   const categoriesList = [
-    { name: 'Art & Design', icon: Palette, count: 38 },
-    { name: 'Development', icon: Code, count: 38 },
-    { name: 'Communication', icon: Globe, count: 38 },
-    { name: 'Videography', icon: Video, count: 38 },
-    { name: 'Photography', icon: Camera, count: 38 },
+    { name: 'Nghệ thuật & Thiết kế', icon: Palette, count: 38 },
+    { name: 'Phát triển phần mềm', icon: Code, count: 38 },
+    { name: 'Giao tiếp', icon: Globe, count: 38 },
+    { name: 'Quay phim', icon: Video, count: 38 },
+    { name: 'Nhiếp ảnh', icon: Camera, count: 38 },
     { name: 'Marketing', icon: TrendingUp, count: 38 },
-    { name: 'Content Writing', icon: FileText, count: 38 },
-    { name: 'Finance', icon: DollarSign, count: 38 },
-    { name: 'Science', icon: Atom, count: 38 },
-    { name: 'Network', icon: Share2, count: 38 }
+    { name: 'Viết nội dung', icon: FileText, count: 38 },
+    { name: 'Tài chính', icon: DollarSign, count: 38 },
+    { name: 'Khoa học', icon: Atom, count: 38 },
+    { name: 'Mạng máy tính', icon: Share2, count: 38 }
   ];
 
   return (
@@ -26,11 +26,11 @@ const TopCategories: React.FC = () => {
         {/* Section Header */}
         <div className="section-header-row">
           <div className="section-title-group">
-            <h2>Top Categories</h2>
-            <p>Explore our Popular Categories</p>
+            <h2>Danh mục hàng đầu</h2>
+            <p>Khám phá các danh mục phổ biến của chúng tôi</p>
           </div>
           <button className="section-header-btn" onClick={onViewAll}>
-            All Categories
+            Tất cả danh mục
           </button>
         </div>
 
@@ -48,7 +48,7 @@ const TopCategories: React.FC = () => {
                   <Icon size={24} />
                 </div>
                 <h3 className="category-name">{cat.name}</h3>
-                <span className="category-courses-count">{cat.count} Courses</span>
+                <span className="category-courses-count">{cat.count} Khóa học</span>
               </div>
             );
           })}

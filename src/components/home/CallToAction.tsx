@@ -16,16 +16,16 @@ const CallToAction: React.FC = () => {
               <div className="cta-icon-circle">
                 <GraduationCap size={28} />
               </div>
-              <h3 className="cta-title">Let's Start With Academy LMS</h3>
+              <h3 className="cta-title">Bắt đầu cùng Academy LMS</h3>
             </div>
 
             {/* Right side: Action buttons */}
             <div className="cta-right-btns">
               <button className="cta-student-btn" onClick={onJoinAsStudent}>
-                I'm A Student
+                Tôi là học viên
               </button>
               <button className="cta-instructor-btn" onClick={onJoinAsInstructor}>
-                Become An Instructor
+                Trở thành giảng viên
               </button>
             </div>
           </div>

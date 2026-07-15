@@ -11,11 +11,11 @@ const FeaturedCourses: React.FC = () => {
         {/* Section Header */}
         <div className="section-header-row">
           <div className="section-title-group">
-            <h2>Featured Courses</h2>
-            <p>Explore our Popular Courses</p>
+            <h2>Khóa học nổi bật</h2>
+            <p>Khám phá các khóa học phổ biến của chúng tôi</p>
           </div>
           <Link to="/courses" className="section-header-btn">
-            All Courses
+            Tất cả khóa học
           </Link>
         </div>
 
@@ -36,7 +36,7 @@ const FeaturedCourses: React.FC = () => {
               {/* Course Info */}
               <div className="course-info-home">
                 <span className="course-author-home">
-                  by <span>{course.instructor}</span>
+                  bởi <span>{course.instructor}</span>
                 </span>
                 
                 <h3 className="course-title-home">
@@ -53,7 +53,7 @@ const FeaturedCourses: React.FC = () => {
                   </div>
                   <div className="course-meta-item">
                     <User size={14} style={{ color: 'var(--primary)' }} />
-                    <span>{course.studentsCount} Students</span>
+                    <span>{course.studentsCount} Học viên</span>
                   </div>
                 </div>
 
@@ -64,14 +64,14 @@ const FeaturedCourses: React.FC = () => {
                       <span className="price-original-home">${course.oldPrice.toFixed(1)}</span>
                     )}
                     <span className={`price-current-home ${course.isFree ? 'free-price' : ''}`}>
-                      {course.isFree ? 'Free' : `$${course.price.toFixed(1)}`}
+                      {course.isFree ? 'Miễn phí' : `$${course.price.toFixed(1)}`}
                     </span>
                   </div>
                   <Link 
                     to={`/courses/${course.course_id}`}
                     className="view-more-link-home"
                   >
-                    View More
+                    Xem thêm
                   </Link>
                 </div>
               </div>

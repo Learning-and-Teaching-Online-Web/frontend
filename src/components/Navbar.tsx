@@ -19,62 +19,57 @@ const Navbar: React.FC = () => {
         {/* Navigation Links */}
         <ul className="nav-links">
           <li>
-            <NavLink 
-              to="/" 
+            <NavLink
+              to="/"
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             >
-              Home
+              Trang chủ
             </NavLink>
           </li>
           <li>
-            <NavLink 
-              to="/courses" 
+            <NavLink
+              to="/courses"
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             >
-              Courses
+              Khóa học
             </NavLink>
           </li>
           <li>
-            <NavLink 
-              to="/blog" 
+            <NavLink
+              to="/blog"
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             >
-              Blog
+              Bài viết
             </NavLink>
           </li>
           <li className="nav-dropdown-wrapper">
-            <a 
-              href="#" 
-              className={`nav-link ${isPageActive ? 'active' : ''}`} 
+            <a
+              href="#"
+              className={`nav-link ${isPageActive ? 'active' : ''}`}
               onClick={(e) => e.preventDefault()}
             >
-              Page <span className="dropdown-arrow">⌵</span>
+              Trang <span className="dropdown-arrow">⌵</span>
             </a>
             <ul className="dropdown-menu">
               <li>
-                <Link to="/faq">FAQs</Link>
+                <Link to="/faq">Hỏi đáp</Link>
               </li>
               <li>
-                <Link to="/contact">Contact</Link>
+                <Link to="/contact">Liên hệ</Link>
               </li>
             </ul>
-          </li>
-          <li>
-            <a href="#" className="nav-link" onClick={(e) => e.preventDefault()}>
-              LearnPress Add-On
-            </a>
           </li>
         </ul>
 
         {/* Actions */}
         <div className="navbar-actions">
-          <NavLink 
-            to="/auth" 
+          <NavLink
+            to="/auth"
             className={({ isActive }) => `auth-link ${isActive ? 'active' : ''}`}
           >
-            Login / Register
+            Đăng nhập / Đăng ký
           </NavLink>
-          <button className="search-trigger" aria-label="Search">
+          <button className="search-trigger" aria-label="Tìm kiếm">
             <Search size={18} />
           </button>
         </div>

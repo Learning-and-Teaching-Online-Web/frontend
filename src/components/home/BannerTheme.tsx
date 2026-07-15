@@ -68,13 +68,13 @@ const BannerTheme: React.FC = () => {
 
             {/* Right Content */}
             <div className="theme-content">
-              <span className="theme-tag">Providing Amazing</span>
-              <h2 className="theme-title">Education Wordpress Theme</h2>
+              <span className="theme-tag">Cung cấp tuyệt vời</span>
+              <h2 className="theme-title">Theme WordPress Giáo dục</h2>
               <p className="theme-desc">
-                The next level of LMS WordPress Theme. Learn anytime and anywhere.
+                Nâng tầm Theme LMS cho WordPress. Học mọi lúc, mọi nơi.
               </p>
               <button className="theme-btn" onClick={onExplore}>
-                Explorer Course
+                Khám phá khóa học
               </button>
             </div>
           </div>

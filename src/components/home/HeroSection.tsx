@@ -41,17 +41,17 @@ const HeroSection: React.FC = () => {
       <div className="container hero-container">
         {/* Left Side: Content */}
         <div className="hero-content">
-          <span className="hero-subtitle">Keep Learning</span>
+          <span className="hero-subtitle">Tiếp tục học tập</span>
           <h1 className="hero-title">
-            Build Skills With<br />
-            <span>Online Course</span>
+            Nâng cao kỹ năng cùng<br />
+            <span>Khóa học trực tuyến</span>
           </h1>
           <p className="hero-description">
-            We denounce with righteous indignation and dislike men who are
-            so beguiled and demoralized that cannot trouble.
+            Chúng tôi tin rằng giáo dục trực tuyến sẽ mang lại những giá trị tốt nhất 
+            để bạn có thể phát triển kỹ năng và mở rộng kiến thức không giới hạn.
           </p>
           <button className="hero-btn" onClick={onExplore}>
-            Explore Course
+            Khám phá khóa học
           </button>
         </div>
 
@@ -62,8 +62,8 @@ const HeroSection: React.FC = () => {
             <circle cx="250" cy="250" r="210" fill="#a7f3d0" opacity="0.7" />
             
             {/* Outline Chalk text "ONLINE SCHOOL" */}
-            <text x="250" y="240" fill="none" stroke="#ffffff" strokeWidth="3" strokeDasharray="3 3" fontFamily="var(--outfit)" fontSize="85" fontWeight="950" textAnchor="middle" opacity="0.6">ONLINE</text>
-            <text x="250" y="320" fill="none" stroke="#ffffff" strokeWidth="3" strokeDasharray="3 3" fontFamily="var(--outfit)" fontSize="85" fontWeight="950" textAnchor="middle" opacity="0.6">SCHOOL</text>
+            <text x="250" y="240" fill="none" stroke="#ffffff" strokeWidth="3" strokeDasharray="3 3" fontFamily="var(--outfit)" fontSize="85" fontWeight="950" textAnchor="middle" opacity="0.6">HỌC TẬP</text>
+            <text x="250" y="320" fill="none" stroke="#ffffff" strokeWidth="3" strokeDasharray="3 3" fontFamily="var(--outfit)" fontSize="80" fontWeight="950" textAnchor="middle" opacity="0.6">TRỰC TUYẾN</text>
             
             {/* Decorative Sparkles & Doodles around student */}
             <path d="M 80 120 Q 95 105 90 90 M 90 120 Q 75 105 80 90" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" />
