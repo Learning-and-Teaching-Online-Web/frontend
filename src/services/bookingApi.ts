@@ -1,7 +1,7 @@
 import axiosClient from './axiosClient';
 
 export const bookingApi = {
-  create: async (data: { courseId: string; scheduleId: string; notes?: string }) => {
+  create: async (data: { courseId: string; scheduleId?: string; notes?: string }) => {
     const response = await axiosClient.post('/bookings', data);
     return response.data;
   },

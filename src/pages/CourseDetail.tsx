@@ -47,34 +47,38 @@ const CourseDetail: React.FC = () => {
 
     if (!courseId || !course) return;
 
-    // Check if the course has any schedules
-    const schedules = course.schedules || [];
-    const availableSchedule = schedules.find((s: any) => !s.is_booked);
-
-    if (!availableSchedule) {
-      toast.error('Khóa học này hiện tại không có lịch dạy trống nào khả dụng.');
+    // Khóa học có phí → chưa hỗ trợ thanh toán
+    if (!course.isFree) {
+      toast.info('Khóa học này có phí. Tính năng thanh toán đang được phát triển. Vui lòng liên hệ để được hỗ trợ.');
       return;
     }
+
+    // Khóa học miễn phí → đăng ký ngay
+    // Tìm schedule trống nếu có (optional với khóa free)
+    const schedules = course.schedules || [];
+    const availableSchedule = schedules.find((s: any) => !s.is_booked);
 
     try {
       toast.info('Đang xử lý đăng ký khóa học...');
       const res = await bookingApi.create({
         courseId: courseId,
-        scheduleId: availableSchedule.schedule_id,
-        notes: 'Đăng ký học từ NovaLearn'
+        scheduleId: availableSchedule?.schedule_id, // optional - có thể undefined
+        notes: 'Đăng ký học miễn phí từ NovaLearn'
       });
 
       if (res && res.success) {
-        toast.success('Đăng ký khóa học thành công!');
-        navigate('/student/dashboard');
+        toast.success('Đăng ký khóa học miễn phí thành công! Chuyển đến bảng điều khiển...');
+        setTimeout(() => navigate('/student/dashboard'), 1500);
       } else {
         toast.error(res.error || 'Có lỗi xảy ra khi đăng ký khóa học.');
       }
     } catch (err: any) {
       console.error('Error booking course:', err);
-      toast.error(err.response?.data?.error || 'Có lỗi xảy ra khi kết nối hệ thống.');
+      const msg = err.response?.data?.error || err.message || 'Có lỗi xảy ra khi kết nối hệ thống.';
+      toast.error(msg);
     }
   };
+
 
   if (isLoading) {
     return (
@@ -191,9 +195,16 @@ const CourseDetail: React.FC = () => {
               <button 
                 className="start-now-btn"
                 onClick={handleStartNow}
+                style={course.isFree ? { background: 'linear-gradient(135deg, #10b981, #059669)' } : {}}
               >
-                Bắt đầu ngay
+                {course.isFree ? '🎓 Đăng ký miễn phí ngay' : '💳 Đăng ký (Sắp hỗ trợ thanh toán)'}
               </button>
+              {course.isFree && (
+                <p style={{ textAlign: 'center', fontSize: '13px', color: '#10b981', marginTop: '8px', fontWeight: 500 }}>
+                  ✓ Hoàn toàn miễn phí, không cần thẻ tín dụng
+                </p>
+              )}
+
             </div>
           </div>
         </div>
