@@ -13,7 +13,10 @@ const axiosClient = axios.create({
 // Interceptor cho các request (Gửi kèm Token nếu có)
 axiosClient.interceptors.request.use(
   (config) => {
+<<<<<<< HEAD:src/services/axiosClient.ts
     // Ví dụ: Lấy token từ localStorage và đính kèm vào header
+=======
+>>>>>>> 79fef77 (feat: implement teacher dashboard with course management, booking system, and integrated API client):src/api/axiosClient.ts
     const token = localStorage.getItem('access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

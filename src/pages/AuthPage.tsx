@@ -55,15 +55,25 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
 
     setIsLoading(true);
     try {
-      const res = await authApi.login({
+
+      const response = await authApi.login({
         email: loginIdentifier,
         password: loginPassword,
       });
-      const token = res.data?.session?.access_token;
+
+      const user = response?.data?.user;
+      const session = response?.data?.session;
+      const role = user?.user_metadata?.role || user?.role || (loginIdentifier.toLowerCase().includes('tutor') ? 'tutor' : 'student');
+      const fullName = user?.user_metadata?.full_name || user?.full_name || loginIdentifier.split('@')[0];
+      const token = session?.access_token;
+
+      localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('userRole', role);
+      localStorage.setItem('userName', fullName);
       if (token) {
         localStorage.setItem('access_token', token);
       }
-      localStorage.setItem('isAuthenticated', 'true');
+
       window.dispatchEvent(new Event('authChange'));
       toast.success('Đăng nhập thành công!');
       navigate('/');
@@ -114,7 +124,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
 
     setIsLoading(true);
     try {
-      await authApi.register({
+      const response = await authApi.register({
         email: registerEmail,
         password: registerPassword,
         fullName: registerFullName,
@@ -124,23 +134,29 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
         role: registerRole
       });
 
-      // Auto-login after successful registration
-      try {
-        const loginRes = await authApi.login({
-          email: registerEmail,
-          password: registerPassword,
-        });
-        const token = loginRes.data?.session?.access_token;
-        if (token) {
-          localStorage.setItem('access_token', token);
+      if (response.data.success) {
+        // Auto-login after successful registration
+        try {
+          const loginRes = await authApi.login({
+            email: registerEmail,
+            password: registerPassword,
+          });
+          const token = loginRes.data?.session?.access_token;
+          if (token) {
+            localStorage.setItem('access_token', token);
+          }
+          localStorage.setItem('isAuthenticated', 'true');
+          localStorage.setItem('userRole', registerRole);
+          localStorage.setItem('userName', registerFullName);
+          window.dispatchEvent(new Event('authChange'));
+          toast.success('Đăng ký tài khoản thành công!');
+          navigate('/');
+        } catch {
+          toast.success('Đăng ký thành công! Vui lòng đăng nhập.');
+          setActiveTab('login');
         }
-        localStorage.setItem('isAuthenticated', 'true');
-        window.dispatchEvent(new Event('authChange'));
-        toast.success('Đăng ký và đăng nhập thành công!');
-        navigate('/');
-      } catch {
-        toast.success('Đăng ký thành công! Vui lòng đăng nhập.');
-        setActiveTab('login');
+      } else {
+        toast.error(response.data.error || 'Đăng ký thất bại. Vui lòng thử lại.');
       }
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Đăng ký thất bại. Vui lòng thử lại.');
