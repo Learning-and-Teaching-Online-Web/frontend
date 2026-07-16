@@ -55,16 +55,20 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
 
     setIsLoading(true);
     try {
-      await authApi.login({
+      const res = await authApi.login({
         email: loginIdentifier,
         password: loginPassword,
       });
+      const token = res.data?.session?.access_token;
+      if (token) {
+        localStorage.setItem('access_token', token);
+      }
       localStorage.setItem('isAuthenticated', 'true');
       window.dispatchEvent(new Event('authChange'));
       toast.success('Đăng nhập thành công!');
       navigate('/');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
+      toast.error(error.response?.data?.error || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
     } finally {
       setIsLoading(false);
     }
@@ -77,7 +81,6 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
       toast.error('Vui lòng nhập Email.');
       return;
     }
-    // Simple Email Regex check
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(registerEmail.trim())) {
       toast.error('Định dạng Email không hợp lệ.');
@@ -120,12 +123,27 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
         dateOfBirth: registerDateOfBirth,
         role: registerRole
       });
-      localStorage.setItem('isAuthenticated', 'true');
-      window.dispatchEvent(new Event('authChange'));
-      toast.success('Đăng ký tài khoản thành công!');
-      navigate('/');
+
+      // Auto-login after successful registration
+      try {
+        const loginRes = await authApi.login({
+          email: registerEmail,
+          password: registerPassword,
+        });
+        const token = loginRes.data?.session?.access_token;
+        if (token) {
+          localStorage.setItem('access_token', token);
+        }
+        localStorage.setItem('isAuthenticated', 'true');
+        window.dispatchEvent(new Event('authChange'));
+        toast.success('Đăng ký và đăng nhập thành công!');
+        navigate('/');
+      } catch {
+        toast.success('Đăng ký thành công! Vui lòng đăng nhập.');
+        setActiveTab('login');
+      }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.');
+      toast.error(error.response?.data?.error || 'Đăng ký thất bại. Vui lòng thử lại.');
     } finally {
       setIsLoading(false);
     }

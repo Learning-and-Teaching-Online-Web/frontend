@@ -9,12 +9,12 @@ import type {
   FavoriteTutor 
 } from '../data/mockStudentData';
 import { 
-  initialStudentProfile, 
-  mockEnrolledCourses, 
-  mockClassSessions, 
-  mockQuizAttempts, 
-  mockFavoriteTutors 
+  initialStudentProfile
 } from '../data/mockStudentData';
+import { authApi } from '../services/authApi';
+import { bookingApi } from '../services/bookingApi';
+import { favoriteApi } from '../services/favoriteApi';
+import { quizApi } from '../services/quizApi';
 
 export const useStudentDashboard = () => {
   const navigate = useNavigate();
@@ -50,68 +50,134 @@ export const useStudentDashboard = () => {
     }
   }, [navigate]);
 
-  // Load state from localStorage or initialize with mock data
+  // Load state from backend APIs
   useEffect(() => {
-    // 1. Profile
-    const localProfile = localStorage.getItem('studentProfile');
-    if (localProfile) {
-      const parsed = JSON.parse(localProfile);
-      setProfile(parsed);
-      setFormName(parsed.fullName);
-      setFormPhone(parsed.phone);
-      setFormGrade(parsed.grade_level || 'Lớp 11');
-      setFormGoals(parsed.learning_goals || '');
-      setFormSubjects(parsed.preferred_subjects || []);
-      setFormMode(parsed.preferred_mode || 'both');
-      setFormBudgetMax(Number(parsed.budget_max) || 1000000);
-    } else {
-      setProfile(initialStudentProfile);
-      setFormName(initialStudentProfile.fullName);
-      setFormPhone(initialStudentProfile.phone);
-      setFormGrade(initialStudentProfile.grade_level || 'Lớp 11');
-      setFormGoals(initialStudentProfile.learning_goals || '');
-      setFormSubjects(initialStudentProfile.preferred_subjects || []);
-      setFormMode(initialStudentProfile.preferred_mode || 'both');
-      setFormBudgetMax(Number(initialStudentProfile.budget_max) || 1000000);
-      localStorage.setItem('studentProfile', JSON.stringify(initialStudentProfile));
-    }
+    const fetchDashboardData = async () => {
+      const authStatus = localStorage.getItem('isAuthenticated') === 'true';
+      if (!authStatus) return;
 
-    // 2. Enrolled Courses
-    const localCourses = localStorage.getItem('studentEnrolledCourses');
-    if (localCourses) {
-      setEnrolledCourses(JSON.parse(localCourses));
-    } else {
-      setEnrolledCourses(mockEnrolledCourses);
-      localStorage.setItem('studentEnrolledCourses', JSON.stringify(mockEnrolledCourses));
-    }
+      try {
+        // 1. Fetch Profile
+        const profileRes = await authApi.getProfile();
+        if (profileRes && profileRes.success && profileRes.data) {
+          const dbUser = profileRes.data;
+          const mappedProfile: StudentProfile = {
+            student_id: dbUser.user_id,
+            fullName: dbUser.full_name,
+            email: dbUser.email,
+            phone: dbUser.phone || '',
+            avatar: dbUser.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+            grade_level: dbUser.metadata?.grade_level || 'Lớp 11',
+            learning_goals: dbUser.metadata?.learning_goals || 'Chưa thiết lập mục tiêu.',
+            preferred_subjects: dbUser.metadata?.preferred_subjects || [],
+            preferred_mode: dbUser.metadata?.preferred_mode || 'both',
+            budget_min: Number(dbUser.metadata?.budget_min) || 0,
+            budget_max: Number(dbUser.metadata?.budget_max) || 1000000,
+            joinedAt: dbUser.created_at
+          };
+          setProfile(mappedProfile);
+          setFormName(mappedProfile.fullName);
+          setFormPhone(mappedProfile.phone);
+          setFormGrade(mappedProfile.grade_level);
+          setFormGoals(mappedProfile.learning_goals);
+          setFormSubjects(mappedProfile.preferred_subjects);
+          setFormMode(mappedProfile.preferred_mode);
+          setFormBudgetMax(mappedProfile.budget_max);
+        }
 
-    // 3. Class Sessions
-    const localSessions = localStorage.getItem('studentClassSessions');
-    if (localSessions) {
-      setClassSessions(JSON.parse(localSessions));
-    } else {
-      setClassSessions(mockClassSessions);
-      localStorage.setItem('studentClassSessions', JSON.stringify(mockClassSessions));
-    }
+        // Helper mapper functions for bookings
+        const mapBookingToEnrolledCourse = (b: any): EnrolledCourse => {
+          return {
+            course_id: b.course?.course_id || '',
+            title: b.course?.title || 'Khóa học',
+            subject: b.course?.subject || 'Môn học',
+            instructor: b.course?.tutor?.user?.full_name || 'Giảng viên',
+            thumbnail: b.course?.thumbnail_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500&auto=format&fit=crop&q=60',
+            progress: b.status === 'completed' ? 100 : 50,
+            completedLessons: b.status === 'completed' ? (b.course?.total_sessions || 1) : 0,
+            totalLessons: b.course?.total_sessions || 1,
+            nextSessionTime: b.schedule?.start_time || undefined
+          };
+        };
 
-    // 4. Quiz Attempts
-    const localQuizzes = localStorage.getItem('studentQuizAttempts');
-    if (localQuizzes) {
-      setQuizAttempts(JSON.parse(localQuizzes));
-    } else {
-      setQuizAttempts(mockQuizAttempts);
-      localStorage.setItem('studentQuizAttempts', JSON.stringify(mockQuizAttempts));
-    }
+        const mapBookingToClassSession = (b: any): ClassSession => {
+          return {
+            session_id: b.booking_id,
+            courseTitle: b.course?.title || 'Khóa học',
+            tutorName: b.course?.tutor?.user?.full_name || 'Giảng viên',
+            tutorAvatar: b.course?.tutor?.user?.avatar_url || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
+            startTime: b.schedule?.start_time || new Date().toISOString(),
+            endTime: b.schedule?.end_time || new Date().toISOString(),
+            status: b.status === 'confirmed' ? 'scheduled' : (b.status === 'completed' ? 'completed' : 'cancelled'),
+            meetingLink: `https://meet.jit.si/novalearn-${b.booking_id}`
+          };
+        };
 
-    // 5. Favorite Tutors
-    const localTutors = localStorage.getItem('studentFavoriteTutors');
-    if (localTutors) {
-      setFavoriteTutors(JSON.parse(localTutors));
-    } else {
-      setFavoriteTutors(mockFavoriteTutors);
-      localStorage.setItem('studentFavoriteTutors', JSON.stringify(mockFavoriteTutors));
-    }
-  }, []);
+        // 2. Fetch Bookings (for Enrolled Courses & Class Sessions)
+        const bookingsRes = await bookingApi.getMyBookings();
+        if (bookingsRes && bookingsRes.success && Array.isArray(bookingsRes.data)) {
+          const mappedCourses = bookingsRes.data.map(mapBookingToEnrolledCourse);
+          setEnrolledCourses(mappedCourses);
+
+          const mappedSessions = bookingsRes.data.map(mapBookingToClassSession);
+          setClassSessions(mappedSessions);
+        }
+
+        // 3. Quiz Attempts
+        const quizAttemptsRes = await quizApi.getMyAttempts();
+        if (quizAttemptsRes && quizAttemptsRes.success && Array.isArray(quizAttemptsRes.data)) {
+          const mappedAttempts = quizAttemptsRes.data.map((qa: any): QuizAttempt => ({
+            attempt_id: qa.attempt_id,
+            quizTitle: qa.quiz?.title || 'Bài kiểm tra',
+            courseTitle: qa.quiz?.course?.title || 'Khóa học',
+            score: Number(qa.score),
+            totalPoints: Number(qa.total_points),
+            isPassed: qa.is_passed,
+            completedAt: qa.completed_at
+          }));
+          setQuizAttempts(mappedAttempts);
+        } else {
+          setQuizAttempts([]);
+        }
+
+        // 4. Favorite Tutors
+        const favoritesRes = await favoriteApi.getMyFavorites();
+        if (favoritesRes && favoritesRes.success && Array.isArray(favoritesRes.data)) {
+          const mappedFavorites = favoritesRes.data.map((fav: any): FavoriteTutor => {
+            const rawSubjects = fav.tutor?.subjects;
+            let subjectStr = 'Chưa cập nhật';
+            if (Array.isArray(rawSubjects)) {
+              subjectStr = rawSubjects.join(', ');
+            } else if (typeof rawSubjects === 'string') {
+              try {
+                subjectStr = JSON.parse(rawSubjects).join(', ');
+              } catch {
+                subjectStr = rawSubjects;
+              }
+            }
+            return {
+              tutor_id: fav.tutor?.tutor_id || '',
+              name: fav.tutor?.user?.full_name || 'Giảng viên',
+              avatar: fav.tutor?.user?.avatar_url || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
+              subject: subjectStr,
+              rating: Number(fav.tutor?.rating) || 5.0,
+              reviewCount: Number(fav.tutor?.review_count) || 0,
+              hourlyRate: Number(fav.tutor?.hourly_rate) || 0,
+              bio: fav.tutor?.bio || 'Chưa cập nhật giới thiệu.'
+            };
+          });
+          setFavoriteTutors(mappedFavorites);
+        } else {
+          setFavoriteTutors([]);
+        }
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+        toast.error('Có lỗi xảy ra khi tải thông tin bảng điều khiển.');
+      }
+    };
+
+    fetchDashboardData();
+  }, [navigate]);
 
   // Update Profile Submit
   const handleProfileSubmit = (e: React.FormEvent) => {

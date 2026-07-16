@@ -1,15 +1,88 @@
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Clock, Users, BookOpen, HelpCircle, Star, Award } from 'lucide-react';
-import { mockCourses } from '../data/mockData';
+import { toast } from 'react-toastify';
+import { courseApi, mapBackendCourseToFrontend } from '../services/courseApi';
+import { bookingApi } from '../services/bookingApi';
 import '../styles/CourseDetail.css';
 
 const CourseDetail: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'overview' | 'curriculum' | 'instructor' | 'faqs' | 'reviews'>('overview');
   const [commentForm, setCommentForm] = useState({ name: '', email: '', comment: '', saveDetails: false });
+  const [course, setCourse] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const course = mockCourses.find(c => c.course_id === courseId);
+  useEffect(() => {
+    const fetchCourseDetail = async () => {
+      if (!courseId) return;
+      try {
+        setIsLoading(true);
+        const res = await courseApi.getDetail(courseId);
+        if (res && res.success && res.data) {
+          const mapped = mapBackendCourseToFrontend(res.data);
+          setCourse(mapped);
+        } else {
+          setCourse(null);
+        }
+      } catch (err) {
+        console.error('Error fetching course detail:', err);
+        setCourse(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCourseDetail();
+  }, [courseId]);
+
+  const handleStartNow = async () => {
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    if (!isAuthenticated) {
+      toast.warning('Bạn cần đăng nhập để đăng ký khóa học. Đang chuyển hướng...');
+      setTimeout(() => navigate('/auth'), 2000);
+      return;
+    }
+
+    if (!courseId || !course) return;
+
+    // Check if the course has any schedules
+    const schedules = course.schedules || [];
+    const availableSchedule = schedules.find((s: any) => !s.is_booked);
+
+    if (!availableSchedule) {
+      toast.error('Khóa học này hiện tại không có lịch dạy trống nào khả dụng.');
+      return;
+    }
+
+    try {
+      toast.info('Đang xử lý đăng ký khóa học...');
+      const res = await bookingApi.create({
+        courseId: courseId,
+        scheduleId: availableSchedule.schedule_id,
+        notes: 'Đăng ký học từ NovaLearn'
+      });
+
+      if (res && res.success) {
+        toast.success('Đăng ký khóa học thành công!');
+        navigate('/student/dashboard');
+      } else {
+        toast.error(res.error || 'Có lỗi xảy ra khi đăng ký khóa học.');
+      }
+    } catch (err: any) {
+      console.error('Error booking course:', err);
+      toast.error(err.response?.data?.error || 'Có lỗi xảy ra khi kết nối hệ thống.');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="container" style={{ padding: '80px 0', textAlign: 'center', color: 'var(--primary)', fontWeight: 600 }}>
+        Đang tải thông tin chi tiết khóa học...
+      </div>
+    );
+  }
 
   if (!course) {
     return (
@@ -117,7 +190,7 @@ const CourseDetail: React.FC = () => {
 
               <button 
                 className="start-now-btn"
-                onClick={() => alert(`Đăng ký khóa học "${course.title}" thành công!`)}
+                onClick={handleStartNow}
               >
                 Bắt đầu ngay
               </button>

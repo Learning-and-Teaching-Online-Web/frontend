@@ -23,6 +23,7 @@ const Navbar: React.FC = () => {
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault();
     localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('access_token');
     window.dispatchEvent(new Event('authChange'));
     navigate('/');
   };

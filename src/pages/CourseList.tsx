@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Grid, List, ChevronLeft, ChevronRight, Search } from 'lucide-react';
-import { mockCourses } from '../data/mockData';
+import { courseApi, mapBackendCourseToFrontend } from '../services/courseApi';
 import SidebarFilters from '../components/SidebarFilters';
 import type { FilterState } from '../components/SidebarFilters';
 import CourseCard from '../components/CourseCard';
@@ -11,6 +11,8 @@ const CourseList: React.FC = () => {
   const [layout, setLayout] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<string>('default');
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [courses, setCourses] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const [filters, setFilters] = useState<FilterState>({
     search: '',
@@ -21,6 +23,28 @@ const CourseList: React.FC = () => {
     levels: []
   });
 
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setIsLoading(true);
+        const res = await courseApi.getAll();
+        if (res && res.success && Array.isArray(res.data)) {
+          const mapped = res.data.map(mapBackendCourseToFrontend);
+          setCourses(mapped);
+        } else {
+          setCourses([]);
+        }
+      } catch (err) {
+        console.error('Error fetching courses from backend:', err);
+        setCourses([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
   const handleFilterChange = (newFilters: FilterState) => {
     setFilters(newFilters);
     setCurrentPage(1); // Reset to page 1 on filter
@@ -28,7 +52,7 @@ const CourseList: React.FC = () => {
 
   // 1. Filter courses
   const filteredCourses = useMemo(() => {
-    return mockCourses.filter(course => {
+    return courses.filter(course => {
       // Search text
       if (filters.search) {
         const query = filters.search.toLowerCase();
@@ -67,7 +91,7 @@ const CourseList: React.FC = () => {
 
       return true;
     });
-  }, [filters]);
+  }, [courses, filters]);
 
   // 2. Sort courses
   const sortedCourses = useMemo(() => {
@@ -172,7 +196,11 @@ const CourseList: React.FC = () => {
             </div>
 
             {/* Course Cards Grid */}
-            {paginatedCourses.length > 0 ? (
+            {isLoading ? (
+              <div style={{ padding: '80px 0', textAlign: 'center', color: 'var(--primary)', fontWeight: 600 }}>
+                Đang tải danh sách khóa học từ hệ thống...
+              </div>
+            ) : paginatedCourses.length > 0 ? (
               <div className={`course-grid ${layout === 'list' ? 'list-view' : ''}`}>
                 {paginatedCourses.map(course => (
                   <CourseCard
