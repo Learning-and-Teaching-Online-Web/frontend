@@ -272,13 +272,32 @@ const CourseDetail: React.FC = () => {
               )}
 
               {activeTab === 'instructor' && (
-                <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                  <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 'bold', color: 'var(--primary)' }}>
-                    {course.instructor.charAt(0)}
+                <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', padding: '8px 0' }}>
+                  {/* Avatar */}
+                  <div style={{ flexShrink: 0 }}>
+                    {course.instructorAvatar ? (
+                      <img
+                        src={course.instructorAvatar}
+                        alt={course.instructor}
+                        style={{ width: '90px', height: '90px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--primary)' }}
+                      />
+                    ) : (
+                      <div style={{ width: '90px', height: '90px', borderRadius: '50%', backgroundColor: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', fontWeight: 'bold', color: '#fff' }}>
+                        {course.instructor.charAt(0).toUpperCase()}
+                      </div>
+                    )}
                   </div>
+                  {/* Info */}
                   <div>
-                    <h4 style={{ fontSize: '20px' }}>{course.instructor}</h4>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '4px' }}>Giáo viên chuyên nghiệp hơn 10 năm kinh nghiệm giảng dạy lĩnh vực {course.subject}.</p>
+                    <h4 style={{ fontSize: '20px', marginBottom: '4px' }}>{course.instructor}</h4>
+                    {course.instructorSpecialization && (
+                      <p style={{ color: 'var(--primary)', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>
+                        {course.instructorSpecialization}
+                      </p>
+                    )}
+                    <p style={{ color: 'var(--text-muted)', fontSize: '14px', lineHeight: '1.6' }}>
+                      {course.instructorBio || `Giáo viên chuyên nghiệp hơn 10 năm kinh nghiệm giảng dạy lĩnh vực ${course.subject}.`}
+                    </p>
                   </div>
                 </div>
               )}

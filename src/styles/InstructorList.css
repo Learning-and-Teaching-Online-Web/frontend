@@ -1,0 +1,310 @@
+/* =============================================
+   INSTRUCTOR LIST PAGE STYLES
+   ============================================= */
+
+/* --- Hero Banner --- */
+.instructor-hero {
+  background: linear-gradient(135deg, #1a1c2e 0%, #2d1b69 50%, #11273f 100%);
+  color: #fff;
+  padding: 80px 0 100px;
+  position: relative;
+  overflow: hidden;
+}
+
+.instructor-hero::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -20%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(255,107,53,0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.instructor-hero::after {
+  content: '';
+  position: absolute;
+  bottom: -50%;
+  right: -10%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.instructor-hero-content {
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.instructor-hero-badge {
+  display: inline-block;
+  background: rgba(255,107,53,0.2);
+  color: #ff6b35;
+  border: 1px solid rgba(255,107,53,0.4);
+  padding: 6px 18px;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.instructor-hero-title {
+  font-size: clamp(32px, 5vw, 52px);
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #ffffff, #c4b5fd);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.instructor-hero-desc {
+  font-size: 17px;
+  color: rgba(255,255,255,0.7);
+  max-width: 520px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+.instructor-hero-wave {
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background: var(--bg-body, #fff);
+  clip-path: ellipse(55% 100% at 50% 100%);
+}
+
+/* --- Main Container --- */
+.instructor-container {
+  padding-top: 60px;
+  padding-bottom: 80px;
+}
+
+/* --- Loading --- */
+.instructor-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 80px 0;
+  color: var(--text-muted);
+}
+
+.instructor-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* --- Empty State --- */
+.instructor-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 80px 0;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.instructor-empty h3 {
+  font-size: 22px;
+  color: var(--text-dark);
+  margin: 0;
+}
+
+.instructor-back-btn {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 12px 28px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: var(--radius-sm, 8px);
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+.instructor-back-btn:hover { opacity: 0.85; }
+
+/* --- Grid --- */
+.instructor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 28px;
+}
+
+/* --- Card --- */
+.instructor-card {
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.instructor-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+}
+
+/* Card Top - Colored Gradient Banner */
+.instructor-card-top {
+  background: linear-gradient(135deg, var(--primary, #ff6b35), #f97316);
+  padding: 32px 24px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+/* Avatar Wrapper */
+.instructor-avatar-wrapper {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 4px solid #fff;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  margin-bottom: -48px;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.instructor-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.instructor-avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  font-size: 36px;
+  font-weight: 700;
+}
+
+/* Social dots placeholder */
+.instructor-social {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 4px;
+}
+
+.social-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.5);
+}
+
+/* Card Body */
+.instructor-card-body {
+  padding: 56px 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.instructor-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0;
+  text-align: center;
+}
+
+.instructor-spec {
+  font-size: 13px;
+  color: var(--primary);
+  font-weight: 600;
+  text-align: center;
+  margin: 0;
+}
+
+.instructor-bio {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  margin: 4px 0 0;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Stats Row */
+.instructor-stats {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 8px;
+  padding: 12px 0;
+  border-top: 1px solid var(--border, #e5e7eb);
+  border-bottom: 1px solid var(--border, #e5e7eb);
+}
+
+.instructor-stat {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: var(--text-dark);
+  font-weight: 500;
+}
+
+/* View Courses Button */
+.instructor-view-courses {
+  display: block;
+  margin-top: 8px;
+  padding: 10px;
+  background: transparent;
+  border: 2px solid var(--primary);
+  color: var(--primary);
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+
+.instructor-view-courses:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .instructor-grid {
+    grid-template-columns: 1fr;
+  }
+}

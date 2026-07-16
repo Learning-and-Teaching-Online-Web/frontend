@@ -63,6 +63,14 @@ const Navbar: React.FC = () => {
               Bài viết
             </NavLink>
           </li>
+          <li>
+            <NavLink
+              to="/instructors"
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+            >
+              Giảng viên
+            </NavLink>
+          </li>
           <li className="nav-dropdown-wrapper">
             <a
               href="#"
