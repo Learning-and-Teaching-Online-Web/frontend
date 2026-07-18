@@ -17,7 +17,7 @@ const Navbar: React.FC = () => {
       setUserRole(localStorage.getItem('userRole'));
     };
     checkAuth();
-    
+
     window.addEventListener('authChange', checkAuth);
     return () => window.removeEventListener('authChange', checkAuth);
   }, []);
@@ -99,8 +99,8 @@ const Navbar: React.FC = () => {
           {isAuthenticated ? (
             <>
               {userRole === 'tutor' ? (
-                <NavLink 
-                  to="/teacher/dashboard" 
+                <NavLink
+                  to="/teacher/dashboard"
                   className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
                   style={{ marginRight: '15px', fontWeight: 600, color: '#4f46e5' }}
                 >
@@ -108,7 +108,7 @@ const Navbar: React.FC = () => {
                 </NavLink>
               ) : (
                 <Link to="/student/dashboard" className="auth-link" style={{ marginRight: '16px', fontWeight: 600 }}>
-                  Bảng điều khiển
+                  Kênh Học Viên
                 </Link>
               )}
               <a href="#" onClick={handleLogout} className="auth-link">
@@ -126,9 +126,9 @@ const Navbar: React.FC = () => {
           <button className="search-trigger" aria-label="Tìm kiếm">
             <Search size={18} />
           </button>
-        </div>
-      </div>
-    </nav>
+        </div >
+      </div >
+    </nav >
   );
 };
 

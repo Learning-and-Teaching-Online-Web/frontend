@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { 
-  LayoutDashboard, 
-  BookOpen, 
-  Calendar, 
-  CheckSquare, 
-  Star, 
-  CreditCard, 
-  Plus, 
-  X, 
-  DollarSign, 
-  Users, 
+import {
+  LayoutDashboard,
+  BookOpen,
+  Calendar,
+  CheckSquare,
+  Star,
+  CreditCard,
+  Plus,
+  X,
+  DollarSign,
+  Users,
   ChevronRight
 } from 'lucide-react';
-import { tutorApi } from '../api/tutorApi';
+
 import '../styles/TeacherDashboard.css';
+import tutorApi from '../services/tutorApi';
 
 interface DashboardStats {
   totalCourses: number;
@@ -29,7 +30,7 @@ const TeacherDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'schedules' | 'bookings' | 'reviews' | 'wallet'>('overview');
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // App States representing Database values
   const [stats, setStats] = useState<DashboardStats>({
     totalCourses: 0,
@@ -43,10 +44,10 @@ const TeacherDashboard: React.FC = () => {
   const [reviews, setReviews] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [walletBalance, setWalletBalance] = useState<number>(0);
-  
+
   // Localized user details
   const [teacherName, setTeacherName] = useState('Gia sư NovaLearn');
-  
+
   // Helper to load all dashboard data from API
   const loadDashboardData = async () => {
     setIsLoading(true);
@@ -56,13 +57,13 @@ const TeacherDashboard: React.FC = () => {
       if (statsRes.success) {
         setStats(statsRes.data);
       }
-      
+
       // 2. Fetch Courses
       const coursesRes = await tutorApi.getMyCourses();
       if (coursesRes.success) {
         setCourses(coursesRes.data || []);
       }
-      
+
       // 3. Fetch Bookings
       const bookingsRes = await tutorApi.getBookings();
       if (bookingsRes.success) {
@@ -93,19 +94,19 @@ const TeacherDashboard: React.FC = () => {
     const auth = localStorage.getItem('isAuthenticated');
     const role = localStorage.getItem('userRole');
     const name = localStorage.getItem('userName');
-    
+
     if (auth !== 'true') {
       toast.warning('Vui lòng đăng nhập để truy cập kênh gia sư.');
       navigate('/auth');
       return;
     }
-    
+
     if (role !== 'tutor') {
       toast.error('Tài khoản của bạn không có quyền truy cập kênh gia sư.');
       navigate('/');
       return;
     }
-    
+
     if (name) {
       setTeacherName(name);
     }
@@ -147,7 +148,7 @@ const TeacherDashboard: React.FC = () => {
   // ----------------------------------------------------
   // EVENT HANDLERS (API Calls)
   // ----------------------------------------------------
-  
+
   // Format Currency Helper
   const formatVND = (num: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
@@ -298,7 +299,7 @@ const TeacherDashboard: React.FC = () => {
   return (
     <div className="dashboard-wrapper">
       <div className="dashboard-container">
-        
+
         {/* ============================================================
            1. SIDEBAR NAVIGATION
            ============================================================ */}
@@ -313,7 +314,7 @@ const TeacherDashboard: React.FC = () => {
 
           <ul className="sidebar-menu">
             <li>
-              <button 
+              <button
                 className={`menu-item-btn ${activeTab === 'overview' ? 'active' : ''}`}
                 onClick={() => setActiveTab('overview')}
               >
@@ -322,7 +323,7 @@ const TeacherDashboard: React.FC = () => {
               </button>
             </li>
             <li>
-              <button 
+              <button
                 className={`menu-item-btn ${activeTab === 'courses' ? 'active' : ''}`}
                 onClick={() => setActiveTab('courses')}
               >
@@ -331,7 +332,7 @@ const TeacherDashboard: React.FC = () => {
               </button>
             </li>
             <li>
-              <button 
+              <button
                 className={`menu-item-btn ${activeTab === 'schedules' ? 'active' : ''}`}
                 onClick={() => setActiveTab('schedules')}
               >
@@ -340,7 +341,7 @@ const TeacherDashboard: React.FC = () => {
               </button>
             </li>
             <li>
-              <button 
+              <button
                 className={`menu-item-btn ${activeTab === 'bookings' ? 'active' : ''}`}
                 onClick={() => setActiveTab('bookings')}
               >
@@ -349,7 +350,7 @@ const TeacherDashboard: React.FC = () => {
               </button>
             </li>
             <li>
-              <button 
+              <button
                 className={`menu-item-btn ${activeTab === 'reviews' ? 'active' : ''}`}
                 onClick={() => setActiveTab('reviews')}
               >
@@ -358,7 +359,7 @@ const TeacherDashboard: React.FC = () => {
               </button>
             </li>
             <li>
-              <button 
+              <button
                 className={`menu-item-btn ${activeTab === 'wallet' ? 'active' : ''}`}
                 onClick={() => setActiveTab('wallet')}
               >
@@ -373,7 +374,7 @@ const TeacherDashboard: React.FC = () => {
            2. MAIN DASHBOARD PANELS
            ============================================================ */}
         <main className="dashboard-main">
-          
+
           {/* STATS OVERVIEW CARDS */}
           <section className="stats-grid">
             <div className="stat-card">
@@ -385,7 +386,7 @@ const TeacherDashboard: React.FC = () => {
                 <span className="stat-label">Tổng thu nhập</span>
               </div>
             </div>
-            
+
             <div className="stat-card">
               <div className="stat-icon-box students">
                 <Users size={24} />
@@ -428,7 +429,7 @@ const TeacherDashboard: React.FC = () => {
                     Xem tất cả <ChevronRight size={16} />
                   </button>
                 </div>
-                
+
                 <div className="table-responsive">
                   <table className="db-table">
                     <thead>
@@ -464,13 +465,13 @@ const TeacherDashboard: React.FC = () => {
                             <td><span className="badge badge-pending">Đang chờ</span></td>
                             <td>
                               <div className="actions-group">
-                                <button 
+                                <button
                                   className="btn-action-success"
                                   onClick={() => handleConfirmBooking(b.booking_id)}
                                 >
                                   Phê duyệt
                                 </button>
-                                <button 
+                                <button
                                   className="btn-action-danger"
                                   onClick={() => handleCancelBooking(b.booking_id)}
                                 >
@@ -506,7 +507,7 @@ const TeacherDashboard: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <button className="btn-primary-db" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setIsWithdrawModalOpen(true)}>
                     <DollarSign size={16} /> Rút tiền về ngân hàng
@@ -540,12 +541,12 @@ const TeacherDashboard: React.FC = () => {
                         </span>
                       </div>
                     </div>
-                    
+
                     <div className="course-db-body">
                       <span className="course-db-subject">{course.subject}</span>
                       <h3 className="course-db-title" title={course.title}>{course.title}</h3>
                       <div className="course-db-price">{formatVND(Number(course.price))}</div>
-                      
+
                       <div className="course-db-meta">
                         <span>Lớp: {course.level || 'Cơ bản'}</span>
                         <span>{course.studentsCount || 0} học viên</span>
@@ -671,13 +672,13 @@ const TeacherDashboard: React.FC = () => {
                           <td>
                             {b.status === 'pending' && (
                               <div className="actions-group">
-                                <button 
+                                <button
                                   className="btn-action-success"
                                   onClick={() => handleConfirmBooking(b.booking_id)}
                                 >
                                   Duyệt học
                                 </button>
-                                <button 
+                                <button
                                   className="btn-action-danger"
                                   onClick={() => handleCancelBooking(b.booking_id)}
                                 >
@@ -686,7 +687,7 @@ const TeacherDashboard: React.FC = () => {
                               </div>
                             )}
                             {b.status === 'confirmed' && (
-                              <button 
+                              <button
                                 className="btn-action-danger"
                                 onClick={() => handleCancelBooking(b.booking_id)}
                               >
@@ -793,9 +794,9 @@ const TeacherDashboard: React.FC = () => {
                         <tr key={tx.transaction_id}>
                           <td style={{ fontFamily: 'monospace', fontWeight: 600 }}>{tx.transaction_id.slice(0, 10)}</td>
                           <td>
-                            <span style={{ 
+                            <span style={{
                               color: tx.type === 'earning' ? '#059669' : '#dc2626',
-                              fontWeight: 600 
+                              fontWeight: 600
                             }}>
                               {tx.type === 'earning' ? 'Học phí lớp' : 'Rút tiền'}
                             </span>
@@ -806,9 +807,8 @@ const TeacherDashboard: React.FC = () => {
                           <td>{tx.description}</td>
                           <td>{formatDateString(tx.created_at)}</td>
                           <td>
-                            <span className={`badge ${
-                              tx.status === 'success' ? 'badge-completed' : tx.status === 'pending' ? 'badge-pending' : 'badge-cancelled'
-                            }`}>
+                            <span className={`badge ${tx.status === 'success' ? 'badge-completed' : tx.status === 'pending' ? 'badge-pending' : 'badge-cancelled'
+                              }`}>
                               {tx.status === 'success' && 'Thành công'}
                               {tx.status === 'pending' && 'Đang xử lý'}
                               {tx.status === 'failed' && 'Thất bại'}
@@ -836,7 +836,7 @@ const TeacherDashboard: React.FC = () => {
       {/* ============================================================
          3. MODALS FOR ACTION POPUPS (COURSE, SCHEDULE, WITHDRAWAL)
          ============================================================ */}
-      
+
       {/* A. Create Course Modal */}
       {isCourseModalOpen && (
         <div className="modal-overlay">
@@ -849,12 +849,12 @@ const TeacherDashboard: React.FC = () => {
               <div className="modal-body db-form">
                 <div className="form-group">
                   <label>Tên khóa học</label>
-                  <input 
-                    type="text" 
-                    placeholder="Ví dụ: Lập trình di động Flutter từ cơ bản..." 
-                    value={newCourseTitle} 
+                  <input
+                    type="text"
+                    placeholder="Ví dụ: Lập trình di động Flutter từ cơ bản..."
+                    value={newCourseTitle}
                     onChange={e => setNewCourseTitle(e.target.value)}
-                    required 
+                    required
                   />
                 </div>
                 <div className="form-row">
@@ -869,12 +869,12 @@ const TeacherDashboard: React.FC = () => {
                   </div>
                   <div className="form-group">
                     <label>Học phí mỗi buổi (VND)</label>
-                    <input 
-                      type="number" 
-                      value={newCoursePrice} 
-                      onChange={e => setNewCoursePrice(Number(e.target.value))} 
+                    <input
+                      type="number"
+                      value={newCoursePrice}
+                      onChange={e => setNewCoursePrice(Number(e.target.value))}
                       min={0}
-                      required 
+                      required
                     />
                   </div>
                 </div>
@@ -899,11 +899,11 @@ const TeacherDashboard: React.FC = () => {
                 </div>
                 <div className="form-group">
                   <label>Tổng số buổi học</label>
-                  <input 
-                    type="number" 
-                    value={newCourseSessions} 
+                  <input
+                    type="number"
+                    value={newCourseSessions}
                     onChange={e => setNewCourseSessions(Number(e.target.value))}
-                    min={1} 
+                    min={1}
                   />
                 </div>
               </div>
@@ -936,30 +936,30 @@ const TeacherDashboard: React.FC = () => {
                 </div>
                 <div className="form-group">
                   <label>Ngày học</label>
-                  <input 
-                    type="date" 
-                    value={scheduleDate} 
-                    onChange={e => setScheduleDate(e.target.value)} 
-                    required 
+                  <input
+                    type="date"
+                    value={scheduleDate}
+                    onChange={e => setScheduleDate(e.target.value)}
+                    required
                   />
                 </div>
                 <div className="form-row">
                   <div className="form-group">
                     <label>Giờ bắt đầu</label>
-                    <input 
-                      type="time" 
-                      value={scheduleStart} 
-                      onChange={e => setScheduleStart(e.target.value)} 
-                      required 
+                    <input
+                      type="time"
+                      value={scheduleStart}
+                      onChange={e => setScheduleStart(e.target.value)}
+                      required
                     />
                   </div>
                   <div className="form-group">
                     <label>Giờ kết thúc</label>
-                    <input 
-                      type="time" 
-                      value={scheduleEnd} 
-                      onChange={e => setScheduleEnd(e.target.value)} 
-                      required 
+                    <input
+                      type="time"
+                      value={scheduleEnd}
+                      onChange={e => setScheduleEnd(e.target.value)}
+                      required
                     />
                   </div>
                 </div>
@@ -985,14 +985,14 @@ const TeacherDashboard: React.FC = () => {
               <div className="modal-body db-form">
                 <div className="form-group">
                   <label>Số tiền rút (VND)</label>
-                  <input 
-                    type="number" 
-                    value={withdrawAmount} 
-                    onChange={e => setWithdrawAmount(Number(e.target.value))} 
+                  <input
+                    type="number"
+                    value={withdrawAmount}
+                    onChange={e => setWithdrawAmount(Number(e.target.value))}
                     max={walletBalance}
                     min={50000}
                     step={10000}
-                    required 
+                    required
                   />
                   <small style={{ color: 'var(--text-light)', fontSize: '11px' }}>Số dư ví khả dụng: {formatVND(walletBalance)}</small>
                 </div>
@@ -1008,12 +1008,12 @@ const TeacherDashboard: React.FC = () => {
                   </div>
                   <div className="form-group">
                     <label>Số tài khoản thụ hưởng</label>
-                    <input 
-                      type="text" 
-                      placeholder="Nhập số tài khoản..." 
-                      value={withdrawAccount} 
-                      onChange={e => setWithdrawAccount(e.target.value)} 
-                      required 
+                    <input
+                      type="text"
+                      placeholder="Nhập số tài khoản..."
+                      value={withdrawAccount}
+                      onChange={e => setWithdrawAccount(e.target.value)}
+                      required
                     />
                   </div>
                 </div>
