@@ -23,6 +23,7 @@ const Navbar: React.FC = () => {
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault();
     localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('access_token');
     window.dispatchEvent(new Event('authChange'));
     navigate('/');
   };
@@ -62,6 +63,14 @@ const Navbar: React.FC = () => {
               Bài viết
             </NavLink>
           </li>
+          <li>
+            <NavLink
+              to="/instructors"
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+            >
+              Giảng viên
+            </NavLink>
+          </li>
           <li className="nav-dropdown-wrapper">
             <a
               href="#"
@@ -84,9 +93,14 @@ const Navbar: React.FC = () => {
         {/* Actions */}
         <div className="navbar-actions">
           {isAuthenticated ? (
-            <a href="#" onClick={handleLogout} className="auth-link">
-              Đăng xuất
-            </a>
+            <>
+              <Link to="/student/dashboard" className="auth-link" style={{ marginRight: '16px', fontWeight: 600 }}>
+                Bảng điều khiển
+              </Link>
+              <a href="#" onClick={handleLogout} className="auth-link">
+                Đăng xuất
+              </a>
+            </>
           ) : (
             <NavLink
               to="/auth"

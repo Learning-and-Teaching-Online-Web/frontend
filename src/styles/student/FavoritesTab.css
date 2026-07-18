@@ -1,0 +1,132 @@
+/* Favorites Tab CSS */
+.tutors-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+.tutor-card {
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  gap: 16px;
+  background-color: white;
+  transition: var(--transition);
+  position: relative;
+}
+
+.tutor-card:hover {
+  border-color: var(--border);
+  box-shadow: var(--shadow);
+}
+
+.btn-favorite-remove {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  color: #ef4444;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+  padding: 0;
+}
+
+.btn-favorite-remove:hover {
+  transform: scale(1.1);
+}
+
+.tutor-card-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border-light);
+  flex-shrink: 0;
+}
+
+.tutor-card-details {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.tutor-card-details h3 {
+  font-size: 16px;
+  color: var(--text-dark);
+  margin-bottom: 4px;
+}
+
+.tutor-card-details .tutor-subject {
+  font-size: 13px;
+  color: var(--primary);
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.tutor-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--text-dark);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.tutor-rating svg {
+  color: #fbbf24;
+}
+
+.tutor-rating span {
+  color: var(--text-light);
+  font-weight: 400;
+}
+
+.tutor-bio {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 12px;
+  flex-grow: 1;
+}
+
+.tutor-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border-light);
+  padding-top: 12px;
+}
+
+.tutor-price {
+  font-size: 13px;
+  color: var(--text-dark);
+  font-weight: 600;
+}
+
+.tutor-price span {
+  color: var(--text-light);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.btn-tutor-message {
+  border: 1px solid var(--border);
+  color: var(--text-dark);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  background-color: transparent;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-tutor-message:hover {
+  background-color: var(--text-dark);
+  color: white;
+  border-color: var(--text-dark);
+}

@@ -1,18 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { ChevronUp } from 'lucide-react';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import HomePage from './components/HomePage';
-import CourseList from './components/CourseList';
-import CourseDetail from './components/CourseDetail';
-import AuthPage from './components/AuthPage';
-import FaqPage from './components/FaqPage';
-import ContactPage from './components/ContactPage';
-import BlogList from './components/BlogList';
-import BlogDetail from './components/BlogDetail';
+import Navbar from './layouts/Navbar';
+import Footer from './layouts/Footer';
+import AppRoutes from './routes/AppRoutes';
 
 // Helper component to auto-scroll to top on route change
 function ScrollToTopOnNavigate() {
@@ -54,16 +47,7 @@ function App() {
 
       {/* 2. Main Page Render */}
       <div className="main-content">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/courses" element={<CourseList />} />
-          <Route path="/courses/:courseId" element={<CourseDetail />} />
-          <Route path="/blog" element={<BlogList />} />
-          <Route path="/blog/:articleId" element={<BlogDetail />} />
-          <Route path="/auth" element={<AuthPage />} />
-          <Route path="/faq" element={<FaqPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-        </Routes>
+        <AppRoutes />
       </div>
 
       {/* 3. Footer */}

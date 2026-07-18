@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Grid, List, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
-import { mockArticles } from '../data/blogData';
+import { blogApi } from '../services/blogApi';
 import type { Article } from '../data/blogData';
-import BlogSidebar from './BlogSidebar';
+import BlogSidebar from '../components/BlogSidebar';
 import '../styles/Blog.css';
 
 export const renderBlogIllustration = (type: Article['imageType']) => {
@@ -212,12 +212,37 @@ export const renderBlogIllustration = (type: Article['imageType']) => {
 const BlogList: React.FC = () => {
   const [layout, setLayout] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<string>('default');
+  const [articles, setArticles] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [currentPageNum, setCurrentPageNum] = useState(1);
+
+  useEffect(() => {
+    const fetchArticles = async () => {
+      try {
+        setIsLoading(true);
+        const res = await blogApi.getAll();
+        if (res && res.success && Array.isArray(res.data)) {
+          const mapped = res.data.map((art: any) => ({
+            ...art,
+            content: typeof art.content === 'string' ? JSON.parse(art.content) : art.content,
+            tags: typeof art.tags === 'string' ? JSON.parse(art.tags) : art.tags
+          }));
+          setArticles(mapped);
+        }
+      } catch (err) {
+        console.error('Error fetching articles:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchArticles();
+  }, []);
 
   // Reset page number on filter changes
   const handleSearchChange = (query: string) => {
@@ -241,7 +266,7 @@ const BlogList: React.FC = () => {
 
   // Filtered Articles
   const filteredArticles = useMemo(() => {
-    return mockArticles.filter(article => {
+    return articles.filter(article => {
       // 1. Search text check (title + excerpt)
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
@@ -259,7 +284,7 @@ const BlogList: React.FC = () => {
       }
       return true;
     });
-  }, [searchQuery, selectedCategories, selectedTag]);
+  }, [articles, searchQuery, selectedCategories, selectedTag]);
 
   // Sorted Articles
   const sortedArticles = useMemo(() => {
@@ -355,7 +380,11 @@ const BlogList: React.FC = () => {
             </div>
 
             {/* Articles Grid / List */}
-            {paginatedArticles.length > 0 ? (
+            {isLoading ? (
+              <div style={{ padding: '60px 0', textAlign: 'center', color: 'var(--primary)', fontWeight: 600 }}>
+                Đang tải danh sách bài viết...
+              </div>
+            ) : paginatedArticles.length > 0 ? (
               <div className={`blog-grid ${layout === 'list' ? 'list-view' : ''}`}>
                 {paginatedArticles.map((article) => (
                   <article className="blog-card" key={article.id}>

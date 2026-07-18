@@ -18,5 +18,10 @@ export const authApi = {
   }) => {
     const response = await axiosClient.post('/auth/signup', data);
     return response.data;
+  },
+
+  getProfile: async () => {
+    const response = await axiosClient.get('/auth/profile');
+    return response.data;
   }
 };

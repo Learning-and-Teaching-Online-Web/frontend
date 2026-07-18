@@ -14,10 +14,10 @@ const axiosClient = axios.create({
 axiosClient.interceptors.request.use(
   (config) => {
     // Ví dụ: Lấy token từ localStorage và đính kèm vào header
-    // const token = localStorage.getItem('access_token');
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {

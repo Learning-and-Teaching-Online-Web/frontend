@@ -1,33 +1,60 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { User, Calendar, MessageCircle, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Facebook, Twitter, Instagram, Youtube, Compass } from 'lucide-react';
-import { mockArticles, mockComments } from '../data/blogData';
+import { blogApi } from '../services/blogApi';
+import { mockComments } from '../data/blogData';
 import type { BlogComment } from '../data/blogData';
 import { renderBlogIllustration } from './BlogList';
 import '../styles/Blog.css';
 
 const BlogDetail: React.FC = () => {
   const { articleId } = useParams<{ articleId: string }>();
+  const [articles, setArticles] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const fetchArticles = async () => {
+      try {
+        setIsLoading(true);
+        const res = await blogApi.getAll();
+        if (res && res.success && Array.isArray(res.data)) {
+          const mapped = res.data.map((art: any) => ({
+            ...art,
+            content: typeof art.content === 'string' ? JSON.parse(art.content) : art.content,
+            tags: typeof art.tags === 'string' ? JSON.parse(art.tags) : art.tags
+          }));
+          setArticles(mapped);
+        }
+      } catch (err) {
+        console.error('Error fetching articles:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchArticles();
+  }, []);
 
   // Find current article
   const article = useMemo(() => {
-    return mockArticles.find(a => a.id === articleId) || mockArticles[0];
-  }, [articleId]);
+    if (articles.length === 0) return null;
+    return articles.find(a => a.id === articleId) || articles[0];
+  }, [articles, articleId]);
 
   // Find Prev / Next articles
   const prevArticle = useMemo(() => {
-    const idx = mockArticles.findIndex(a => a.id === article.id);
-    if (idx <= 0) return mockArticles[mockArticles.length - 1];
-    return mockArticles[idx - 1];
-  }, [article]);
+    if (articles.length === 0 || !article) return null;
+    const idx = articles.findIndex(a => a.id === article.id);
+    if (idx <= 0) return articles[articles.length - 1];
+    return articles[idx - 1];
+  }, [articles, article]);
 
   const nextArticle = useMemo(() => {
-    const idx = mockArticles.findIndex(a => a.id === article.id);
-    if (idx === -1 || idx >= mockArticles.length - 1) return mockArticles[0];
-    return mockArticles[idx + 1];
-  }, [article]);
-
-
+    if (articles.length === 0 || !article) return null;
+    const idx = articles.findIndex(a => a.id === article.id);
+    if (idx === -1 || idx >= articles.length - 1) return articles[0];
+    return articles[idx + 1];
+  }, [articles, article]);
 
   // Leave a Comment form states
   const [name, setName] = useState('');
@@ -80,6 +107,22 @@ const BlogDetail: React.FC = () => {
     setEmail('');
     setCommentText('');
   };
+
+  if (isLoading) {
+    return (
+      <div className="blog-detail-page-wrapper" style={{ padding: '80px 0', textAlign: 'center', color: 'var(--primary)', fontWeight: 600 }}>
+        Đang tải bài viết...
+      </div>
+    );
+  }
+
+  if (!article) {
+    return (
+      <div className="blog-detail-page-wrapper" style={{ padding: '80px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
+        Không tìm thấy bài viết yêu cầu. <Link to="/blog">Quay lại danh sách</Link>
+      </div>
+    );
+  }
 
   return (
     <div className="blog-detail-page-wrapper">

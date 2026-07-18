@@ -1,15 +1,92 @@
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Clock, Users, BookOpen, HelpCircle, Star, Award } from 'lucide-react';
-import { mockCourses } from '../data/mockData';
+import { toast } from 'react-toastify';
+import { courseApi, mapBackendCourseToFrontend } from '../services/courseApi';
+import { bookingApi } from '../services/bookingApi';
 import '../styles/CourseDetail.css';
 
 const CourseDetail: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'overview' | 'curriculum' | 'instructor' | 'faqs' | 'reviews'>('overview');
   const [commentForm, setCommentForm] = useState({ name: '', email: '', comment: '', saveDetails: false });
+  const [course, setCourse] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const course = mockCourses.find(c => c.course_id === courseId);
+  useEffect(() => {
+    const fetchCourseDetail = async () => {
+      if (!courseId) return;
+      try {
+        setIsLoading(true);
+        const res = await courseApi.getDetail(courseId);
+        if (res && res.success && res.data) {
+          const mapped = mapBackendCourseToFrontend(res.data);
+          setCourse(mapped);
+        } else {
+          setCourse(null);
+        }
+      } catch (err) {
+        console.error('Error fetching course detail:', err);
+        setCourse(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCourseDetail();
+  }, [courseId]);
+
+  const handleStartNow = async () => {
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    if (!isAuthenticated) {
+      toast.warning('Bạn cần đăng nhập để đăng ký khóa học. Đang chuyển hướng...');
+      setTimeout(() => navigate('/auth'), 2000);
+      return;
+    }
+
+    if (!courseId || !course) return;
+
+    // Khóa học có phí → chưa hỗ trợ thanh toán
+    if (!course.isFree) {
+      toast.info('Khóa học này có phí. Tính năng thanh toán đang được phát triển. Vui lòng liên hệ để được hỗ trợ.');
+      return;
+    }
+
+    // Khóa học miễn phí → đăng ký ngay
+    // Tìm schedule trống nếu có (optional với khóa free)
+    const schedules = course.schedules || [];
+    const availableSchedule = schedules.find((s: any) => !s.is_booked);
+
+    try {
+      toast.info('Đang xử lý đăng ký khóa học...');
+      const res = await bookingApi.create({
+        courseId: courseId,
+        scheduleId: availableSchedule?.schedule_id, // optional - có thể undefined
+        notes: 'Đăng ký học miễn phí từ NovaLearn'
+      });
+
+      if (res && res.success) {
+        toast.success('Đăng ký khóa học miễn phí thành công! Chuyển đến bảng điều khiển...');
+        setTimeout(() => navigate('/student/dashboard'), 1500);
+      } else {
+        toast.error(res.error || 'Có lỗi xảy ra khi đăng ký khóa học.');
+      }
+    } catch (err: any) {
+      console.error('Error booking course:', err);
+      const msg = err.response?.data?.error || err.message || 'Có lỗi xảy ra khi kết nối hệ thống.';
+      toast.error(msg);
+    }
+  };
+
+
+  if (isLoading) {
+    return (
+      <div className="container" style={{ padding: '80px 0', textAlign: 'center', color: 'var(--primary)', fontWeight: 600 }}>
+        Đang tải thông tin chi tiết khóa học...
+      </div>
+    );
+  }
 
   if (!course) {
     return (
@@ -117,10 +194,17 @@ const CourseDetail: React.FC = () => {
 
               <button 
                 className="start-now-btn"
-                onClick={() => alert(`Đăng ký khóa học "${course.title}" thành công!`)}
+                onClick={handleStartNow}
+                style={course.isFree ? { background: 'linear-gradient(135deg, #10b981, #059669)' } : {}}
               >
-                Bắt đầu ngay
+                {course.isFree ? '🎓 Đăng ký miễn phí ngay' : '💳 Đăng ký (Sắp hỗ trợ thanh toán)'}
               </button>
+              {course.isFree && (
+                <p style={{ textAlign: 'center', fontSize: '13px', color: '#10b981', marginTop: '8px', fontWeight: 500 }}>
+                  ✓ Hoàn toàn miễn phí, không cần thẻ tín dụng
+                </p>
+              )}
+
             </div>
           </div>
         </div>
@@ -188,13 +272,32 @@ const CourseDetail: React.FC = () => {
               )}
 
               {activeTab === 'instructor' && (
-                <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                  <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 'bold', color: 'var(--primary)' }}>
-                    {course.instructor.charAt(0)}
+                <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', padding: '8px 0' }}>
+                  {/* Avatar */}
+                  <div style={{ flexShrink: 0 }}>
+                    {course.instructorAvatar ? (
+                      <img
+                        src={course.instructorAvatar}
+                        alt={course.instructor}
+                        style={{ width: '90px', height: '90px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--primary)' }}
+                      />
+                    ) : (
+                      <div style={{ width: '90px', height: '90px', borderRadius: '50%', backgroundColor: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', fontWeight: 'bold', color: '#fff' }}>
+                        {course.instructor.charAt(0).toUpperCase()}
+                      </div>
+                    )}
                   </div>
+                  {/* Info */}
                   <div>
-                    <h4 style={{ fontSize: '20px' }}>{course.instructor}</h4>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '4px' }}>Giáo viên chuyên nghiệp hơn 10 năm kinh nghiệm giảng dạy lĩnh vực {course.subject}.</p>
+                    <h4 style={{ fontSize: '20px', marginBottom: '4px' }}>{course.instructor}</h4>
+                    {course.instructorSpecialization && (
+                      <p style={{ color: 'var(--primary)', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>
+                        {course.instructorSpecialization}
+                      </p>
+                    )}
+                    <p style={{ color: 'var(--text-muted)', fontSize: '14px', lineHeight: '1.6' }}>
+                      {course.instructorBio || `Giáo viên chuyên nghiệp hơn 10 năm kinh nghiệm giảng dạy lĩnh vực ${course.subject}.`}
+                    </p>
                   </div>
                 </div>
               )}

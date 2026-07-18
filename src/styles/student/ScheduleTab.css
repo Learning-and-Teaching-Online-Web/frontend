@@ -1,0 +1,119 @@
+/* Schedule Tab CSS */
+.schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.schedule-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background-color: var(--bg-light);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  transition: var(--transition);
+}
+
+.schedule-item:hover {
+  border-color: var(--border);
+  background-color: #ffffff;
+  box-shadow: var(--shadow);
+}
+
+.schedule-time-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  width: 70px;
+  height: 70px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.time-box-day {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-dark);
+  font-family: var(--outfit);
+}
+
+.time-box-month {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+.schedule-details {
+  flex-grow: 1;
+  margin-left: 20px;
+}
+
+.schedule-details h3 {
+  font-size: 16px;
+  color: var(--text-dark);
+  margin-bottom: 6px;
+}
+
+.schedule-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.schedule-meta span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.status-badge.scheduled {
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+
+.status-badge.completed {
+  background-color: #ecfdf5;
+  color: #059669;
+}
+
+.status-badge.cancelled {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
+.btn-meeting-link {
+  background-color: #ffffff;
+  border: 1px solid var(--border);
+  color: var(--text-dark);
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: var(--transition);
+  text-decoration: none;
+}
+
+.btn-meeting-link:hover {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
