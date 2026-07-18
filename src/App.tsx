@@ -55,9 +55,9 @@ function App() {
 
       {/* 4. Scroll To Top Button */}
       {showScrollTop && (
-        <button 
-          className="scroll-top-btn" 
-          onClick={scrollToTop} 
+        <button
+          className="scroll-top-btn"
+          onClick={scrollToTop}
           aria-label="Scroll to top"
         >
           <ChevronUp size={20} />

@@ -9,13 +9,15 @@ const Navbar: React.FC = () => {
   const isPageActive = location.pathname === '/faq' || location.pathname === '/contact';
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAuth = () => {
       setIsAuthenticated(localStorage.getItem('isAuthenticated') === 'true');
+      setUserRole(localStorage.getItem('userRole'));
     };
     checkAuth();
-    
+
     window.addEventListener('authChange', checkAuth);
     return () => window.removeEventListener('authChange', checkAuth);
   }, []);
@@ -24,6 +26,8 @@ const Navbar: React.FC = () => {
     e.preventDefault();
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('access_token');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userName');
     window.dispatchEvent(new Event('authChange'));
     navigate('/');
   };
@@ -94,9 +98,19 @@ const Navbar: React.FC = () => {
         <div className="navbar-actions">
           {isAuthenticated ? (
             <>
-              <Link to="/student/dashboard" className="auth-link" style={{ marginRight: '16px', fontWeight: 600 }}>
-                Bảng điều khiển
-              </Link>
+              {userRole === 'tutor' ? (
+                <NavLink
+                  to="/teacher/dashboard"
+                  className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                  style={{ marginRight: '15px', fontWeight: 600, color: '#4f46e5' }}
+                >
+                  Kênh Gia Sư
+                </NavLink>
+              ) : (
+                <Link to="/student/dashboard" className="auth-link" style={{ marginRight: '16px', fontWeight: 600 }}>
+                  Kênh Học Viên
+                </Link>
+              )}
               <a href="#" onClick={handleLogout} className="auth-link">
                 Đăng xuất
               </a>
@@ -112,9 +126,9 @@ const Navbar: React.FC = () => {
           <button className="search-trigger" aria-label="Tìm kiếm">
             <Search size={18} />
           </button>
-        </div>
-      </div>
-    </nav>
+        </div >
+      </div >
+    </nav >
   );
 };
 
