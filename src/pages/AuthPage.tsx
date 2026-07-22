@@ -134,7 +134,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
         role: registerRole
       });
 
-      if (response.data.success) {
+      if (response.success) {
         // Auto-login after successful registration
         try {
           const loginRes = await authApi.login({
