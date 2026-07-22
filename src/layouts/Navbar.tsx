@@ -98,7 +98,15 @@ const Navbar: React.FC = () => {
         <div className="navbar-actions">
           {isAuthenticated ? (
             <>
-              {userRole === 'tutor' ? (
+              {userRole === 'admin' ? (
+                <NavLink
+                  to="/admin"
+                  className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                  style={{ marginRight: '15px', fontWeight: 600, color: '#e11d48' }}
+                >
+                  Kênh Admin
+                </NavLink>
+              ) : userRole === 'tutor' ? (
                 <NavLink
                   to="/teacher/dashboard"
                   className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}

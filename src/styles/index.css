@@ -71,6 +71,11 @@ button {
   flex-grow: 1;
 }
 
+.admin-app-wrapper {
+  flex-grow: 1;
+  min-height: 100vh;
+}
+
 /* Container */
 .container {
   max-width: 1200px;

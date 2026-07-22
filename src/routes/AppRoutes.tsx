@@ -12,6 +12,14 @@ import StudentDashboard from '../pages/StudentDashboard';
 import InstructorList from '../pages/InstructorList';
 import TeacherDashboard from '../components/TeacherDashboard';
 
+// Admin pages
+import AdminDashboard from '../pages/admin/AdminDashboard';
+import UserManagement from '../pages/admin/UserManagement';
+import StudentManagement from '../pages/admin/StudentManagement';
+import TutorVerification from '../pages/admin/TutorVerification';
+import CourseModeration from '../pages/admin/CourseModeration';
+import TransactionHistory from '../pages/admin/TransactionHistory';
+
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
@@ -26,6 +34,14 @@ const AppRoutes: React.FC = () => {
       <Route path="/student/dashboard" element={<StudentDashboard />} />
       <Route path="/instructors" element={<InstructorList />} />
       <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
+
+      {/* Admin Panel routes */}
+      <Route path="/admin" element={<AdminDashboard />} />
+      <Route path="/admin/users" element={<UserManagement />} />
+      <Route path="/admin/students" element={<StudentManagement />} />
+      <Route path="/admin/tutors" element={<TutorVerification />} />
+      <Route path="/admin/courses" element={<CourseModeration />} />
+      <Route path="/admin/payouts" element={<TransactionHistory />} />
     </Routes>
   );
 };
