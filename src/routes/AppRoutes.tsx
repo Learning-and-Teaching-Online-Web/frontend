@@ -13,6 +13,7 @@ import InstructorList from '../pages/InstructorList';
 import TeacherDashboard from '../components/TeacherDashboard';
 
 // Admin pages
+import AdminLogin from '../pages/admin/AdminLogin';
 import AdminDashboard from '../pages/admin/AdminDashboard';
 import UserManagement from '../pages/admin/UserManagement';
 import StudentManagement from '../pages/admin/StudentManagement';
@@ -36,6 +37,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
 
       {/* Admin Panel routes */}
+      <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="/admin" element={<AdminDashboard />} />
       <Route path="/admin/users" element={<UserManagement />} />
       <Route path="/admin/students" element={<StudentManagement />} />

@@ -45,10 +45,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onLogout }) => {
       </div>
 
       <div className="admin-sidebar-footer">
-        <Link to="/" className="admin-sidebar-item" style={{ marginBottom: '8px' }}>
-          <ArrowLeft size={20} />
-          <span>Về trang chủ</span>
-        </Link>
         <button onClick={onLogout} className="admin-logout-btn">
           <LogOut size={20} />
           <span>Đăng xuất</span>

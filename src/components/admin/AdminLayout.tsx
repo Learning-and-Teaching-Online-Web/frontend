@@ -19,7 +19,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
     const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
     if (!isAuthenticated || userRole !== 'admin') {
       toast.error('Bạn không có quyền truy cập trang quản trị!');
-      navigate('/auth');
+      navigate('/admin/login');
     }
   }, [navigate, userRole]);
 
@@ -30,7 +30,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
     localStorage.removeItem('userName');
     window.dispatchEvent(new Event('authChange'));
     toast.success('Đăng xuất tài khoản quản trị thành công!');
-    navigate('/auth');
+    navigate('/admin/login');
   };
 
   return (
