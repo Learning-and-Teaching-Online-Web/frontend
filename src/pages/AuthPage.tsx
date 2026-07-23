@@ -76,7 +76,13 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
 
       window.dispatchEvent(new Event('authChange'));
       toast.success('Đăng nhập thành công!');
-      navigate('/');
+      if (role === 'admin') {
+        navigate('/admin');
+      } else if (role === 'tutor') {
+        navigate('/teacher/dashboard');
+      } else {
+        navigate('/');
+      }
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
     } finally {
@@ -134,7 +140,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
         role: registerRole
       });
 
-      if (response.data.success) {
+      if (response.success) {
         // Auto-login after successful registration
         try {
           const loginRes = await authApi.login({

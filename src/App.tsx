@@ -19,6 +19,8 @@ function ScrollToTopOnNavigate() {
 }
 
 function App() {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
   const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
 
   // Handle scroll event to display scroll-to-top button
@@ -42,19 +44,19 @@ function App() {
     <div className="app-container">
       <ScrollToTopOnNavigate />
 
-      {/* 1. Navigation Bar */}
-      <Navbar />
+      {/* 1. Navigation Bar (Only on public client pages) */}
+      {!isAdminRoute && <Navbar />}
 
       {/* 2. Main Page Render */}
-      <div className="main-content">
+      <div className={isAdminRoute ? "admin-app-wrapper" : "main-content"}>
         <AppRoutes />
       </div>
 
-      {/* 3. Footer */}
-      <Footer />
+      {/* 3. Footer (Only on public client pages) */}
+      {!isAdminRoute && <Footer />}
 
       {/* 4. Scroll To Top Button */}
-      {showScrollTop && (
+      {!isAdminRoute && showScrollTop && (
         <button
           className="scroll-top-btn"
           onClick={scrollToTop}
