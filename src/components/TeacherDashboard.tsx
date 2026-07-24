@@ -10,7 +10,8 @@ import {
   Plus,
   X,
   DollarSign,
-  Users
+  Users,
+  Award
 } from 'lucide-react';
 
 import '../styles/TeacherDashboard.css';
@@ -22,6 +23,8 @@ import { BookingsTab } from './teacher/tabs/BookingsTab';
 import { ArticlesTab } from './teacher/tabs/ArticlesTab';
 import { ReviewsTab } from './teacher/tabs/ReviewsTab';
 import { WalletTab } from './teacher/tabs/WalletTab';
+import { ProfileTab } from './teacher/tabs/ProfileTab';
+import { VerificationBanner } from './teacher/VerificationBanner';
 
 const TeacherDashboard: React.FC = () => {
   const {
@@ -30,6 +33,7 @@ const TeacherDashboard: React.FC = () => {
     isLoading,
     teacherName,
     stats,
+    tutorProfile,
     courses,
     bookings,
     reviews,
@@ -39,6 +43,19 @@ const TeacherDashboard: React.FC = () => {
     allSchedules,
     formatVND,
     formatDateString,
+    // Profile & Certificate Actions
+    handleUpdateProfileSubmit,
+    isCertModalOpen, setIsCertModalOpen,
+    certTitle, setCertTitle,
+    certFileUrl, setCertFileUrl,
+    selectedCertFile, setSelectedCertFile,
+    certFileType, setCertFileType,
+    certIssuedBy, setCertIssuedBy,
+    certIssuedDate, setCertIssuedDate,
+    certExpiryDate, setCertExpiryDate,
+    openAddCertModal,
+    handleAddCertSubmit,
+    handleDeleteCert,
     // Modals & Course Actions
     isCourseModalOpen, setIsCourseModalOpen,
     editingCourse,
@@ -166,6 +183,15 @@ const TeacherDashboard: React.FC = () => {
             </li>
             <li>
               <button
+                className={`menu-item-btn ${activeTab === 'profile' ? 'active' : ''}`}
+                onClick={() => setActiveTab('profile')}
+              >
+                <Award size={18} />
+                Hồ sơ & Chứng chỉ
+              </button>
+            </li>
+            <li>
+              <button
                 className={`menu-item-btn ${activeTab === 'wallet' ? 'active' : ''}`}
                 onClick={() => setActiveTab('wallet')}
               >
@@ -178,6 +204,12 @@ const TeacherDashboard: React.FC = () => {
 
         {/* MAIN DASHBOARD PANELS */}
         <main className="dashboard-main">
+
+          {/* VERIFICATION STATUS BANNER */}
+          <VerificationBanner
+            status={tutorProfile?.verified_status || 'pending'}
+            onGoToProfile={() => setActiveTab('profile')}
+          />
 
           {/* STATS OVERVIEW CARDS */}
           <section className="stats-grid">
@@ -233,6 +265,16 @@ const TeacherDashboard: React.FC = () => {
               setIsWithdrawModalOpen={setIsWithdrawModalOpen}
               handleConfirmBooking={handleConfirmBooking}
               handleCancelBooking={handleCancelBooking}
+            />
+          )}
+
+          {activeTab === 'profile' && (
+            <ProfileTab
+              tutorProfile={tutorProfile}
+              handleUpdateProfileSubmit={handleUpdateProfileSubmit}
+              openAddCertModal={openAddCertModal}
+              handleDeleteCert={handleDeleteCert}
+              formatVND={formatVND}
             />
           )}
 
@@ -495,6 +537,107 @@ const TeacherDashboard: React.FC = () => {
               <div className="modal-actions">
                 <button type="button" className="btn-secondary-db" onClick={() => setIsWithdrawModalOpen(false)}>Hủy</button>
                 <button type="submit" className="btn-primary-db">Gửi yêu cầu rút tiền</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 4: ADD CERTIFICATE */}
+      {isCertModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <div className="modal-header">
+              <h3>Thêm chứng chỉ / bằng cấp mới</h3>
+              <button onClick={() => setIsCertModalOpen(false)} className="btn-close"><X size={20} /></button>
+            </div>
+            <form onSubmit={handleAddCertSubmit}>
+              <div className="form-group-db">
+                <label>Tên chứng chỉ / bằng cấp *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="VD: Bằng Cử nhân Sư phạm Toán, IELTS 8.0..."
+                  value={certTitle}
+                  onChange={(e) => setCertTitle(e.target.value)}
+                />
+              </div>
+
+              <div className="form-group-db">
+                <label>Tải tệp từ máy tính (PDF, PNG, JPG) *</label>
+                <input
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg"
+                  onChange={(e) => {
+                    const file = e.target.files ? e.target.files[0] : null;
+                    setSelectedCertFile(file);
+                  }}
+                />
+                {selectedCertFile ? (
+                  <div style={{ fontSize: '12px', color: '#059669', marginTop: '6px', fontWeight: 600 }}>
+                    ✓ Đã chọn: {selectedCertFile.name} ({(selectedCertFile.size / (1024 * 1024)).toFixed(2)} MB)
+                  </div>
+                ) : (
+                  <span style={{ fontSize: '11px', color: 'var(--text-light)', marginTop: '4px' }}>
+                    Chọn tệp minh chứng từ máy tính của bạn để tải lên Supabase Storage tự động.
+                  </span>
+                )}
+              </div>
+
+              <div className="form-group-db">
+                <label>Hoặc nhập URL tệp trực tiếp (nếu có)</label>
+                <input
+                  type="url"
+                  placeholder="https://..."
+                  value={certFileUrl}
+                  onChange={(e) => setCertFileUrl(e.target.value)}
+                />
+              </div>
+
+              <div className="form-row-db">
+                <div className="form-group-db">
+                  <label>Định dạng tệp</label>
+                  <select value={certFileType} onChange={(e) => setCertFileType(e.target.value)}>
+                    <option value="PDF">Tệp PDF</option>
+                    <option value="PNG">Hình ảnh PNG</option>
+                    <option value="JPG">Hình ảnh JPG</option>
+                  </select>
+                </div>
+
+                <div className="form-group-db">
+                  <label>Nơi cấp (Trường / Tổ chức)</label>
+                  <input
+                    type="text"
+                    placeholder="VD: ĐH Sư phạm Hà Nội, British Council..."
+                    value={certIssuedBy}
+                    onChange={(e) => setCertIssuedBy(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="form-row-db">
+                <div className="form-group-db">
+                  <label>Ngày cấp</label>
+                  <input
+                    type="date"
+                    value={certIssuedDate}
+                    onChange={(e) => setCertIssuedDate(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group-db">
+                  <label>Ngày hết hạn (nếu có)</label>
+                  <input
+                    type="date"
+                    value={certExpiryDate}
+                    onChange={(e) => setCertExpiryDate(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" className="btn-secondary-db" onClick={() => setIsCertModalOpen(false)}>Hủy</button>
+                <button type="submit" className="btn-primary-db">Gửi chứng chỉ</button>
               </div>
             </form>
           </div>

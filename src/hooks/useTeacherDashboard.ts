@@ -13,7 +13,7 @@ export interface DashboardStats {
   activeSchedules: number;
 }
 
-export type TeacherTab = 'overview' | 'courses' | 'schedules' | 'bookings' | 'articles' | 'reviews' | 'wallet';
+export type TeacherTab = 'overview' | 'courses' | 'schedules' | 'bookings' | 'articles' | 'reviews' | 'wallet' | 'profile';
 
 export const useTeacherDashboard = () => {
   const navigate = useNavigate();
@@ -28,6 +28,7 @@ export const useTeacherDashboard = () => {
     averageRating: 0,
     activeSchedules: 0
   });
+  const [tutorProfile, setTutorProfile] = useState<any | null>(null);
   const [courses, setCourses] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
@@ -45,6 +46,16 @@ export const useTeacherDashboard = () => {
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [isArticleModalOpen, setIsArticleModalOpen] = useState(false);
   const [editingArticle, setEditingArticle] = useState<any | null>(null);
+  const [isCertModalOpen, setIsCertModalOpen] = useState(false);
+
+  // Form States - Certificate
+  const [certTitle, setCertTitle] = useState('');
+  const [certFileUrl, setCertFileUrl] = useState('');
+  const [selectedCertFile, setSelectedCertFile] = useState<File | null>(null);
+  const [certFileType, setCertFileType] = useState('PDF');
+  const [certIssuedBy, setCertIssuedBy] = useState('');
+  const [certIssuedDate, setCertIssuedDate] = useState('');
+  const [certExpiryDate, setCertExpiryDate] = useState('');
 
   // Form States - Course
   const [newCourseTitle, setNewCourseTitle] = useState('');
@@ -77,6 +88,10 @@ export const useTeacherDashboard = () => {
   const loadDashboardData = async () => {
     setIsLoading(true);
     try {
+      // 0. Fetch My Profile & Certificates
+      const profileRes = await tutorApi.getMyProfile();
+      if (profileRes.success) setTutorProfile(profileRes.data);
+
       // 1. Fetch Stats
       const statsRes = await tutorApi.getStats();
       if (statsRes.success) setStats(statsRes.data);
@@ -414,6 +429,111 @@ export const useTeacherDashboard = () => {
     }
   };
 
+  // Profile & Certificate Handlers
+  const handleUpdateProfileSubmit = async (data: any) => {
+    try {
+      const res = await tutorApi.updateMyProfile(data);
+      if (res && res.success) {
+        toast.success('Cập nhật thông tin hồ sơ thành công!');
+        loadDashboardData();
+      } else {
+        toast.error(res?.error || 'Không thể cập nhật hồ sơ.');
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Có lỗi xảy ra khi cập nhật hồ sơ.');
+    }
+  };
+
+  const openAddCertModal = () => {
+    setCertTitle('');
+    setCertFileUrl('');
+    setSelectedCertFile(null);
+    setCertFileType('PDF');
+    setCertIssuedBy('');
+    setCertIssuedDate('');
+    setCertExpiryDate('');
+    setIsCertModalOpen(true);
+  };
+
+  const handleAddCertSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!certTitle.trim()) {
+      toast.error('Vui lòng nhập Tên chứng chỉ/bằng cấp.');
+      return;
+    }
+
+    if (!selectedCertFile && !certFileUrl.trim()) {
+      toast.error('Vui lòng chọn tệp chứng chỉ từ máy tính hoặc cung cấp đường dẫn tệp.');
+      return;
+    }
+
+    try {
+      if (selectedCertFile) {
+        const reader = new FileReader();
+        reader.onload = async () => {
+          try {
+            const base64Str = reader.result as string;
+            const res = await tutorApi.addCertificate({
+              title: certTitle.trim(),
+              file_base64: base64Str,
+              file_name: selectedCertFile.name,
+              file_type: certFileType,
+              issued_by: certIssuedBy.trim() || undefined,
+              issued_date: certIssuedDate || undefined,
+              expiry_date: certExpiryDate || undefined
+            });
+
+            if (res && res.success) {
+              toast.success('Đã tải lên tệp chứng chỉ tới Supabase Storage! Đang chờ Admin xét duyệt.');
+              setIsCertModalOpen(false);
+              setSelectedCertFile(null);
+              loadDashboardData();
+            } else {
+              toast.error(res?.error || 'Gửi chứng chỉ thất bại.');
+            }
+          } catch (err: any) {
+            toast.error(err.response?.data?.error || 'Không thể tải lên tệp chứng chỉ.');
+          }
+        };
+        reader.readAsDataURL(selectedCertFile);
+      } else {
+        const res = await tutorApi.addCertificate({
+          title: certTitle.trim(),
+          file_url: certFileUrl.trim(),
+          file_type: certFileType,
+          issued_by: certIssuedBy.trim() || undefined,
+          issued_date: certIssuedDate || undefined,
+          expiry_date: certExpiryDate || undefined
+        });
+
+        if (res && res.success) {
+          toast.success('Gửi chứng chỉ mới thành công! Đang chờ Admin xét duyệt.');
+          setIsCertModalOpen(false);
+          loadDashboardData();
+        } else {
+          toast.error(res?.error || 'Gửi chứng chỉ thất bại.');
+        }
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Không thể gửi chứng chỉ.');
+    }
+  };
+
+  const handleDeleteCert = async (certId: string, title: string) => {
+    if (!window.confirm(`Bạn có chắc muốn xóa chứng chỉ "${title}"?`)) return;
+    try {
+      const res = await tutorApi.deleteCertificate(certId);
+      if (res && res.success) {
+        toast.success('Xóa chứng chỉ thành công!');
+        loadDashboardData();
+      } else {
+        toast.error(res?.error || 'Xóa chứng chỉ thất bại.');
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Không thể xóa chứng chỉ.');
+    }
+  };
+
   const allSchedules = courses.reduce((acc: any[], course) => {
     const courseSchedules = (course.schedules || []).map((sch: any) => ({
       ...sch,
@@ -429,6 +549,7 @@ export const useTeacherDashboard = () => {
     isLoading,
     teacherName,
     stats,
+    tutorProfile,
     courses,
     bookings,
     reviews,
@@ -438,6 +559,19 @@ export const useTeacherDashboard = () => {
     allSchedules,
     formatVND,
     formatDateString,
+    // Profile & Certificate Handlers
+    handleUpdateProfileSubmit,
+    isCertModalOpen, setIsCertModalOpen,
+    certTitle, setCertTitle,
+    certFileUrl, setCertFileUrl,
+    selectedCertFile, setSelectedCertFile,
+    certFileType, setCertFileType,
+    certIssuedBy, setCertIssuedBy,
+    certIssuedDate, setCertIssuedDate,
+    certExpiryDate, setCertExpiryDate,
+    openAddCertModal,
+    handleAddCertSubmit,
+    handleDeleteCert,
     // Modals & Course Actions
     isCourseModalOpen, setIsCourseModalOpen,
     editingCourse, setEditingCourse,
