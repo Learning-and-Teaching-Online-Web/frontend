@@ -171,7 +171,7 @@ const BlogDetail: React.FC = () => {
 
               {/* Body */}
               <div className="blog-detail-body">
-                {article.content.map((paragraph, index) => (
+                {article.content.map((paragraph: string, index: number) => (
                   <p key={index}>{paragraph}</p>
                 ))}
               </div>
@@ -179,7 +179,7 @@ const BlogDetail: React.FC = () => {
               {/* Tags */}
               <div className="blog-detail-tags">
                 <span className="blog-detail-tags-title">Thẻ:</span>
-                {article.tags.map((tag, idx) => (
+                {article.tags.map((tag: string, idx: number) => (
                   <span className="blog-detail-tag" key={idx}>{tag}</span>
                 ))}
               </div>

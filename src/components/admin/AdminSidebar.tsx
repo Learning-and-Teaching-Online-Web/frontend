@@ -5,9 +5,9 @@ import {
   Users, 
   GraduationCap, 
   BookOpen, 
+  FileText,
   CreditCard, 
-  LogOut, 
-  ArrowLeft 
+  LogOut
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -22,6 +22,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onLogout }) => {
     { path: '/admin/students', label: 'Học viên', icon: <Users size={20} /> },
     { path: '/admin/tutors', label: 'Giảng viên', icon: <GraduationCap size={20} /> },
     { path: '/admin/courses', label: 'Khóa học', icon: <BookOpen size={20} /> },
+    { path: '/admin/articles', label: 'Bài viết Blog', icon: <FileText size={20} /> },
     { path: '/admin/payouts', label: 'Giao dịch & Rút tiền', icon: <CreditCard size={20} /> },
   ];
 

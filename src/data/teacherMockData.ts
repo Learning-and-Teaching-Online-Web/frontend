@@ -60,7 +60,7 @@ export interface TeacherBooking {
   start_time: string;
   end_time: string;
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
-  payment_status: 'paid' | 'unpaid';
+  payment_status: 'paid' | 'unpaid' | 'refunded';
   amount: number;
   created_at: string;
 }

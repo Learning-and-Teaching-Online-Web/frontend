@@ -22,6 +22,7 @@ import StudentManagement from '../pages/admin/StudentManagement';
 import TutorVerification from '../pages/admin/TutorVerification';
 import CourseModeration from '../pages/admin/CourseModeration';
 import TransactionHistory from '../pages/admin/TransactionHistory';
+import ArticleManagement from '../pages/admin/ArticleManagement';
 
 const AppRoutes: React.FC = () => {
   return (
@@ -55,6 +56,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/admin/students" element={<StudentManagement />} />
         <Route path="/admin/tutors" element={<TutorVerification />} />
         <Route path="/admin/courses" element={<CourseModeration />} />
+        <Route path="/admin/articles" element={<ArticleManagement />} />
         <Route path="/admin/payouts" element={<TransactionHistory />} />
       </Route>
 
