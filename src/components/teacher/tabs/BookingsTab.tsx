@@ -85,7 +85,7 @@ export const BookingsTab: React.FC<BookingsTabProps> = ({
                         className="btn-action-danger"
                         onClick={() => handleCancelBooking(b.booking_id)}
                       >
-                        Hủy buổi học
+                        Hủy khóa học
                       </button>
                     )}
                     {b.status !== 'pending' && b.status !== 'confirmed' && (

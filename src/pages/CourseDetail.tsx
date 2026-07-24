@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Clock, Users, BookOpen, HelpCircle, Star, Award, LogIn, Trash2, AlertCircle, CheckCircle2, Video, FileText, ExternalLink, PlayCircle, X } from 'lucide-react';
+import { Clock, Users, BookOpen, HelpCircle, Star, Award, LogIn, Trash2, AlertCircle, CheckCircle2, Video, FileText, ExternalLink, PlayCircle, X, Heart } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { courseApi, mapBackendCourseToFrontend } from '../services/courseApi';
 import { bookingApi } from '../services/bookingApi';
+import { favoriteApi } from '../services/favoriteApi';
 import authStorage from '../utils/authStorage';
 import '../styles/CourseDetail.css';
 
@@ -14,6 +15,7 @@ const CourseDetail: React.FC = () => {
   const [course, setCourse] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [selectedLessonModal, setSelectedLessonModal] = useState<any | null>(null);
+  const [isFavoriteTutor, setIsFavoriteTutor] = useState<boolean>(false);
 
   const getEmbedUrl = (url: string) => {
     if (!url) return null;
@@ -64,6 +66,18 @@ const CourseDetail: React.FC = () => {
         if (res && res.success && res.data) {
           const mapped = mapBackendCourseToFrontend(res.data);
           setCourse(mapped);
+          
+          if (mapped.tutor_id && isAuthenticated) {
+            try {
+              const favRes = await favoriteApi.getMyFavorites();
+              if (favRes && favRes.success && Array.isArray(favRes.data)) {
+                const isFav = favRes.data.some((f: any) => f.tutor?.tutor_id === mapped.tutor_id);
+                setIsFavoriteTutor(isFav);
+              }
+            } catch (favErr) {
+              console.error('Error fetching favorites:', favErr);
+            }
+          }
         } else {
           setCourse(null);
         }
@@ -79,7 +93,32 @@ const CourseDetail: React.FC = () => {
     if (courseId) {
       fetchCourseComments(courseId);
     }
-  }, [courseId]);
+  }, [courseId, isAuthenticated]);
+
+  const handleToggleFavoriteTutor = async () => {
+    if (!isAuthenticated) {
+      toast.warning('Bạn cần đăng nhập tài khoản Học viên để yêu thích giảng viên.');
+      return;
+    }
+    if (!course || !course.tutor_id) return;
+
+    try {
+      const res = await favoriteApi.toggleFavorite(course.tutor_id);
+      if (res && res.success) {
+        setIsFavoriteTutor(!isFavoriteTutor);
+        if (!isFavoriteTutor) {
+          toast.success(`Đã thêm ${course.instructor} vào danh sách giảng viên yêu thích! ❤️`);
+        } else {
+          toast.info(`Đã xóa ${course.instructor} khỏi danh sách yêu thích.`);
+        }
+      } else {
+        toast.error(res?.error || 'Không thể thay đổi trạng thái yêu thích.');
+      }
+    } catch (err: any) {
+      console.error('Error toggling favorite tutor:', err);
+      toast.error(err.response?.data?.error || 'Có lỗi xảy ra khi lưu giảng viên yêu thích.');
+    }
+  };
 
   const handleStartNow = async () => {
     if (!isAuthenticated) {
@@ -477,6 +516,26 @@ const CourseDetail: React.FC = () => {
                     <p style={{ color: 'var(--text-muted)', fontSize: '14px', lineHeight: '1.6' }}>
                       {course.instructorBio || `Giáo viên chuyên nghiệp có nhiều năm kinh nghiệm giảng dạy lĩnh vực ${course.subject}.`}
                     </p>
+                    <button
+                      onClick={handleToggleFavoriteTutor}
+                      style={{
+                        marginTop: '12px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '6px 14px',
+                        borderRadius: '6px',
+                        border: '1px solid var(--border)',
+                        background: isFavoriteTutor ? '#fef2f2' : '#fff',
+                        color: isFavoriteTutor ? '#ef4444' : 'var(--text-main)',
+                        fontWeight: 600,
+                        fontSize: '13px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <Heart size={16} fill={isFavoriteTutor ? '#ef4444' : 'none'} color={isFavoriteTutor ? '#ef4444' : '#64748b'} />
+                      {isFavoriteTutor ? 'Đã yêu thích giảng viên' : 'Yêu thích giảng viên'}
+                    </button>
                   </div>
                 </div>
               )}

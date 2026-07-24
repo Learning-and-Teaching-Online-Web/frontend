@@ -1,20 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { User, Award, Plus, Trash2, ExternalLink, Save, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { User, Award, Plus, Trash2, ExternalLink, Save, CheckCircle, Clock, XCircle, Camera } from 'lucide-react';
 
 interface ProfileTabProps {
   tutorProfile: any | null;
   handleUpdateProfileSubmit: (data: any) => Promise<void>;
   openAddCertModal: () => void;
   handleDeleteCert: (certId: string, title: string) => Promise<void>;
-  formatVND: (n: number) => string;
+  formatVND?: (n: number) => string;
 }
 
 export const ProfileTab: React.FC<ProfileTabProps> = ({
   tutorProfile,
   handleUpdateProfileSubmit,
   openAddCertModal,
-  handleDeleteCert,
-  formatVND
+  handleDeleteCert
 }) => {
   const [bio, setBio] = useState('');
   const [education, setEducation] = useState('');
@@ -24,6 +23,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
   const [teachingMode, setTeachingMode] = useState<'online' | 'offline' | 'both'>('both');
   const [province, setProvince] = useState('');
   const [district, setDistrict] = useState('');
+  const [avatarBase64, setAvatarBase64] = useState<string | null>(null);
 
   useEffect(() => {
     if (tutorProfile) {
@@ -52,7 +52,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
       .map(s => s.trim())
       .filter(s => s.length > 0);
 
-    handleUpdateProfileSubmit({
+    const payload: any = {
       bio,
       education,
       experience_years: Number(experienceYears),
@@ -61,7 +61,13 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
       teaching_mode: teachingMode,
       province,
       district
-    });
+    };
+
+    if (avatarBase64) {
+      payload.avatarUrl = avatarBase64;
+    }
+
+    handleUpdateProfileSubmit(payload);
   };
 
   const certificates = tutorProfile?.certificates || [];
@@ -76,6 +82,49 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
         </div>
 
         <form onSubmit={onSaveProfile} className="db-form">
+          {/* AVATAR UPLOAD SECTION */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px', padding: '16px 20px', background: 'var(--bg-dashboard)', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <img
+                src={avatarBase64 || tutorProfile?.user?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'}
+                alt={tutorProfile?.user?.full_name || 'Giảng viên'}
+                style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #4f46e5' }}
+              />
+            </div>
+            <div>
+              <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: 'var(--text-dark)' }}>Ảnh đại diện Giảng viên</h3>
+              <p style={{ margin: '0 0 10px 0', fontSize: '13px', color: 'var(--text-light)' }}>Chọn tệp hình ảnh (PNG, JPG, WEBP) từ máy tính của bạn</p>
+              <label style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 14px',
+                background: '#4f46e5',
+                color: '#fff',
+                borderRadius: '6px',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}>
+                <Camera size={15} /> Đổi ảnh từ máy tính
+                <input
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files ? e.target.files[0] : null;
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        setAvatarBase64(reader.result as string);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+              </label>
+            </div>
+          </div>
           <div className="form-group-db">
             <label>Giới thiệu bản thân & Phương pháp giảng dạy (Bio) *</label>
             <textarea

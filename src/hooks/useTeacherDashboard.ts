@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import tutorApi from '../services/tutorApi';
 import { courseApi } from '../services/courseApi';
 import { blogApi, type CreateArticlePayload } from '../services/blogApi';
+import { authApi } from '../services/authApi';
 import authStorage from '../utils/authStorage';
 
 export interface DashboardStats {
@@ -443,8 +444,12 @@ export const useTeacherDashboard = () => {
   // Profile & Certificate Handlers
   const handleUpdateProfileSubmit = async (data: any) => {
     try {
+      if (data.avatarUrl) {
+        await authApi.updateProfile({ avatarUrl: data.avatarUrl });
+      }
       const res = await tutorApi.updateMyProfile(data);
       if (res && res.success) {
+        window.dispatchEvent(new Event('authChange'));
         toast.success('Cập nhật thông tin hồ sơ thành công!');
         loadDashboardData();
       } else {

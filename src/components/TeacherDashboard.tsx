@@ -134,8 +134,16 @@ const TeacherDashboard: React.FC = () => {
         {/* SIDEBAR NAVIGATION */}
         <aside className="dashboard-sidebar">
           <div className="sidebar-profile">
-            <div className="sidebar-avatar">
-              {teacherName.charAt(0).toUpperCase()}
+            <div className="sidebar-avatar" style={{ overflow: 'hidden', padding: 0 }}>
+              {tutorProfile?.user?.avatar_url ? (
+                <img
+                  src={tutorProfile.user.avatar_url}
+                  alt={teacherName}
+                  style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                />
+              ) : (
+                teacherName.charAt(0).toUpperCase()
+              )}
             </div>
             <h3 className="sidebar-name">{teacherName}</h3>
             <span className="sidebar-role">Gia Sư Đối Tác</span>

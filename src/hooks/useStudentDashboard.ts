@@ -37,6 +37,7 @@ export const useStudentDashboard = () => {
   const [formSubjects, setFormSubjects] = useState<string[]>([]);
   const [formMode, setFormMode] = useState<'online' | 'offline' | 'both'>('both');
   const [formBudgetMax, setFormBudgetMax] = useState<number>(1000000);
+  const [avatarBase64, setAvatarBase64] = useState<string | null>(null);
 
   // Authentication check
   useEffect(() => {
@@ -180,6 +181,17 @@ export const useStudentDashboard = () => {
     fetchDashboardData();
   }, [navigate]);
 
+  const handleAvatarFileChange = (file: File) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64Str = reader.result as string;
+      setAvatarBase64(base64Str);
+      setProfile(prev => ({ ...prev, avatar: base64Str }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   // Update Profile Submit
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,7 +201,7 @@ export const useStudentDashboard = () => {
     }
 
     try {
-      const res = await authApi.updateProfile({
+      const payload: any = {
         fullName: formName,
         phone: formPhone,
         metadata: {
@@ -199,13 +211,21 @@ export const useStudentDashboard = () => {
           preferred_mode: formMode,
           budget_max: formBudgetMax
         }
-      });
+      };
+
+      if (avatarBase64) {
+        payload.avatarUrl = avatarBase64;
+      }
+
+      const res = await authApi.updateProfile(payload);
 
       if (res && res.success) {
+        const newAvatar = res.data?.avatar_url || avatarBase64 || profile.avatar;
         const updatedProfile: StudentProfile = {
           ...profile,
           fullName: formName,
           phone: formPhone,
+          avatar: newAvatar,
           grade_level: formGrade,
           learning_goals: formGoals,
           preferred_subjects: formSubjects,
@@ -214,6 +234,8 @@ export const useStudentDashboard = () => {
         };
 
         setProfile(updatedProfile);
+        authStorage.setAuthSession(undefined, undefined, formName);
+        window.dispatchEvent(new Event('authChange'));
         toast.success('Cập nhật hồ sơ thành công!');
       } else {
         toast.error(res?.error || 'Cập nhật thất bại.');
@@ -234,11 +256,19 @@ export const useStudentDashboard = () => {
   };
 
   // Remove tutor from favorites
-  const handleRemoveFavorite = (tutorId: string) => {
-    const updated = favoriteTutors.filter(t => t.tutor_id !== tutorId);
-    setFavoriteTutors(updated);
-    sessionStorage.setItem('studentFavoriteTutors', JSON.stringify(updated));
-    toast.info('Đã xóa giảng viên khỏi danh sách yêu thích.');
+  const handleRemoveFavorite = async (tutorId: string) => {
+    try {
+      const res = await favoriteApi.toggleFavorite(tutorId);
+      if (res && res.success) {
+        setFavoriteTutors(prev => prev.filter(t => t.tutor_id !== tutorId));
+        toast.info('Đã xóa giảng viên khỏi danh sách yêu thích.');
+      } else {
+        toast.error(res?.error || 'Không thể xóa giảng viên khỏi danh sách yêu thích.');
+      }
+    } catch (err: any) {
+      console.error('Error removing favorite tutor:', err);
+      toast.error('Có lỗi xảy ra khi xóa giảng viên yêu thích.');
+    }
   };
 
   // Simulate starting a quiz
@@ -335,7 +365,8 @@ export const useStudentDashboard = () => {
       handleSubjectCheckbox,
       handleRemoveFavorite,
       handleSimulateQuiz,
-      handleLogout
+      handleLogout,
+      handleAvatarFileChange
     },
     helpers: {
       formatDate,
