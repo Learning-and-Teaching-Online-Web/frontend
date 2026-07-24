@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import tutorApi from '../services/tutorApi';
 import { blogApi, type CreateArticlePayload } from '../services/blogApi';
+import authStorage from '../utils/authStorage';
 
 export interface DashboardStats {
   totalCourses: number;
@@ -98,10 +99,20 @@ export const useTeacherDashboard = () => {
         setTransactions(walletRes.data.transactions || []);
       }
 
-      // 6. Fetch Articles
+      // 6. Fetch Articles (Filtered to tutor's own articles unless admin)
       const articlesRes = await blogApi.getAll();
       if (articlesRes && articlesRes.success && Array.isArray(articlesRes.data)) {
-        setArticles(articlesRes.data);
+        const currentTeacherName = authStorage.getUserName() || teacherName;
+        const currentRole = authStorage.getUserRole();
+
+        if (currentRole === 'admin') {
+          setArticles(articlesRes.data);
+        } else {
+          const myArticles = articlesRes.data.filter((art: any) =>
+            art.author && art.author.toLowerCase().trim() === currentTeacherName.toLowerCase().trim()
+          );
+          setArticles(myArticles);
+        }
       }
     } catch (error: any) {
       console.error('Error loading dashboard data:', error);
@@ -112,11 +123,11 @@ export const useTeacherDashboard = () => {
   };
 
   useEffect(() => {
-    const auth = localStorage.getItem('isAuthenticated');
-    const role = localStorage.getItem('userRole');
-    const name = localStorage.getItem('userName');
+    const auth = authStorage.isAuthenticated();
+    const role = authStorage.getUserRole();
+    const name = authStorage.getUserName();
 
-    if (auth !== 'true') {
+    if (!auth) {
       toast.warning('Vui lòng đăng nhập để truy cập kênh gia sư.');
       navigate('/auth');
       return;

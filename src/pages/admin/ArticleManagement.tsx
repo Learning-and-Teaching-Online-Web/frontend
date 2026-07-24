@@ -3,6 +3,7 @@ import AdminLayout from '../../components/admin/AdminLayout';
 import { blogApi, type CreateArticlePayload } from '../../services/blogApi';
 import { Search, Plus, Edit2, Trash2, X, FileText } from 'lucide-react';
 import { toast } from 'react-toastify';
+import authStorage from '../../utils/authStorage';
 
 interface ArticleItem {
   id: string;
@@ -84,7 +85,7 @@ const ArticleManagement: React.FC = () => {
       excerpt: '',
       category: CATEGORY_OPTIONS[0],
       imageType: 'globe',
-      author: localStorage.getItem('userName') || 'Admin',
+      author: authStorage.getUserName() || 'Admin',
       tags: '',
       content: ''
     });

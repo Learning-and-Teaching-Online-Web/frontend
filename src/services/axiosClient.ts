@@ -1,4 +1,5 @@
 import axios from 'axios';
+import authStorage from '../utils/authStorage';
 
 // Khởi tạo một instance của axios với các cấu hình mặc định
 const axiosClient = axios.create({
@@ -11,7 +12,7 @@ const axiosClient = axios.create({
 // Interceptor cho các request (Gửi kèm Token nếu có)
 axiosClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('access_token');
+    const token = authStorage.getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -33,10 +34,7 @@ axiosClient.interceptors.response.use(
       const currentPath = window.location.pathname;
       // Tránh tự động redirect lặp lại nếu đang ở trang auth hoặc admin login
       if (!currentPath.startsWith('/auth') && !currentPath.startsWith('/admin/login')) {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('isAuthenticated');
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('userName');
+        authStorage.clearAuthSession();
         window.dispatchEvent(new Event('authChange'));
         
         if (currentPath.startsWith('/admin')) {

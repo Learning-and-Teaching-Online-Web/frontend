@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Mail } from 'lucide-react';
 import { authApi } from '../../services/authApi';
+import authStorage from '../../utils/authStorage';
 import { toast } from 'react-toastify';
 import '../../styles/admin/AdminLogin.css';
 
@@ -22,14 +23,8 @@ const AdminLogin: React.FC = () => {
       setIsLoading(true);
       const res = await authApi.login({ email, password });
 
-      // Assume the response structure is { metadata: { user: { role, ... }, tokens: { accessToken } } }
-      // This is a common structure, but let's check what authApi actually returns
-      // For now, based on generic JWT logic:
       const user = res.metadata?.user || res.user || res.data?.user;
       const token = res.data?.session?.access_token;
-
-
-      // Supabase stores custom roles in user_metadata, while user.role is 'authenticated'
       const userRole = user?.user_metadata?.role || user?.role;
 
       if (userRole !== 'admin') {
@@ -38,11 +33,10 @@ const AdminLogin: React.FC = () => {
         return;
       }
 
-      // Save admin session
-      localStorage.setItem('access_token', token);
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('userRole', userRole);
-      localStorage.setItem('userName', user?.user_metadata?.full_name || user?.fullName || user?.email?.split('@')[0] || 'Admin');
+      const userName = user?.user_metadata?.full_name || user?.fullName || user?.email?.split('@')[0] || 'Admin';
+
+      // Save admin session in authStorage
+      authStorage.setAuthSession(token, userRole, userName);
 
       window.dispatchEvent(new Event('authChange'));
       toast.success('Đăng nhập thành công!');

@@ -4,6 +4,7 @@ import { Clock, Users, BookOpen, HelpCircle, Star, Award } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { courseApi, mapBackendCourseToFrontend } from '../services/courseApi';
 import { bookingApi } from '../services/bookingApi';
+import authStorage from '../utils/authStorage';
 import '../styles/CourseDetail.css';
 
 const CourseDetail: React.FC = () => {
@@ -38,14 +39,14 @@ const CourseDetail: React.FC = () => {
   }, [courseId]);
 
   const handleStartNow = async () => {
-    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    const isAuthenticated = authStorage.isAuthenticated();
     if (!isAuthenticated) {
       toast.warning('Bạn cần đăng nhập để đăng ký khóa học. Đang chuyển hướng...');
       setTimeout(() => navigate('/auth'), 2000);
       return;
     }
 
-    const userRole = localStorage.getItem('userRole');
+    const userRole = authStorage.getUserRole();
     if (userRole === 'admin') {
       toast.error('Tài khoản Quản trị viên (Admin) không thể đăng ký khóa học.');
       return;

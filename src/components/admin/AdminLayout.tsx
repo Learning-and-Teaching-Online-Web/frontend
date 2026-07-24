@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminSidebar from './AdminSidebar';
+import authStorage from '../../utils/authStorage';
 import '../../styles/admin/AdminLayout.css';
 import { toast } from 'react-toastify';
 
@@ -11,12 +12,12 @@ interface AdminLayoutProps {
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
   const navigate = useNavigate();
-  const userName = localStorage.getItem('userName') || 'Admin';
-  const userRole = localStorage.getItem('userRole');
+  const userName = authStorage.getUserName() || 'Admin';
+  const userRole = authStorage.getUserRole();
 
   // Security check - Must be logged in as admin
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    const isAuthenticated = authStorage.isAuthenticated();
     if (!isAuthenticated || userRole !== 'admin') {
       toast.error('Bạn không có quyền truy cập trang quản trị!');
       navigate('/admin/login');
@@ -24,10 +25,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
   }, [navigate, userRole]);
 
   const handleLogout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userName');
+    authStorage.clearAuthSession();
     window.dispatchEvent(new Event('authChange'));
     toast.success('Đăng xuất tài khoản quản trị thành công!');
     navigate('/admin/login');

@@ -14,6 +14,7 @@ import {
 import { authApi } from '../services/authApi';
 import { bookingApi } from '../services/bookingApi';
 import { favoriteApi } from '../services/favoriteApi';
+import authStorage from '../utils/authStorage';
 import { quizApi } from '../services/quizApi';
 
 export const useStudentDashboard = () => {
@@ -39,7 +40,7 @@ export const useStudentDashboard = () => {
 
   // Authentication check
   useEffect(() => {
-    const authStatus = localStorage.getItem('isAuthenticated') === 'true';
+    const authStatus = authStorage.isAuthenticated();
     if (!authStatus) {
       setIsAuthenticated(false);
       toast.warning('Bạn cần đăng nhập để truy cập trang này. Đang chuyển hướng...');
@@ -53,7 +54,7 @@ export const useStudentDashboard = () => {
   // Load state from backend APIs
   useEffect(() => {
     const fetchDashboardData = async () => {
-      const authStatus = localStorage.getItem('isAuthenticated') === 'true';
+      const authStatus = authStorage.isAuthenticated();
       if (!authStatus) return;
 
       try {
@@ -236,7 +237,7 @@ export const useStudentDashboard = () => {
   const handleRemoveFavorite = (tutorId: string) => {
     const updated = favoriteTutors.filter(t => t.tutor_id !== tutorId);
     setFavoriteTutors(updated);
-    localStorage.setItem('studentFavoriteTutors', JSON.stringify(updated));
+    sessionStorage.setItem('studentFavoriteTutors', JSON.stringify(updated));
     toast.info('Đã xóa giảng viên khỏi danh sách yêu thích.');
   };
 
@@ -257,7 +258,7 @@ export const useStudentDashboard = () => {
 
     const updated = [newAttempt, ...quizAttempts];
     setQuizAttempts(updated);
-    localStorage.setItem('studentQuizAttempts', JSON.stringify(updated));
+    sessionStorage.setItem('studentQuizAttempts', JSON.stringify(updated));
     toast.success(`Hoàn thành bài kiểm tra "${quizTitle}"! Điểm số: ${score}/10`);
   };
 
@@ -283,7 +284,7 @@ export const useStudentDashboard = () => {
 
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault();
-    localStorage.removeItem('isAuthenticated');
+    authStorage.clearAuthSession();
     window.dispatchEvent(new Event('authChange'));
     toast.success('Đăng xuất thành công!');
     navigate('/');
