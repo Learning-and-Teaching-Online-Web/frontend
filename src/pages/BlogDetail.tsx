@@ -1,16 +1,20 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { User, Calendar, MessageCircle, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Facebook, Twitter, Instagram, Youtube, Compass } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { User, Calendar, MessageCircle, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Facebook, Twitter, Instagram, Youtube, Compass, LogIn, Trash2 } from 'lucide-react';
 import { blogApi } from '../services/blogApi';
-import { mockComments } from '../data/blogData';
-import type { BlogComment } from '../data/blogData';
+import authStorage from '../utils/authStorage';
 import { renderBlogIllustration } from './BlogList';
 import '../styles/Blog.css';
 
 const BlogDetail: React.FC = () => {
   const { articleId } = useParams<{ articleId: string }>();
+  const navigate = useNavigate();
   const [articles, setArticles] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Auth states
+  const isAuthenticated = authStorage.isAuthenticated();
+  const userName = authStorage.getUserName() || 'Người dùng';
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -56,56 +60,84 @@ const BlogDetail: React.FC = () => {
     return articles[idx + 1];
   }, [articles, article]);
 
-  // Leave a Comment form states
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  // Comment form states
   const [commentText, setCommentText] = useState('');
-  const [saveInfo, setSaveInfo] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Status Alerts
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  // Comments list with new user comments capability
-  const [commentsList, setCommentsList] = useState<BlogComment[]>(mockComments);
+  // Real backend comments list
+  const [commentsList, setCommentsList] = useState<any[]>([]);
+  const [isLoadingComments, setIsLoadingComments] = useState<boolean>(false);
 
-  const handleCommentSubmit = (e: React.FormEvent) => {
+  // Fetch comments from backend
+  const fetchComments = async (artId: string) => {
+    try {
+      setIsLoadingComments(true);
+      const res = await blogApi.getComments(artId);
+      if (res && res.success && Array.isArray(res.data)) {
+        setCommentsList(res.data);
+      }
+    } catch (err) {
+      console.error('Error fetching comments:', err);
+    } finally {
+      setIsLoadingComments(false);
+    }
+  };
+
+  useEffect(() => {
+    if (article?.id) {
+      fetchComments(article.id);
+    }
+  }, [article?.id]);
+
+  const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
     setSuccessMsg(null);
 
-    if (!name.trim()) {
-      setErrorMsg('Vui lòng nhập tên.');
+    if (!isAuthenticated) {
+      setErrorMsg('Bạn cần đăng nhập để gửi bình luận.');
       return;
     }
-    if (!email.trim()) {
-      setErrorMsg('Vui lòng nhập email.');
-      return;
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) {
-      setErrorMsg('Định dạng email không hợp lệ.');
-      return;
-    }
+
     if (!commentText.trim()) {
-      setErrorMsg('Vui lòng nhập bình luận.');
+      setErrorMsg('Vui lòng nhập nội dung bình luận.');
       return;
     }
 
-    // Append new comment
-    const newComment: BlogComment = {
-      id: `custom-comment-${Date.now()}`,
-      authorName: name,
-      date: 'Just now',
-      content: commentText,
-      avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150' // default male avatar
-    };
+    try {
+      setIsSubmitting(true);
+      const res = await blogApi.createComment(article.id, commentText.trim());
+      if (res && res.success) {
+        setSuccessMsg('Đăng bình luận thành công!');
+        setCommentText('');
+        fetchComments(article.id);
+      } else {
+        setErrorMsg(res?.error || 'Không thể đăng bình luận.');
+      }
+    } catch (err: any) {
+      console.error('Error submitting comment:', err);
+      const msg = err.response?.data?.error || 'Có lỗi xảy ra khi gửi bình luận.';
+      setErrorMsg(msg);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-    setCommentsList(prev => [...prev, newComment]);
-    setSuccessMsg('Đăng bình luận thành công!');
-    setName('');
-    setEmail('');
-    setCommentText('');
+  const handleDeleteComment = async (commentId: string) => {
+    if (!window.confirm('Bạn có chắc muốn xóa bình luận này không?')) return;
+    try {
+      const res = await blogApi.deleteComment(commentId);
+      if (res && res.success) {
+        setCommentsList(prev => prev.filter(c => c.comment_id !== commentId));
+      }
+    } catch (err: any) {
+      console.error('Error deleting comment:', err);
+      alert(err.response?.data?.error || 'Không thể xóa bình luận.');
+    }
   };
 
   if (isLoading) {
@@ -160,7 +192,7 @@ const BlogDetail: React.FC = () => {
                 </span>
                 <span className="meta-item">
                   <MessageCircle size={14} />
-                  {commentsList.length} Comments
+                  {commentsList.length} Bình luận
                 </span>
               </div>
 
@@ -231,102 +263,118 @@ const BlogDetail: React.FC = () => {
               <div className="blog-comments-section">
                 <h3 className="comments-title">{commentsList.length} Bình luận</h3>
                 
-                <div className="comments-list">
-                  {commentsList.map((comment) => (
-                    <div className="comment-item" key={comment.id}>
-                      <div className="comment-avatar">
-                        <img src={comment.avatarUrl} alt={comment.authorName} />
-                      </div>
-                      
-                      <div className="comment-content">
-                        <div className="comment-meta">
-                          <span className="comment-author-name">{comment.authorName}</span>
-                          <span className="comment-post-date">{comment.date}</span>
+                {isLoadingComments ? (
+                  <p style={{ color: 'var(--text-muted)' }}>Đang tải bình luận...</p>
+                ) : commentsList.length === 0 ? (
+                  <p style={{ color: 'var(--text-muted)' }}>Chưa có bình luận nào. Hãy là người đầu tiên bình luận!</p>
+                ) : (
+                  <div className="comments-list">
+                    {commentsList.map((comment) => (
+                      <div className="comment-item" key={comment.comment_id}>
+                        <div className="comment-avatar">
+                          <img 
+                            src={comment.user?.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'} 
+                            alt={comment.user?.full_name || 'Avatar'} 
+                          />
                         </div>
-                        <p className="comment-text">{comment.content}</p>
-                        <span 
-                          className="comment-reply-link"
-                          onClick={() => {
-                            setCommentText(`@${comment.authorName} `);
-                            document.getElementById('comment-form-title')?.scrollIntoView({ behavior: 'smooth' });
-                          }}
-                        >
-                          Trả lời
-                        </span>
+                        
+                        <div className="comment-content">
+                          <div className="comment-meta">
+                            <span className="comment-author-name">{comment.user?.full_name || 'Người dùng'}</span>
+                            <span className="comment-post-date">
+                              {new Date(comment.created_at).toLocaleDateString('vi-VN', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+                          <p className="comment-text">{comment.content}</p>
+                          
+                          <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                            <span 
+                              className="comment-reply-link"
+                              onClick={() => {
+                                setCommentText(`@${comment.user?.full_name} `);
+                                document.getElementById('comment-form-title')?.scrollIntoView({ behavior: 'smooth' });
+                              }}
+                            >
+                              Trả lời
+                            </span>
+                            
+                            {(authStorage.getUserRole() === 'admin') && (
+                              <span 
+                                style={{ color: '#ef4444', fontSize: '13px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                onClick={() => handleDeleteComment(comment.comment_id)}
+                              >
+                                <Trash2 size={13} /> Xóa
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {/* Leave A Comment Form */}
+              {/* Leave A Comment Section */}
               <div className="leave-comment-section" id="comment-form-container">
                 <h3 className="form-title" id="comment-form-title">Để lại bình luận</h3>
-                <p className="form-subtitle">Địa chỉ email của bạn sẽ không được công bố. Các trường bắt buộc được đánh dấu *</p>
-
-                {errorMsg && (
-                  <div className="contact-alert contact-alert-error">
-                    <AlertCircle className="contact-alert-icon" size={18} />
-                    <span>{errorMsg}</span>
+                
+                {!isAuthenticated ? (
+                  <div style={{ padding: '24px', backgroundColor: 'var(--bg-light)', borderRadius: 'var(--radius-md)', textAlign: 'center', margin: '20px 0', border: '1px dashed var(--border)' }}>
+                    <p style={{ fontSize: '16px', color: 'var(--text-main)', marginBottom: '16px', fontWeight: 500 }}>
+                      🔒 Bạn cần đăng nhập để tham gia bình luận bài viết này.
+                    </p>
+                    <button 
+                      className="contact-submit-btn" 
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                      onClick={() => navigate('/auth')}
+                    >
+                      <LogIn size={18} /> Đăng nhập ngay
+                    </button>
                   </div>
+                ) : (
+                  <>
+                    <p className="form-subtitle" style={{ marginBottom: '16px' }}>
+                      Bình luận với tài khoản: <strong style={{ color: 'var(--primary)' }}>{userName}</strong>
+                    </p>
+
+                    {errorMsg && (
+                      <div className="contact-alert contact-alert-error">
+                        <AlertCircle className="contact-alert-icon" size={18} />
+                        <span>{errorMsg}</span>
+                      </div>
+                    )}
+
+                    {successMsg && (
+                      <div className="contact-alert contact-alert-success">
+                        <CheckCircle2 className="contact-alert-icon" size={18} />
+                        <span>{successMsg}</span>
+                      </div>
+                    )}
+
+                    <form onSubmit={handleCommentSubmit} noValidate>
+                      <div className="contact-form-textarea">
+                        <textarea 
+                          className="form-input" 
+                          placeholder="Viết bình luận của bạn..." 
+                          rows={4}
+                          value={commentText}
+                          onChange={(e) => setCommentText(e.target.value)}
+                          required
+                        />
+                      </div>
+
+                      <button type="submit" className="contact-submit-btn" disabled={isSubmitting}>
+                        {isSubmitting ? 'Đang gửi...' : 'Đăng bình luận'}
+                      </button>
+                    </form>
+                  </>
                 )}
-
-                {successMsg && (
-                  <div className="contact-alert contact-alert-success">
-                    <CheckCircle2 className="contact-alert-icon" size={18} />
-                    <span>{successMsg}</span>
-                  </div>
-                )}
-
-                <form onSubmit={handleCommentSubmit} noValidate>
-                  <div className="contact-form-inputs">
-                    <div className="form-group">
-                      <input 
-                        type="text" 
-                        className="form-input" 
-                        placeholder="Tên*" 
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <input 
-                        type="email" 
-                        className="form-input" 
-                        placeholder="Email*" 
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="contact-form-textarea">
-                    <textarea 
-                      className="form-input" 
-                      placeholder="Bình luận" 
-                      rows={6}
-                      value={commentText}
-                      onChange={(e) => setCommentText(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <label className="contact-form-checkbox">
-                    <input 
-                      type="checkbox" 
-                      checked={saveInfo}
-                      onChange={(e) => setSaveInfo(e.target.checked)}
-                    />
-                    <span>Lưu tên và email của tôi trong trình duyệt này cho lần bình luận tiếp theo</span>
-                  </label>
-
-                  <button type="submit" className="contact-submit-btn">
-                    Đăng bình luận
-                  </button>
-                </form>
               </div>
 
             </div>

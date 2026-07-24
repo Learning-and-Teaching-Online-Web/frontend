@@ -34,6 +34,22 @@ export const blogApi = {
   delete: async (id: string) => {
     const response = await axiosClient.delete(`/blog/${id}`);
     return response.data;
+  },
+
+  // Comments
+  getComments: async (articleId: string) => {
+    const response = await axiosClient.get(`/blog/${articleId}/comments`);
+    return response.data;
+  },
+
+  createComment: async (articleId: string, content: string) => {
+    const response = await axiosClient.post(`/blog/${articleId}/comments`, { content });
+    return response.data;
+  },
+
+  deleteComment: async (commentId: string) => {
+    const response = await axiosClient.delete(`/blog/comments/${commentId}`);
+    return response.data;
   }
 };
 

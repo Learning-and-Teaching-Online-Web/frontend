@@ -57,5 +57,21 @@ export const courseApi = {
   addSchedule: async (courseId: string, data: any) => {
     const response = await axiosClient.post(`/courses/${courseId}/schedules`, data);
     return response.data;
+  },
+
+  // Comments
+  getComments: async (courseId: string) => {
+    const response = await axiosClient.get(`/courses/${courseId}/comments`);
+    return response.data;
+  },
+
+  createComment: async (courseId: string, content: string, rating?: number) => {
+    const response = await axiosClient.post(`/courses/${courseId}/comments`, { content, rating });
+    return response.data;
+  },
+
+  deleteComment: async (commentId: string) => {
+    const response = await axiosClient.delete(`/courses/comments/${commentId}`);
+    return response.data;
   }
 };
