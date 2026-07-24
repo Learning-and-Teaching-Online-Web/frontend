@@ -142,6 +142,7 @@ const CourseList: React.FC = () => {
           <SidebarFilters
             filters={filters}
             onFilterChange={handleFilterChange}
+            courses={courses}
           />
 
           {/* Right Column (Courses + Control) */}

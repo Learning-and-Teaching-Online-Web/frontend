@@ -1,6 +1,5 @@
 import React from 'react';
 import { Search, Star } from 'lucide-react';
-import { mockCourses } from '../data/mockData';
 import '../styles/SidebarFilters.css';
 
 export interface FilterState {
@@ -15,29 +14,123 @@ export interface FilterState {
 interface SidebarFiltersProps {
   filters: FilterState;
   onFilterChange: (filters: FilterState) => void;
+  courses?: any[];
 }
 
-const SidebarFilters: React.FC<SidebarFiltersProps> = ({ filters, onFilterChange }) => {
-  // Count course properties dynamically for badge counts
+const SidebarFilters: React.FC<SidebarFiltersProps> = ({ filters, onFilterChange, courses = [] }) => {
+  const [categorySearch, setCategorySearch] = React.useState('');
+  const [isCatExpanded, setIsCatExpanded] = React.useState(false);
+  const [instructorSearch, setInstructorSearch] = React.useState('');
+  const [isInstExpanded, setIsInstExpanded] = React.useState(false);
+
+  // Extract dynamic categories & counts from actual courses
+  const categoryMap = React.useMemo(() => {
+    const map: { [key: string]: number } = {};
+    courses.forEach(c => {
+      const subjectName = c.subject || c.category;
+      if (subjectName) {
+        map[subjectName] = (map[subjectName] || 0) + 1;
+      }
+      if (Array.isArray(c.categories)) {
+        c.categories.forEach((cat: string) => {
+          if (cat && cat !== subjectName) {
+            map[cat] = (map[cat] || 0) + 1;
+          }
+        });
+      }
+    });
+    return map;
+  }, [courses]);
+
+  // Sort categories by course count descending
+  const availableCategories = React.useMemo(() => {
+    const keys = Object.keys(categoryMap);
+    if (keys.length === 0) {
+      return ["Lập trình & Web", "Backend", "Cơ sở dữ liệu", "Toán", "Vật Lý", "Tiếng Anh"];
+    }
+    return keys.sort((a, b) => (categoryMap[b] || 0) - (categoryMap[a] || 0));
+  }, [categoryMap]);
+
+  // Filtered & collapsed categories
+  const filteredCategories = React.useMemo(() => {
+    let list = availableCategories;
+    if (categorySearch.trim()) {
+      const q = categorySearch.toLowerCase().trim();
+      list = list.filter(cat => cat.toLowerCase().includes(q));
+    }
+    return list;
+  }, [availableCategories, categorySearch]);
+
+  const visibleCategories = React.useMemo(() => {
+    if (categorySearch.trim() || isCatExpanded) {
+      return filteredCategories;
+    }
+    const initialList = filteredCategories.slice(0, 4);
+    // Keep checked categories visible even when collapsed
+    filters.categories.forEach(checkedCat => {
+      if (!initialList.includes(checkedCat) && filteredCategories.includes(checkedCat)) {
+        initialList.push(checkedCat);
+      }
+    });
+    return initialList;
+  }, [filteredCategories, categorySearch, isCatExpanded, filters.categories]);
+
+  // Extract dynamic instructors & counts
+  const instructorMap = React.useMemo(() => {
+    const map: { [key: string]: number } = {};
+    courses.forEach(c => {
+      if (c.instructor) {
+        map[c.instructor] = (map[c.instructor] || 0) + 1;
+      }
+    });
+    return map;
+  }, [courses]);
+
+  const availableInstructors = React.useMemo(() => {
+    return Object.keys(instructorMap).sort((a, b) => (instructorMap[b] || 0) - (instructorMap[a] || 0));
+  }, [instructorMap]);
+
+  const filteredInstructors = React.useMemo(() => {
+    let list = availableInstructors;
+    if (instructorSearch.trim()) {
+      const q = instructorSearch.toLowerCase().trim();
+      list = list.filter(inst => inst.toLowerCase().includes(q));
+    }
+    return list;
+  }, [availableInstructors, instructorSearch]);
+
+  const visibleInstructors = React.useMemo(() => {
+    if (instructorSearch.trim() || isInstExpanded) {
+      return filteredInstructors;
+    }
+    const initialList = filteredInstructors.slice(0, 4);
+    filters.instructors.forEach(checkedInst => {
+      if (!initialList.includes(checkedInst) && filteredInstructors.includes(checkedInst)) {
+        initialList.push(checkedInst);
+      }
+    });
+    return initialList;
+  }, [filteredInstructors, instructorSearch, isInstExpanded, filters.instructors]);
+
   const getCategoryCount = (cat: string) => {
-    return mockCourses.filter(c => c.categories.includes(cat)).length;
+    return categoryMap[cat] || 0;
   };
 
   const getInstructorCount = (inst: string) => {
-    return mockCourses.filter(c => c.instructor === inst).length;
+    return instructorMap[inst] || 0;
   };
 
   const getLevelCount = (lvl: string) => {
-    return mockCourses.filter(c => c.level === lvl).length;
+    return courses.filter(c => c.level === lvl).length;
   };
 
   const getPriceCount = (type: 'free' | 'paid') => {
-    if (type === 'free') return mockCourses.filter(c => c.isFree).length;
-    return mockCourses.filter(c => !c.isFree).length;
+    if (type === 'free') return courses.filter(c => c.isFree || c.price === 0).length;
+    return courses.filter(c => !c.isFree && c.price > 0).length;
   };
 
   const getRatingCount = (stars: number) => {
-    return mockCourses.filter(c => c.rating === stars).length;
+    return courses.filter(c => Math.floor(c.rating || 5) === stars).length;
   };
 
   // Toggle checklist arrays
@@ -98,8 +191,31 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({ filters, onFilterChange
       {/* 2. Course Category */}
       <div className="filter-group">
         <h3 className="filter-title">Danh mục khóa học</h3>
+
+        {/* Mini Search Input for Categories */}
+        {availableCategories.length > 4 && (
+          <div style={{ marginBottom: '10px', position: 'relative' }}>
+            <input 
+              type="text"
+              placeholder="Tìm nhanh danh mục..."
+              value={categorySearch}
+              onChange={(e) => setCategorySearch(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '6px 28px 6px 10px',
+                fontSize: '12px',
+                borderRadius: '6px',
+                border: '1px solid #e2e8f0',
+                outline: 'none',
+                background: '#f8fafc'
+              }}
+            />
+            <Search size={14} style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+          </div>
+        )}
+
         <div className="filter-options">
-          {["Academy", "Commercial", "Office", "Shop", "Studio", "University"].map(cat => {
+          {visibleCategories.map(cat => {
             const count = getCategoryCount(cat);
             return (
               <label key={cat} className="filter-checkbox-label">
@@ -116,32 +232,110 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({ filters, onFilterChange
               </label>
             );
           })}
+          {visibleCategories.length === 0 && (
+            <div style={{ fontSize: '12px', color: '#94a3b8', padding: '6px 0' }}>
+              Không tìm thấy danh mục
+            </div>
+          )}
         </div>
+
+        {/* Toggle Show More / Show Less */}
+        {!categorySearch && availableCategories.length > 4 && (
+          <button
+            onClick={() => setIsCatExpanded(!isCatExpanded)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--primary)',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              marginTop: '8px',
+              padding: 0,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            {isCatExpanded ? 'Thu gọn ▲' : `Xem thêm (${availableCategories.length - 4}) ▼`}
+          </button>
+        )}
       </div>
 
       {/* 3. Instructors */}
-      <div className="filter-group">
-        <h3 className="filter-title">Giảng viên</h3>
-        <div className="filter-options">
-          {["Kenny White", "John Doe", "Determined-Poitras"].map(inst => {
-            const count = getInstructorCount(inst);
-            return (
-              <label key={inst} className="filter-checkbox-label">
-                <div className="filter-checkbox-left">
-                  <input 
-                    type="checkbox" 
-                    className="filter-checkbox-input"
-                    checked={filters.instructors.includes(inst)}
-                    onChange={() => handleCheckboxChange('instructors', inst)}
-                  />
-                  <span>{inst}</span>
-                </div>
-                <span className="filter-checkbox-count">{count}</span>
-              </label>
-            );
-          })}
+      {availableInstructors.length > 0 && (
+        <div className="filter-group">
+          <h3 className="filter-title">Giảng viên</h3>
+
+          {/* Mini Search Input for Instructors */}
+          {availableInstructors.length > 4 && (
+            <div style={{ marginBottom: '10px', position: 'relative' }}>
+              <input 
+                type="text"
+                placeholder="Tìm giảng viên..."
+                value={instructorSearch}
+                onChange={(e) => setInstructorSearch(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '6px 28px 6px 10px',
+                  fontSize: '12px',
+                  borderRadius: '6px',
+                  border: '1px solid #e2e8f0',
+                  outline: 'none',
+                  background: '#f8fafc'
+                }}
+              />
+              <Search size={14} style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+            </div>
+          )}
+
+          <div className="filter-options">
+            {visibleInstructors.map(inst => {
+              const count = getInstructorCount(inst);
+              return (
+                <label key={inst} className="filter-checkbox-label">
+                  <div className="filter-checkbox-left">
+                    <input 
+                      type="checkbox" 
+                      className="filter-checkbox-input"
+                      checked={filters.instructors.includes(inst)}
+                      onChange={() => handleCheckboxChange('instructors', inst)}
+                    />
+                    <span>{inst}</span>
+                  </div>
+                  <span className="filter-checkbox-count">{count}</span>
+                </label>
+              );
+            })}
+            {visibleInstructors.length === 0 && (
+              <div style={{ fontSize: '12px', color: '#94a3b8', padding: '6px 0' }}>
+                Không tìm thấy giảng viên
+              </div>
+            )}
+          </div>
+
+          {!instructorSearch && availableInstructors.length > 4 && (
+            <button
+              onClick={() => setIsInstExpanded(!isInstExpanded)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--primary)',
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                marginTop: '8px',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              {isInstExpanded ? 'Thu gọn ▲' : `Xem thêm (${availableInstructors.length - 4}) ▼`}
+            </button>
+          )}
         </div>
-      </div>
+      )}
 
       {/* 4. Price */}
       <div className="filter-group">
@@ -157,7 +351,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({ filters, onFilterChange
               />
               <span>Tất cả</span>
             </div>
-            <span className="filter-checkbox-count">{mockCourses.length}</span>
+            <span className="filter-checkbox-count">{courses.length}</span>
           </label>
           <label className="filter-checkbox-label">
             <div className="filter-checkbox-left">

@@ -335,6 +335,7 @@ const BlogList: React.FC = () => {
             onToggleCategory={handleToggleCategory}
             selectedTag={selectedTag}
             onSelectTag={handleTagSelect}
+            articles={articles}
           />
 
           {/* Right Column: Main Articles Content */}

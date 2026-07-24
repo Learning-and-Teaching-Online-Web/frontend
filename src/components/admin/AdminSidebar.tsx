@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Users, 
-  GraduationCap, 
+  UserCheck, 
   BookOpen, 
   FileText,
   CreditCard, 
@@ -20,7 +20,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onLogout }) => {
   const menuItems = [
     { path: '/admin', label: 'Thống kê', icon: <LayoutDashboard size={20} /> },
     { path: '/admin/students', label: 'Học viên', icon: <Users size={20} /> },
-    { path: '/admin/tutors', label: 'Giảng viên', icon: <GraduationCap size={20} /> },
+    { path: '/admin/tutors', label: 'Giảng viên', icon: <UserCheck size={20} /> },
     { path: '/admin/courses', label: 'Khóa học', icon: <BookOpen size={20} /> },
     { path: '/admin/articles', label: 'Bài viết Blog', icon: <FileText size={20} /> },
     { path: '/admin/payouts', label: 'Giao dịch & Rút tiền', icon: <CreditCard size={20} /> },

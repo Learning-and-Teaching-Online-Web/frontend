@@ -3,7 +3,7 @@ import AdminLayout from '../../components/admin/AdminLayout';
 import { adminApi } from '../../services/adminApi';
 import { 
   Users, 
-  GraduationCap, 
+  UserCheck, 
   BookOpen, 
   DollarSign, 
   TrendingUp, 
@@ -80,7 +80,7 @@ const AdminDashboard: React.FC = () => {
 
             <div className="admin-stat-card">
               <div className="admin-stat-icon-wrapper success">
-                <GraduationCap size={28} />
+                <UserCheck size={28} />
               </div>
               <div className="admin-stat-details">
                 <span className="admin-stat-value">{stats?.totalTutors || 0}</span>
