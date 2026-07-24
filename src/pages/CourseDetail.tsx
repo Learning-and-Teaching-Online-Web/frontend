@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Clock, Users, BookOpen, HelpCircle, Star, Award, LogIn, Trash2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Clock, Users, BookOpen, HelpCircle, Star, Award, LogIn, Trash2, AlertCircle, CheckCircle2, Video, FileText, ExternalLink, PlayCircle, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { courseApi, mapBackendCourseToFrontend } from '../services/courseApi';
 import { bookingApi } from '../services/bookingApi';
@@ -13,6 +13,20 @@ const CourseDetail: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'curriculum' | 'instructor' | 'faqs' | 'reviews'>('overview');
   const [course, setCourse] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [selectedLessonModal, setSelectedLessonModal] = useState<any | null>(null);
+
+  const getEmbedUrl = (url: string) => {
+    if (!url) return null;
+    if (url.includes('youtube.com/watch?v=')) {
+      const videoId = url.split('v=')[1]?.split('&')[0];
+      return `https://www.youtube.com/embed/${videoId}`;
+    }
+    if (url.includes('youtu.be/')) {
+      const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+      return `https://www.youtube.com/embed/${videoId}`;
+    }
+    return null;
+  };
 
   // Auth states
   const isAuthenticated = authStorage.isAuthenticated();
@@ -336,13 +350,105 @@ const CourseDetail: React.FC = () => {
 
               {activeTab === 'curriculum' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                  <h4 style={{ fontSize: '18px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>Chương trình giảng dạy ({course.lessonsCount} bài học)</h4>
-                  {[...Array(Math.max(course.lessonsCount, 3))].map((_, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', background: 'var(--bg-light)', borderRadius: 'var(--radius-sm)' }}>
-                      <span style={{ fontWeight: 500 }}>Bài {i + 1}: Hướng dẫn nội dung kiến thức chuyên đề {i + 1}</span>
-                      <span style={{ color: 'var(--text-muted)' }}>60 phút</span>
-                    </div>
-                  ))}
+                  <h4 style={{ fontSize: '18px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
+                    Chương trình giảng dạy ({course.curriculum?.length || 0} bài học)
+                  </h4>
+                  {course.curriculum && course.curriculum.length > 0 ? (
+                    course.curriculum.map((item: any, i: number) => {
+                      const embedUrl = getEmbedUrl(item.url);
+                      return (
+                        <div
+                          key={item.id || i}
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: '14px 18px',
+                            background: 'var(--bg-light)',
+                            borderRadius: 'var(--radius-md)',
+                            border: '1px solid var(--border)',
+                            gap: '12px',
+                            flexWrap: 'wrap'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: '220px' }}>
+                            <div style={{
+                              width: '38px',
+                              height: '38px',
+                              borderRadius: '8px',
+                              background: item.type === 'video' ? '#eff6ff' : item.type === 'pdf' ? '#fef2f2' : '#f0fdf4',
+                              color: item.type === 'video' ? '#2563eb' : item.type === 'pdf' ? '#dc2626' : '#16a34a',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0
+                            }}>
+                              {item.type === 'video' ? <Video size={20} /> : item.type === 'pdf' ? <FileText size={20} /> : <BookOpen size={20} />}
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: 600, fontSize: '15px', color: 'var(--text-main)' }}>
+                                Bài {i + 1}: {item.title}
+                              </div>
+                              {item.description && (
+                                <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                  {item.description}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            {item.url && item.url !== '#' && (
+                              embedUrl ? (
+                                <button
+                                  onClick={() => setSelectedLessonModal(item)}
+                                  style={{
+                                    border: 'none',
+                                    background: 'var(--primary)',
+                                    color: '#fff',
+                                    fontSize: '13px',
+                                    fontWeight: 600,
+                                    padding: '6px 14px',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
+                                  }}
+                                >
+                                  <PlayCircle size={15} /> Xem Video
+                                </button>
+                              ) : (
+                                <a
+                                  href={item.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    fontSize: '13px',
+                                    color: 'var(--primary)',
+                                    fontWeight: 600,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    textDecoration: 'none',
+                                    background: 'rgba(99, 102, 241, 0.1)',
+                                    padding: '6px 12px',
+                                    borderRadius: '6px'
+                                  }}
+                                >
+                                  {item.type === 'pdf' ? 'Tải PDF' : 'Mở liên kết'} <ExternalLink size={14} />
+                                </a>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p style={{ color: 'var(--text-muted)', padding: '20px 0' }}>
+                      Giảng viên chưa tải bài học nào lên cho khóa học này.
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -533,6 +639,45 @@ const CourseDetail: React.FC = () => {
 
         </div>
       </div>
+      {/* Video Modal Player */}
+      {selectedLessonModal && (
+        <div className="modal-overlay" style={{ zIndex: 1000 }}>
+          <div className="modal-card" style={{ maxWidth: '800px', width: '95%', padding: '20px' }}>
+            <div className="modal-header" style={{ marginBottom: '15px' }}>
+              <div>
+                <h3 style={{ fontSize: '18px', margin: 0 }}>{selectedLessonModal.title}</h3>
+                {selectedLessonModal.description && (
+                  <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>{selectedLessonModal.description}</p>
+                )}
+              </div>
+              <button onClick={() => setSelectedLessonModal(null)} className="btn-close" style={{ border: 'none', background: 'none', cursor: 'pointer' }}><X size={20} /></button>
+            </div>
+
+            {getEmbedUrl(selectedLessonModal.url) ? (
+              <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '10px', background: '#000' }}>
+                <iframe
+                  src={getEmbedUrl(selectedLessonModal.url)!}
+                  title={selectedLessonModal.title}
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '30px' }}>
+                <a
+                  href={selectedLessonModal.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: 'var(--primary)', color: '#fff', borderRadius: '6px', textDecoration: 'none', fontWeight: 600 }}
+                >
+                  <ExternalLink size={18} /> Mở tệp / Bài học ở cửa sổ mới
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

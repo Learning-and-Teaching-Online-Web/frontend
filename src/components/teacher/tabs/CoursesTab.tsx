@@ -1,11 +1,12 @@
 import React from 'react';
-import { Plus, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, BookOpen } from 'lucide-react';
 
 interface CoursesTabProps {
   courses: any[];
   formatVND: (n: number) => string;
   openCreateCourseModal: () => void;
   openEditCourseModal: (course: any) => void;
+  openLessonsModal: (course: any) => void;
   handleDeleteCourse: (courseId: string, title: string) => void;
 }
 
@@ -14,6 +15,7 @@ export const CoursesTab: React.FC<CoursesTabProps> = ({
   formatVND,
   openCreateCourseModal,
   openEditCourseModal,
+  openLessonsModal,
   handleDeleteCourse
 }) => {
   return (
@@ -48,6 +50,14 @@ export const CoursesTab: React.FC<CoursesTabProps> = ({
                   <span>{course.studentsCount || 0} học viên</span>
                 </div>
                 <div style={{ display: 'flex', gap: '6px' }}>
+                  <button
+                    className="btn-secondary-db"
+                    style={{ padding: '5px 10px', fontSize: '12px', background: 'rgba(99, 102, 241, 0.1)', color: '#4f46e5', border: '1px solid rgba(99, 102, 241, 0.2)' }}
+                    onClick={() => openLessonsModal(course)}
+                    title="Quản lý các bài học và video giảng dạy"
+                  >
+                    <BookOpen size={13} /> Bài học ({course.documents?.length || 0})
+                  </button>
                   <button
                     className="btn-secondary-db"
                     style={{ padding: '5px 10px', fontSize: '12px' }}

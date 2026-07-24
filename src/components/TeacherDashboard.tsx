@@ -25,6 +25,7 @@ import { ReviewsTab } from './teacher/tabs/ReviewsTab';
 import { WalletTab } from './teacher/tabs/WalletTab';
 import { ProfileTab } from './teacher/tabs/ProfileTab';
 import { VerificationBanner } from './teacher/VerificationBanner';
+import { LessonManagementModal } from './teacher/LessonManagementModal';
 
 const TeacherDashboard: React.FC = () => {
   const {
@@ -43,6 +44,20 @@ const TeacherDashboard: React.FC = () => {
     allSchedules,
     formatVND,
     formatDateString,
+    // Lesson Management Actions
+    isLessonModalOpen, setIsLessonModalOpen,
+    selectedCourseForLessons,
+    courseLessons,
+    newLessonTitle, setNewLessonTitle,
+    newLessonUrl, setNewLessonUrl,
+    newLessonType, setNewLessonType,
+    newLessonDesc, setNewLessonDesc,
+    editingLesson,
+    handleEditLesson,
+    cancelEditLesson,
+    openLessonsModal,
+    handleAddLessonSubmit,
+    handleDeleteLesson,
     // Profile & Certificate Actions
     handleUpdateProfileSubmit,
     isCertModalOpen, setIsCertModalOpen,
@@ -284,6 +299,7 @@ const TeacherDashboard: React.FC = () => {
               formatVND={formatVND}
               openCreateCourseModal={openCreateCourseModal}
               openEditCourseModal={openEditCourseModal}
+              openLessonsModal={openLessonsModal}
               handleDeleteCourse={handleDeleteCourse}
             />
           )}
@@ -643,6 +659,30 @@ const TeacherDashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* MODAL 5: LESSON MANAGEMENT */}
+      <LessonManagementModal
+        isOpen={isLessonModalOpen}
+        onClose={() => {
+          cancelEditLesson();
+          setIsLessonModalOpen(false);
+        }}
+        selectedCourse={selectedCourseForLessons}
+        lessons={courseLessons}
+        newLessonTitle={newLessonTitle}
+        setNewLessonTitle={setNewLessonTitle}
+        newLessonUrl={newLessonUrl}
+        setNewLessonUrl={setNewLessonUrl}
+        newLessonType={newLessonType}
+        setNewLessonType={setNewLessonType}
+        newLessonDesc={newLessonDesc}
+        setNewLessonDesc={setNewLessonDesc}
+        editingLesson={editingLesson}
+        onEditLesson={handleEditLesson}
+        onCancelEdit={cancelEditLesson}
+        handleAddLessonSubmit={handleAddLessonSubmit}
+        handleDeleteLesson={handleDeleteLesson}
+      />
 
     </div>
   );

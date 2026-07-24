@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import tutorApi from '../services/tutorApi';
+import { courseApi } from '../services/courseApi';
 import { blogApi, type CreateArticlePayload } from '../services/blogApi';
 import authStorage from '../utils/authStorage';
 
@@ -56,6 +57,16 @@ export const useTeacherDashboard = () => {
   const [certIssuedBy, setCertIssuedBy] = useState('');
   const [certIssuedDate, setCertIssuedDate] = useState('');
   const [certExpiryDate, setCertExpiryDate] = useState('');
+
+  // Form & Modal States - Course Lessons
+  const [isLessonModalOpen, setIsLessonModalOpen] = useState(false);
+  const [selectedCourseForLessons, setSelectedCourseForLessons] = useState<any | null>(null);
+  const [courseLessons, setCourseLessons] = useState<any[]>([]);
+  const [newLessonTitle, setNewLessonTitle] = useState('');
+  const [newLessonUrl, setNewLessonUrl] = useState('');
+  const [newLessonType, setNewLessonType] = useState<'video' | 'pdf' | 'text'>('video');
+  const [newLessonDesc, setNewLessonDesc] = useState('');
+  const [editingLesson, setEditingLesson] = useState<any | null>(null);
 
   // Form States - Course
   const [newCourseTitle, setNewCourseTitle] = useState('');
@@ -534,6 +545,108 @@ export const useTeacherDashboard = () => {
     }
   };
 
+  // Lesson Management Handlers
+  const openLessonsModal = async (course: any) => {
+    setSelectedCourseForLessons(course);
+    setEditingLesson(null);
+    setNewLessonTitle('');
+    setNewLessonUrl('');
+    setNewLessonType('video');
+    setNewLessonDesc('');
+    setIsLessonModalOpen(true);
+    try {
+      const res = await courseApi.getCourseDocuments(course.course_id);
+      if (res && res.success) {
+        setCourseLessons(res.data || []);
+      } else {
+        setCourseLessons(course.documents || []);
+      }
+    } catch (err) {
+      setCourseLessons(course.documents || []);
+    }
+  };
+
+  const handleEditLesson = (lesson: any) => {
+    setEditingLesson(lesson);
+    setNewLessonTitle(lesson.title || '');
+    setNewLessonUrl(lesson.file_url === '#' ? '' : lesson.file_url || '');
+    setNewLessonType(lesson.file_type || 'video');
+    setNewLessonDesc(lesson.description || '');
+  };
+
+  const cancelEditLesson = () => {
+    setEditingLesson(null);
+    setNewLessonTitle('');
+    setNewLessonUrl('');
+    setNewLessonType('video');
+    setNewLessonDesc('');
+  };
+
+  const handleAddLessonSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCourseForLessons) return;
+    if (!newLessonTitle.trim()) {
+      toast.error('Vui lòng nhập Tên bài học.');
+      return;
+    }
+
+    try {
+      let res;
+      if (editingLesson) {
+        res = await courseApi.updateCourseDocument(editingLesson.doc_id, {
+          title: newLessonTitle.trim(),
+          file_url: newLessonUrl.trim() || undefined,
+          file_type: newLessonType,
+          description: newLessonDesc.trim() || undefined
+        });
+      } else {
+        res = await courseApi.addCourseDocument(selectedCourseForLessons.course_id, {
+          title: newLessonTitle.trim(),
+          file_url: newLessonUrl.trim() || undefined,
+          file_type: newLessonType,
+          description: newLessonDesc.trim() || undefined
+        });
+      }
+
+      if (res && res.success) {
+        toast.success(editingLesson ? 'Cập nhật bài học thành công!' : 'Đăng bài học mới thành công!');
+        setEditingLesson(null);
+        setNewLessonTitle('');
+        setNewLessonUrl('');
+        setNewLessonDesc('');
+        // Refresh lessons list
+        const updatedDocs = await courseApi.getCourseDocuments(selectedCourseForLessons.course_id);
+        if (updatedDocs && updatedDocs.success) {
+          setCourseLessons(updatedDocs.data);
+        }
+        loadDashboardData();
+      } else {
+        toast.error(res?.error || (editingLesson ? 'Không thể cập nhật bài học.' : 'Không thể tạo bài học.'));
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Có lỗi xảy ra khi lưu bài học.');
+    }
+  };
+
+  const handleDeleteLesson = async (docId: string, title: string) => {
+    if (!window.confirm(`Bạn có chắc muốn xóa bài học "${title}"?`)) return;
+    try {
+      const res = await courseApi.deleteCourseDocument(docId);
+      if (res && res.success) {
+        toast.success('Xóa bài học thành công!');
+        setCourseLessons(prev => prev.filter(l => l.doc_id !== docId));
+        if (editingLesson && editingLesson.doc_id === docId) {
+          cancelEditLesson();
+        }
+        loadDashboardData();
+      } else {
+        toast.error(res?.error || 'Xóa bài học thất bại.');
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Có lỗi xảy ra khi xóa bài học.');
+    }
+  };
+
   const allSchedules = courses.reduce((acc: any[], course) => {
     const courseSchedules = (course.schedules || []).map((sch: any) => ({
       ...sch,
@@ -559,6 +672,20 @@ export const useTeacherDashboard = () => {
     allSchedules,
     formatVND,
     formatDateString,
+    // Lesson Management
+    isLessonModalOpen, setIsLessonModalOpen,
+    selectedCourseForLessons, setSelectedCourseForLessons,
+    courseLessons, setCourseLessons,
+    newLessonTitle, setNewLessonTitle,
+    newLessonUrl, setNewLessonUrl,
+    newLessonType, setNewLessonType,
+    newLessonDesc, setNewLessonDesc,
+    editingLesson,
+    handleEditLesson,
+    cancelEditLesson,
+    openLessonsModal,
+    handleAddLessonSubmit,
+    handleDeleteLesson,
     // Profile & Certificate Handlers
     handleUpdateProfileSubmit,
     isCertModalOpen, setIsCertModalOpen,

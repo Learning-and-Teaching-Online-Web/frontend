@@ -11,7 +11,7 @@ export const mapBackendCourseToFrontend = (beCourse: any) => {
     oldPrice: beCourse.oldPrice || undefined,
     isFree: isFree,
     duration: `${beCourse.total_sessions || 1} Buổi (${beCourse.duration_minutes || 60} Phút/Buổi)`,
-    studentsCount: beCourse.max_students || 0,
+    studentsCount: beCourse.studentsCount !== undefined ? beCourse.studentsCount : 0,
     rating: Number(beCourse.tutor?.rating) || 5,
     reviewCount: beCourse.tutor?.review_count || 0,
     level: beCourse.level || 'Beginner',
@@ -21,9 +21,18 @@ export const mapBackendCourseToFrontend = (beCourse: any) => {
     instructorBio: beCourse.tutor?.bio || null,
     instructorSpecialization: beCourse.tutor?.specialization || null,
     thumbnail: beCourse.thumbnail_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500&auto=format&fit=crop&q=60',
-    lessonsCount: beCourse.total_sessions || 0,
+    lessonsCount: (beCourse.documents && beCourse.documents.length > 0) ? beCourse.documents.length : (beCourse.total_sessions || 0),
     quizzesCount: beCourse.quizzes?.length || 0,
     schedules: beCourse.schedules || [],
+    documents: beCourse.documents || [],
+    curriculum: (beCourse.documents || []).map((doc: any, index: number) => ({
+      id: doc.doc_id,
+      title: doc.title,
+      description: doc.description || '',
+      type: doc.file_type || 'video',
+      url: doc.file_url || '',
+      createdAt: doc.created_at
+    })),
     tutor_id: beCourse.tutor_id || '',
   };
 };
@@ -56,6 +65,27 @@ export const courseApi = {
 
   addSchedule: async (courseId: string, data: any) => {
     const response = await axiosClient.post(`/courses/${courseId}/schedules`, data);
+    return response.data;
+  },
+
+  // Course Documents / Lessons
+  getCourseDocuments: async (courseId: string) => {
+    const response = await axiosClient.get(`/courses/${courseId}/documents`);
+    return response.data;
+  },
+
+  addCourseDocument: async (courseId: string, data: { title: string; file_url?: string; file_type?: string; description?: string }) => {
+    const response = await axiosClient.post(`/courses/${courseId}/documents`, data);
+    return response.data;
+  },
+
+  updateCourseDocument: async (docId: string, data: { title?: string; file_url?: string; file_type?: string; description?: string }) => {
+    const response = await axiosClient.patch(`/courses/documents/${docId}`, data);
+    return response.data;
+  },
+
+  deleteCourseDocument: async (docId: string) => {
+    const response = await axiosClient.delete(`/courses/documents/${docId}`);
     return response.data;
   },
 
