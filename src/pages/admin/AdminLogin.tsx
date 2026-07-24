@@ -32,8 +32,6 @@ const AdminLogin: React.FC = () => {
       // Supabase stores custom roles in user_metadata, while user.role is 'authenticated'
       const userRole = user?.user_metadata?.role || user?.role;
 
-      console.log('Role found:', userRole);
-
       if (userRole !== 'admin') {
         toast.error('Tài khoản không có quyền quản trị viên!');
         setIsLoading(false);

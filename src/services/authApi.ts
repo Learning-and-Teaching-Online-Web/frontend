@@ -2,7 +2,6 @@ import axiosClient from './axiosClient';
 
 export const authApi = {
   login: async (data: { identifier?: string; email?: string; username?: string; password: string }) => {
-    // Tùy theo cấu trúc BE, có thể gửi email, username, hoặc identifier chung
     const response = await axiosClient.post('/auth/signin', data);
     return response.data;
   },
@@ -22,6 +21,16 @@ export const authApi = {
 
   getProfile: async () => {
     const response = await axiosClient.get('/auth/profile');
+    return response.data;
+  },
+
+  updateProfile: async (data: {
+    fullName?: string;
+    phone?: string;
+    avatarUrl?: string;
+    metadata?: any;
+  }) => {
+    const response = await axiosClient.patch('/auth/profile', data);
     return response.data;
   }
 };

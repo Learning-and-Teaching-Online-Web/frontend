@@ -11,6 +11,8 @@ import ContactPage from '../pages/ContactPage';
 import StudentDashboard from '../pages/StudentDashboard';
 import InstructorList from '../pages/InstructorList';
 import TeacherDashboard from '../components/TeacherDashboard';
+import NotFoundPage from '../pages/NotFoundPage';
+import ProtectedRoute from '../components/ProtectedRoute';
 
 // Admin pages
 import AdminLogin from '../pages/admin/AdminLogin';
@@ -24,6 +26,7 @@ import TransactionHistory from '../pages/admin/TransactionHistory';
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
+      {/* Public routes */}
       <Route path="/" element={<HomePage />} />
       <Route path="/courses" element={<CourseList />} />
       <Route path="/courses/:courseId" element={<CourseDetail />} />
@@ -32,18 +35,31 @@ const AppRoutes: React.FC = () => {
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/faq" element={<FaqPage />} />
       <Route path="/contact" element={<ContactPage />} />
-      <Route path="/student/dashboard" element={<StudentDashboard />} />
       <Route path="/instructors" element={<InstructorList />} />
-      <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
-
-      {/* Admin Panel routes */}
       <Route path="/admin/login" element={<AdminLogin />} />
-      <Route path="/admin" element={<AdminDashboard />} />
-      <Route path="/admin/users" element={<UserManagement />} />
-      <Route path="/admin/students" element={<StudentManagement />} />
-      <Route path="/admin/tutors" element={<TutorVerification />} />
-      <Route path="/admin/courses" element={<CourseModeration />} />
-      <Route path="/admin/payouts" element={<TransactionHistory />} />
+
+      {/* Protected Student routes */}
+      <Route element={<ProtectedRoute allowedRoles={['student', 'admin']} redirectPath="/auth" />}>
+        <Route path="/student/dashboard" element={<StudentDashboard />} />
+      </Route>
+
+      {/* Protected Tutor routes */}
+      <Route element={<ProtectedRoute allowedRoles={['tutor', 'admin']} redirectPath="/auth" />}>
+        <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
+      </Route>
+
+      {/* Protected Admin Panel routes */}
+      <Route element={<ProtectedRoute allowedRoles={['admin']} redirectPath="/admin/login" />}>
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/users" element={<UserManagement />} />
+        <Route path="/admin/students" element={<StudentManagement />} />
+        <Route path="/admin/tutors" element={<TutorVerification />} />
+        <Route path="/admin/courses" element={<CourseModeration />} />
+        <Route path="/admin/payouts" element={<TransactionHistory />} />
+      </Route>
+
+      {/* Catch-all 404 Route */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 };

@@ -2,8 +2,6 @@ import axios from 'axios';
 
 // Khởi tạo một instance của axios với các cấu hình mặc định
 const axiosClient = axios.create({
-  // Sử dụng biến môi trường (environment variables) từ Vite
-  // Import.meta.env.VITE_API_BASE_URL sẽ tự động lấy từ file .env hoặc .env.production
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
   headers: {
     'Content-Type': 'application/json',
@@ -27,14 +25,26 @@ axiosClient.interceptors.request.use(
 // Interceptor cho các response (Xử lý lỗi hoặc chuẩn hóa dữ liệu trả về)
 axiosClient.interceptors.response.use(
   (response) => {
-    // Có thể chỉ trả về response.data nếu BE trả dữ liệu gói trong 'data'
-    // return response.data;
     return response;
   },
   (error) => {
-    // Xử lý các mã lỗi phổ biến (401, 403, 500,...)
+    // Xử lý khi token hết hạn hoặc không hợp lệ (401)
     if (error.response?.status === 401) {
-      console.error('Unauthorized! Có thể cần redirect về trang đăng nhập.');
+      const currentPath = window.location.pathname;
+      // Tránh tự động redirect lặp lại nếu đang ở trang auth hoặc admin login
+      if (!currentPath.startsWith('/auth') && !currentPath.startsWith('/admin/login')) {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userName');
+        window.dispatchEvent(new Event('authChange'));
+        
+        if (currentPath.startsWith('/admin')) {
+          window.location.href = '/admin/login';
+        } else {
+          window.location.href = '/auth';
+        }
+      }
     }
     return Promise.reject(error);
   }

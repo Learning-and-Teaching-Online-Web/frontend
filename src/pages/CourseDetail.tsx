@@ -45,6 +45,16 @@ const CourseDetail: React.FC = () => {
       return;
     }
 
+    const userRole = localStorage.getItem('userRole');
+    if (userRole === 'admin') {
+      toast.error('Tài khoản Quản trị viên (Admin) không thể đăng ký khóa học.');
+      return;
+    }
+    if (userRole === 'tutor') {
+      toast.error('Tài khoản Giảng viên không thể đăng ký khóa học. Vui lòng sử dụng tài khoản Học viên.');
+      return;
+    }
+
     if (!courseId || !course) return;
 
     // Khóa học có phí → chưa hỗ trợ thanh toán

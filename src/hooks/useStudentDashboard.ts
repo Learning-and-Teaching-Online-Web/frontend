@@ -180,27 +180,47 @@ export const useStudentDashboard = () => {
   }, [navigate]);
 
   // Update Profile Submit
-  const handleProfileSubmit = (e: React.FormEvent) => {
+  const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formName.trim()) {
       toast.error('Họ và tên không được để trống.');
       return;
     }
 
-    const updatedProfile: StudentProfile = {
-      ...profile,
-      fullName: formName,
-      phone: formPhone,
-      grade_level: formGrade,
-      learning_goals: formGoals,
-      preferred_subjects: formSubjects,
-      preferred_mode: formMode,
-      budget_max: formBudgetMax
-    };
+    try {
+      const res = await authApi.updateProfile({
+        fullName: formName,
+        phone: formPhone,
+        metadata: {
+          grade_level: formGrade,
+          learning_goals: formGoals,
+          preferred_subjects: formSubjects,
+          preferred_mode: formMode,
+          budget_max: formBudgetMax
+        }
+      });
 
-    setProfile(updatedProfile);
-    localStorage.setItem('studentProfile', JSON.stringify(updatedProfile));
-    toast.success('Cập nhật hồ sơ thành công!');
+      if (res && res.success) {
+        const updatedProfile: StudentProfile = {
+          ...profile,
+          fullName: formName,
+          phone: formPhone,
+          grade_level: formGrade,
+          learning_goals: formGoals,
+          preferred_subjects: formSubjects,
+          preferred_mode: formMode,
+          budget_max: formBudgetMax
+        };
+
+        setProfile(updatedProfile);
+        toast.success('Cập nhật hồ sơ thành công!');
+      } else {
+        toast.error(res?.error || 'Cập nhật thất bại.');
+      }
+    } catch (err: any) {
+      console.error('Error updating profile:', err);
+      toast.error(err?.response?.data?.error || 'Có lỗi xảy ra khi cập nhật hồ sơ.');
+    }
   };
 
   // Toggle Subject checkbox
