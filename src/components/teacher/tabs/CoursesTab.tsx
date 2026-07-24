@@ -1,22 +1,26 @@
 import React from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Edit2, Trash2 } from 'lucide-react';
 
 interface CoursesTabProps {
   courses: any[];
   formatVND: (n: number) => string;
-  setIsCourseModalOpen: (open: boolean) => void;
+  openCreateCourseModal: () => void;
+  openEditCourseModal: (course: any) => void;
+  handleDeleteCourse: (courseId: string, title: string) => void;
 }
 
 export const CoursesTab: React.FC<CoursesTabProps> = ({
   courses,
   formatVND,
-  setIsCourseModalOpen
+  openCreateCourseModal,
+  openEditCourseModal,
+  handleDeleteCourse
 }) => {
   return (
     <div className="section-card">
       <div className="section-header">
         <h2>Khóa học của tôi</h2>
-        <button className="btn-primary-db" onClick={() => setIsCourseModalOpen(true)}>
+        <button className="btn-primary-db" onClick={openCreateCourseModal}>
           <Plus size={16} /> Tạo khóa học mới
         </button>
       </div>
@@ -38,10 +42,27 @@ export const CoursesTab: React.FC<CoursesTabProps> = ({
               <h3 className="course-db-title" title={course.title}>{course.title}</h3>
               <div className="course-db-price">{formatVND(Number(course.price))}</div>
 
-              <div className="course-db-meta">
-                <span>Lớp: {course.level || 'Cơ bản'}</span>
-                <span>{course.studentsCount || 0} học viên</span>
-                <span>{(course.schedules || []).length} lịch dạy</span>
+              <div className="course-db-meta" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                <div>
+                  <span style={{ marginRight: '8px' }}>Lớp: {course.level || 'Cơ bản'}</span>
+                  <span>{course.studentsCount || 0} học viên</span>
+                </div>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button
+                    className="btn-secondary-db"
+                    style={{ padding: '5px 10px', fontSize: '12px' }}
+                    onClick={() => openEditCourseModal(course)}
+                  >
+                    <Edit2 size={13} /> Sửa
+                  </button>
+                  <button
+                    className="btn-action-danger"
+                    style={{ padding: '5px 10px', fontSize: '12px' }}
+                    onClick={() => handleDeleteCourse(course.course_id, course.title)}
+                  >
+                    <Trash2 size={13} /> Xóa
+                  </button>
+                </div>
               </div>
             </div>
           </div>

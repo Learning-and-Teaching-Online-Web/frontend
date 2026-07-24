@@ -39,8 +39,13 @@ const TeacherDashboard: React.FC = () => {
     allSchedules,
     formatVND,
     formatDateString,
-    // Modals
+    // Modals & Course Actions
     isCourseModalOpen, setIsCourseModalOpen,
+    editingCourse,
+    openCreateCourseModal,
+    openEditCourseModal,
+    handleCourseSubmit,
+    handleDeleteCourse,
     isScheduleModalOpen, setIsScheduleModalOpen,
     isWithdrawModalOpen, setIsWithdrawModalOpen,
     isArticleModalOpen, setIsArticleModalOpen,
@@ -52,7 +57,6 @@ const TeacherDashboard: React.FC = () => {
     newCourseLevel, setNewCourseLevel,
     newCourseSessions, setNewCourseSessions,
     newCourseDuration, setNewCourseDuration,
-    handleCreateCourseSubmit,
     // Schedule Form
     scheduleCourseId, setScheduleCourseId,
     scheduleDate, setScheduleDate,
@@ -236,7 +240,9 @@ const TeacherDashboard: React.FC = () => {
             <CoursesTab
               courses={courses}
               formatVND={formatVND}
-              setIsCourseModalOpen={setIsCourseModalOpen}
+              openCreateCourseModal={openCreateCourseModal}
+              openEditCourseModal={openEditCourseModal}
+              handleDeleteCourse={handleDeleteCourse}
             />
           )}
 
@@ -293,15 +299,15 @@ const TeacherDashboard: React.FC = () => {
 
       </div>
 
-      {/* MODAL 1: CREATE COURSE */}
+      {/* MODAL 1: CREATE / EDIT COURSE */}
       {isCourseModalOpen && (
         <div className="modal-overlay">
           <div className="modal-card">
             <div className="modal-header">
-              <h3>Tạo khóa học mới</h3>
+              <h3>{editingCourse ? 'Chỉnh sửa khóa học' : 'Tạo khóa học mới'}</h3>
               <button onClick={() => setIsCourseModalOpen(false)} className="btn-close"><X size={20} /></button>
             </div>
-            <form onSubmit={handleCreateCourseSubmit}>
+            <form onSubmit={handleCourseSubmit}>
               <div className="form-group-db">
                 <label>Tên khóa học *</label>
                 <input
@@ -368,7 +374,9 @@ const TeacherDashboard: React.FC = () => {
 
               <div className="modal-actions">
                 <button type="button" className="btn-secondary-db" onClick={() => setIsCourseModalOpen(false)}>Hủy</button>
-                <button type="submit" className="btn-primary-db">Tạo khóa học</button>
+                <button type="submit" className="btn-primary-db">
+                  {editingCourse ? 'Cập nhật khóa học' : 'Tạo khóa học'}
+                </button>
               </div>
             </form>
           </div>

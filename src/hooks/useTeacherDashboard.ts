@@ -40,6 +40,7 @@ export const useTeacherDashboard = () => {
 
   // Modal Open States
   const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<any | null>(null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [isArticleModalOpen, setIsArticleModalOpen] = useState(false);
@@ -184,7 +185,30 @@ export const useTeacherDashboard = () => {
     }
   };
 
-  const handleCreateCourseSubmit = async (e: React.FormEvent) => {
+  // Course Handlers
+  const openCreateCourseModal = () => {
+    setEditingCourse(null);
+    setNewCourseTitle('');
+    setNewCourseSubject('Lập trình & Web');
+    setNewCoursePrice(300000);
+    setNewCourseLevel('Beginner');
+    setNewCourseSessions(10);
+    setNewCourseDuration(90);
+    setIsCourseModalOpen(true);
+  };
+
+  const openEditCourseModal = (course: any) => {
+    setEditingCourse(course);
+    setNewCourseTitle(course.title || '');
+    setNewCourseSubject(course.subject || 'Lập trình & Web');
+    setNewCoursePrice(Number(course.price) || 300000);
+    setNewCourseLevel(course.level || 'Beginner');
+    setNewCourseSessions(course.total_sessions || 10);
+    setNewCourseDuration(course.duration_minutes || 90);
+    setIsCourseModalOpen(true);
+  };
+
+  const handleCourseSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCourseTitle.trim()) {
       toast.error('Vui lòng nhập tên khóa học');
@@ -192,22 +216,39 @@ export const useTeacherDashboard = () => {
     }
 
     try {
-      await tutorApi.createCourse({
-        title: newCourseTitle,
+      const payload = {
+        title: newCourseTitle.trim(),
         subject: newCourseSubject,
         price: Number(newCoursePrice),
         level: newCourseLevel,
         duration_minutes: Number(newCourseDuration),
         total_sessions: Number(newCourseSessions)
-      });
+      };
 
-      toast.success('Tạo khóa học mới thành công!');
+      if (editingCourse) {
+        await tutorApi.updateCourse(editingCourse.course_id, payload);
+        toast.success('Cập nhật khóa học thành công!');
+      } else {
+        await tutorApi.createCourse(payload);
+        toast.success('Tạo khóa học mới thành công!');
+      }
+
       setIsCourseModalOpen(false);
-      setNewCourseTitle('');
-      setNewCoursePrice(300000);
+      setEditingCourse(null);
       loadDashboardData();
     } catch (err: any) {
-      toast.error(err.response?.data?.error || 'Tạo khóa học mới thất bại.');
+      toast.error(err.response?.data?.error || (editingCourse ? 'Cập nhật thất bại.' : 'Tạo khóa học mới thất bại.'));
+    }
+  };
+
+  const handleDeleteCourse = async (courseId: string, title: string) => {
+    if (!window.confirm(`Bạn có chắc muốn xóa khóa học "${title}"?`)) return;
+    try {
+      await tutorApi.deleteCourse(courseId);
+      toast.success('Xóa khóa học thành công!');
+      loadDashboardData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Xóa khóa học thất bại.');
     }
   };
 
@@ -397,8 +438,13 @@ export const useTeacherDashboard = () => {
     allSchedules,
     formatVND,
     formatDateString,
-    // Modals
+    // Modals & Course Actions
     isCourseModalOpen, setIsCourseModalOpen,
+    editingCourse, setEditingCourse,
+    openCreateCourseModal,
+    openEditCourseModal,
+    handleCourseSubmit,
+    handleDeleteCourse,
     isScheduleModalOpen, setIsScheduleModalOpen,
     isWithdrawModalOpen, setIsWithdrawModalOpen,
     isArticleModalOpen, setIsArticleModalOpen,
@@ -410,7 +456,6 @@ export const useTeacherDashboard = () => {
     newCourseLevel, setNewCourseLevel,
     newCourseSessions, setNewCourseSessions,
     newCourseDuration, setNewCourseDuration,
-    handleCreateCourseSubmit,
     // Schedule form
     scheduleCourseId, setScheduleCourseId,
     scheduleDate, setScheduleDate,

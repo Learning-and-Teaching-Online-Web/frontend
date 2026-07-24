@@ -37,6 +37,26 @@ export const tutorApi = {
     return res.data;
   },
 
+  // Update Course
+  updateCourse: async (courseId: string, data: {
+    title?: string;
+    subject?: string;
+    price?: number;
+    level?: string;
+    duration_minutes?: number;
+    total_sessions?: number;
+    status?: string;
+  }) => {
+    const res = await axiosClient.patch(`/courses/${courseId}`, data);
+    return res.data;
+  },
+
+  // Delete Course
+  deleteCourse: async (courseId: string) => {
+    const res = await axiosClient.delete(`/courses/${courseId}`);
+    return res.data;
+  },
+
   // Add Schedule
   addSchedule: async (courseId: string, data: {
     start_time: string;
