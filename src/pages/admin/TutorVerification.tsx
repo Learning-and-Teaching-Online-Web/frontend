@@ -108,7 +108,10 @@ const TutorVerification: React.FC = () => {
         fetchTutors();
         fetchPendingCount();
         if (selectedTutor?.tutor_id === tutorId) {
-          setSelectedTutor(prev => prev ? { ...prev, verified_status: status } : null);
+          const updatedTutor = { ...selectedTutor, verified_status: status };
+          setSelectedTutor(updatedTutor);
+          // Re-fetch certificates to reflect auto-approved/rejected statuses
+          handleSelectTutor(updatedTutor);
         }
       } else {
         toast.error(response.error || 'Lỗi cập nhật hồ sơ.');
@@ -280,21 +283,32 @@ const TutorVerification: React.FC = () => {
             </div>
 
             {/* Verification decision for tutor profile */}
-            {selectedTutor.verified_status === 'pending' && (
-              <div style={{ background: 'rgba(99, 102, 241, 0.05)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(99, 102, 241, 0.15)', marginBottom: '24px' }}>
-                <span style={{ fontSize: '14px', fontWeight: 600, display: 'block', marginBottom: '8px' }}>Quyết định duyệt hồ sơ gia sư:</span>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button onClick={() => handleVerifyTutor(selectedTutor.tutor_id, 'approved')} className="admin-btn success sm" style={{ flexGrow: 1 }}>
-                    <Check size={16} />
-                    <span>Duyệt hồ sơ</span>
-                  </button>
-                  <button onClick={() => handleVerifyTutor(selectedTutor.tutor_id, 'rejected')} className="admin-btn danger sm" style={{ flexGrow: 1 }}>
-                    <X size={16} />
-                    <span>Từ chối</span>
-                  </button>
-                </div>
+            <div style={{ background: 'rgba(99, 102, 241, 0.05)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(99, 102, 241, 0.15)', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <span style={{ fontSize: '14px', fontWeight: 600 }}>Quyết định duyệt hồ sơ gia sư:</span>
+                <span className={`admin-badge ${selectedTutor.verified_status === 'approved' ? 'success' : selectedTutor.verified_status === 'rejected' ? 'danger' : 'warning'}`}>
+                  {selectedTutor.verified_status === 'approved' ? 'Đã duyệt tài khoản' : selectedTutor.verified_status === 'rejected' ? 'Đã từ chối tài khoản' : 'Đang chờ duyệt'}
+                </span>
               </div>
-            )}
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  onClick={() => handleVerifyTutor(selectedTutor.tutor_id, 'approved')}
+                  className={`admin-btn ${selectedTutor.verified_status === 'approved' ? 'success' : 'secondary'} sm`}
+                  style={{ flexGrow: 1, opacity: selectedTutor.verified_status === 'approved' ? 1 : 0.8 }}
+                >
+                  <Check size={16} />
+                  <span>Duyệt hồ sơ (Đồng bộ bằng cấp)</span>
+                </button>
+                <button
+                  onClick={() => handleVerifyTutor(selectedTutor.tutor_id, 'rejected')}
+                  className={`admin-btn ${selectedTutor.verified_status === 'rejected' ? 'danger' : 'secondary'} sm`}
+                  style={{ flexGrow: 1, opacity: selectedTutor.verified_status === 'rejected' ? 1 : 0.8 }}
+                >
+                  <X size={16} />
+                  <span>Từ chối hồ sơ</span>
+                </button>
+              </div>
+            </div>
 
             {/* Certificates section */}
             <h4 style={{ fontSize: '15px', fontWeight: 600, borderTop: '1px solid var(--admin-border)', paddingTop: '16px', marginBottom: '12px' }}>
@@ -336,22 +350,20 @@ const TutorVerification: React.FC = () => {
                       </div>
                     )}
 
-                    {cert.status === 'pending' && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
-                        <input 
-                          type="text" 
-                          placeholder="Lý do từ chối/ghi chú..." 
-                          className="admin-search-input"
-                          style={{ minWidth: '100%', padding: '6px 10px', fontSize: '12px' }}
-                          value={adminNote}
-                          onChange={(e) => setAdminNote(e.target.value)}
-                        />
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <button onClick={() => handleVerifyCertificate(cert.cert_id, 'approved')} className="admin-btn success sm" style={{ flexGrow: 1, padding: '4px' }}>Duyệt</button>
-                          <button onClick={() => handleVerifyCertificate(cert.cert_id, 'rejected')} className="admin-btn danger sm" style={{ flexGrow: 1, padding: '4px' }}>Bỏ</button>
-                        </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
+                      <input 
+                        type="text" 
+                        placeholder="Lý do từ chối/ghi chú..." 
+                        className="admin-search-input"
+                        style={{ minWidth: '100%', padding: '6px 10px', fontSize: '12px' }}
+                        value={adminNote}
+                        onChange={(e) => setAdminNote(e.target.value)}
+                      />
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button onClick={() => handleVerifyCertificate(cert.cert_id, 'approved')} className={`admin-btn ${cert.status === 'approved' ? 'success' : 'secondary'} sm`} style={{ flexGrow: 1, padding: '4px' }}>Duyệt</button>
+                        <button onClick={() => handleVerifyCertificate(cert.cert_id, 'rejected')} className={`admin-btn ${cert.status === 'rejected' ? 'danger' : 'secondary'} sm`} style={{ flexGrow: 1, padding: '4px' }}>Bỏ</button>
                       </div>
-                    )}
+                    </div>
                   </div>
                 ))}
               </div>

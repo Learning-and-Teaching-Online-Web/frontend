@@ -18,6 +18,45 @@ export const tutorApi = {
     return res.data;
   },
 
+  // My Tutor Profile & Certificates
+  getMyProfile: async () => {
+    const res = await axiosClient.get('/tutors/my-profile');
+    return res.data;
+  },
+
+  updateMyProfile: async (data: {
+    bio?: string;
+    education?: string;
+    experience_years?: number;
+    hourly_rate?: number;
+    specialties?: string[];
+    teaching_mode?: 'online' | 'offline' | 'both';
+    province?: string;
+    district?: string;
+  }) => {
+    const res = await axiosClient.put('/tutors/my-profile', data);
+    return res.data;
+  },
+
+  addCertificate: async (data: {
+    title: string;
+    file_url?: string;
+    file_base64?: string;
+    file_name?: string;
+    file_type?: string;
+    issued_by?: string;
+    issued_date?: string;
+    expiry_date?: string;
+  }) => {
+    const res = await axiosClient.post('/tutors/certificates', data);
+    return res.data;
+  },
+
+  deleteCertificate: async (certId: string) => {
+    const res = await axiosClient.delete(`/tutors/certificates/${certId}`);
+    return res.data;
+  },
+
   // Courses (My Courses for Tutor)
   getMyCourses: async () => {
     const res = await axiosClient.get('/courses/my-courses');
@@ -34,6 +73,26 @@ export const tutorApi = {
     total_sessions: number;
   }) => {
     const res = await axiosClient.post('/courses', data);
+    return res.data;
+  },
+
+  // Update Course
+  updateCourse: async (courseId: string, data: {
+    title?: string;
+    subject?: string;
+    price?: number;
+    level?: string;
+    duration_minutes?: number;
+    total_sessions?: number;
+    status?: string;
+  }) => {
+    const res = await axiosClient.patch(`/courses/${courseId}`, data);
+    return res.data;
+  },
+
+  // Delete Course
+  deleteCourse: async (courseId: string) => {
+    const res = await axiosClient.delete(`/courses/${courseId}`);
     return res.data;
   },
 

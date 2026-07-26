@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { authApi } from '../services/authApi';
+import authStorage from '../utils/authStorage';
 import '../styles/AuthPage.css';
 
 interface AuthPageProps {
@@ -67,12 +68,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
       const fullName = user?.user_metadata?.full_name || user?.full_name || loginIdentifier.split('@')[0];
       const token = session?.access_token;
 
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('userRole', role);
-      localStorage.setItem('userName', fullName);
-      if (token) {
-        localStorage.setItem('access_token', token);
-      }
+      authStorage.setAuthSession(token, role, fullName);
 
       window.dispatchEvent(new Event('authChange'));
       toast.success('Đăng nhập thành công!');
@@ -148,12 +144,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
             password: registerPassword,
           });
           const token = loginRes.data?.session?.access_token;
-          if (token) {
-            localStorage.setItem('access_token', token);
-          }
-          localStorage.setItem('isAuthenticated', 'true');
-          localStorage.setItem('userRole', registerRole);
-          localStorage.setItem('userName', registerFullName);
+          authStorage.setAuthSession(token, registerRole, registerFullName);
           window.dispatchEvent(new Event('authChange'));
           toast.success('Đăng ký tài khoản thành công!');
           navigate('/');

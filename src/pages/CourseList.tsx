@@ -63,7 +63,7 @@ const CourseList: React.FC = () => {
 
       // Categories (OR logic: match any of the selected categories)
       if (filters.categories.length > 0) {
-        const hasMatchingCat = course.categories.some(cat => filters.categories.includes(cat));
+        const hasMatchingCat = course.categories.some((cat: string) => filters.categories.includes(cat));
         if (!hasMatchingCat) return false;
       }
 
@@ -142,6 +142,7 @@ const CourseList: React.FC = () => {
           <SidebarFilters
             filters={filters}
             onFilterChange={handleFilterChange}
+            courses={courses}
           />
 
           {/* Right Column (Courses + Control) */}

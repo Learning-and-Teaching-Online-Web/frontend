@@ -10,6 +10,7 @@ interface BlogSidebarProps {
   onToggleCategory: (category: string) => void;
   selectedTag: string | null;
   onSelectTag: (tag: string | null) => void;
+  articles?: any[];
 }
 
 const BlogSidebar: React.FC<BlogSidebarProps> = ({
@@ -18,8 +19,47 @@ const BlogSidebar: React.FC<BlogSidebarProps> = ({
   selectedCategories,
   onToggleCategory,
   selectedTag,
-  onSelectTag
+  onSelectTag,
+  articles = []
 }) => {
+  // Dynamically calculate category counts from real loaded articles
+  const categoryList = React.useMemo(() => {
+    const counts: { [key: string]: number } = {};
+    articles.forEach(art => {
+      if (art.category) {
+        counts[art.category] = (counts[art.category] || 0) + 1;
+      }
+    });
+    if (Object.keys(counts).length > 0) {
+      return Object.keys(counts).map(name => ({ name, count: counts[name] }));
+    }
+    return mockCategories;
+  }, [articles]);
+
+  // Dynamically get recent posts from real articles
+  const recentPostsList = React.useMemo(() => {
+    if (articles.length > 0) {
+      return articles.slice(0, 3).map(art => ({
+        id: art.id || art.article_id,
+        title: art.title,
+        date: art.date || (art.created_at ? new Date(art.created_at).toLocaleDateString('vi-VN') : 'Mới cập nhật'),
+        imageType: (art.imageType || 'globe') as 'globe' | 'classroom' | 'office'
+      }));
+    }
+    return mockRecentPosts;
+  }, [articles]);
+
+  // Dynamically get tags from real articles
+  const tagsList = React.useMemo(() => {
+    const set = new Set<string>();
+    articles.forEach(art => {
+      if (Array.isArray(art.tags)) {
+        art.tags.forEach((t: string) => { if (t) set.add(t); });
+      }
+    });
+    if (set.size > 0) return Array.from(set);
+    return mockTags;
+  }, [articles]);
 
   const renderThumbnail = (imageType: 'globe' | 'classroom' | 'office') => {
     switch (imageType) {
@@ -72,7 +112,7 @@ const BlogSidebar: React.FC<BlogSidebarProps> = ({
       <div className="filter-group">
         <h3 className="filter-title">Danh mục</h3>
         <div className="filter-options">
-          {mockCategories.map((cat, idx) => (
+          {categoryList.map((cat, idx) => (
             <label key={idx} className="filter-checkbox-label">
               <div className="filter-checkbox-left">
                 <input
@@ -93,7 +133,7 @@ const BlogSidebar: React.FC<BlogSidebarProps> = ({
       <div className="filter-group">
         <h3 className="filter-title">Bài viết gần đây</h3>
         <div className="recent-posts-list" style={{ marginTop: '12px' }}>
-          {mockRecentPosts.map((post) => (
+          {recentPostsList.map((post) => (
             <Link
               key={post.id}
               to={`/blog/${post.id}`}
@@ -125,7 +165,7 @@ const BlogSidebar: React.FC<BlogSidebarProps> = ({
           >
             Tất cả thẻ
           </button>
-          {mockTags.map((tag, idx) => (
+          {tagsList.map((tag, idx) => (
             <button
               key={idx}
               className={`sidebar-tag-btn ${selectedTag === tag ? 'active' : ''}`}

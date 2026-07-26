@@ -1,5 +1,6 @@
 import React from 'react';
-import { Heart, Trash2, Star } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Heart, Trash2, Star, BookOpen } from 'lucide-react';
 import { toast } from 'react-toastify';
 import type { FavoriteTutor } from '../../../data/mockStudentData';
 import '../../../styles/student/FavoritesTab.css';
@@ -45,14 +46,19 @@ export const FavoritesTab: React.FC<FavoritesTabProps> = ({
 
                 <p className="tutor-bio">{tutor.bio}</p>
 
-                <div className="tutor-footer">
-                  <div className="tutor-price">
-                    {tutor.hourlyRate.toLocaleString('vi-VN')}đ <span>/ giờ</span>
-                  </div>
+                <div className="tutor-footer" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <Link
+                    to={`/courses?tutor_id=${tutor.tutor_id}`}
+                    className="btn-tutor-message"
+                    style={{ background: 'var(--primary)', color: '#fff', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                  >
+                    <BookOpen size={14} /> Xem khóa học
+                  </Link>
                   <button 
                     className="btn-tutor-message"
+                    style={{ background: 'var(--bg-light)', color: 'var(--text-main)', border: '1px solid var(--border)' }}
                     onClick={() => {
-                      toast.info(`Mở cửa sổ chat với Giảng viên ${tutor.name}. Tính năng nhắn tin đang tải...`);
+                      toast.info(`Mở cửa sổ chat với Giảng viên ${tutor.name}. Tính năng nhắn tin đang được phát triển...`);
                     }}
                   >
                     Gửi tin nhắn

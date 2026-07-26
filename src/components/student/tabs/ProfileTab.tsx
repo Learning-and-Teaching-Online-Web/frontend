@@ -1,5 +1,5 @@
 import React from 'react';
-import { Save } from 'lucide-react';
+import { Save, Camera } from 'lucide-react';
 import type { StudentProfile } from '../../../data/mockStudentData';
 import '../../../styles/student/ProfileTab.css';
 
@@ -26,6 +26,7 @@ interface ProfileTabProps {
   handlers: {
     handleProfileSubmit: (e: React.FormEvent) => void;
     handleSubjectCheckbox: (subject: string) => void;
+    handleAvatarFileChange?: (file: File) => void;
   };
 }
 
@@ -43,6 +44,45 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
       </div>
 
       <form onSubmit={handlers.handleProfileSubmit}>
+        {/* AVATAR UPLOAD SECTION */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px', padding: '16px 20px', background: 'var(--bg-light)', borderRadius: '12px', border: '1px solid var(--border)' }}>
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <img
+              src={profile.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'}
+              alt={profile.fullName}
+              style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--primary)' }}
+            />
+          </div>
+          <div>
+            <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: 'var(--text-dark)' }}>Ảnh đại diện tài khoản</h3>
+            <p style={{ margin: '0 0 10px 0', fontSize: '13px', color: 'var(--text-muted)' }}>Chọn tệp hình ảnh (PNG, JPG, WEBP) từ máy tính của bạn</p>
+            <label style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 14px',
+              background: 'var(--primary)',
+              color: '#fff',
+              borderRadius: '6px',
+              fontSize: '13px',
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}>
+              <Camera size={15} /> Đổi ảnh từ máy tính
+              <input
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={(e) => {
+                  const file = e.target.files ? e.target.files[0] : null;
+                  if (file && handlers.handleAvatarFileChange) {
+                    handlers.handleAvatarFileChange(file);
+                  }
+                }}
+              />
+            </label>
+          </div>
+        </div>
         <div className="profile-form-grid">
           <div className="profile-form-group">
             <label htmlFor="fullName">Họ và tên *</label>

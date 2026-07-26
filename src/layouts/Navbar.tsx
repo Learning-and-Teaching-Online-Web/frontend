@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { BookOpen, Search } from 'lucide-react';
+import authStorage from '../utils/authStorage';
 import '../styles/Navbar.css';
 
 const Navbar: React.FC = () => {
@@ -13,8 +14,8 @@ const Navbar: React.FC = () => {
 
   useEffect(() => {
     const checkAuth = () => {
-      setIsAuthenticated(localStorage.getItem('isAuthenticated') === 'true');
-      setUserRole(localStorage.getItem('userRole'));
+      setIsAuthenticated(authStorage.isAuthenticated());
+      setUserRole(authStorage.getUserRole());
     };
     checkAuth();
 
@@ -24,10 +25,7 @@ const Navbar: React.FC = () => {
 
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault();
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userName');
+    authStorage.clearAuthSession();
     window.dispatchEvent(new Event('authChange'));
     navigate('/');
   };
@@ -134,9 +132,9 @@ const Navbar: React.FC = () => {
           <button className="search-trigger" aria-label="Tìm kiếm">
             <Search size={18} />
           </button>
-        </div >
-      </div >
-    </nav >
+        </div>
+      </div>
+    </nav>
   );
 };
 
