@@ -63,12 +63,12 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
       });
 
       const user = response?.data?.user;
-      const session = response?.data?.session;
-      const role = user?.user_metadata?.role || user?.role || (loginIdentifier.toLowerCase().includes('tutor') ? 'tutor' : 'student');
-      const fullName = user?.user_metadata?.full_name || user?.full_name || loginIdentifier.split('@')[0];
-      const token = session?.access_token;
+      const token = response?.data?.access_token;
+      const refreshToken = response?.data?.refresh_token;
+      const role = user?.role || (loginIdentifier.toLowerCase().includes('tutor') ? 'tutor' : 'student');
+      const fullName = user?.full_name || loginIdentifier.split('@')[0];
 
-      authStorage.setAuthSession(token, role, fullName);
+      authStorage.setAuthSession(token, refreshToken, role, fullName);
 
       window.dispatchEvent(new Event('authChange'));
       toast.success('Đăng nhập thành công!');
@@ -137,18 +137,15 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
       });
 
       if (response.success) {
-        // Auto-login after successful registration
-        try {
-          const loginRes = await authApi.login({
-            email: registerEmail,
-            password: registerPassword,
-          });
-          const token = loginRes.data?.session?.access_token;
-          authStorage.setAuthSession(token, registerRole, registerFullName);
+        const token = response.data?.access_token;
+        const refreshToken = response.data?.refresh_token;
+
+        if (token && refreshToken) {
+          authStorage.setAuthSession(token, refreshToken, registerRole, registerFullName);
           window.dispatchEvent(new Event('authChange'));
           toast.success('Đăng ký tài khoản thành công!');
           navigate('/');
-        } catch {
+        } else {
           toast.success('Đăng ký thành công! Vui lòng đăng nhập.');
           setActiveTab('login');
         }
