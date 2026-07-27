@@ -40,6 +40,51 @@ const TutorVerification: React.FC = () => {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [certsLoading, setCertsLoading] = useState(false);
   const [adminNote, setAdminNote] = useState('');
+  const [previewCert, setPreviewCert] = useState<Certificate | null>(null);
+
+  // File type helpers
+  const isImageFile = (url: string) => {
+    if (!url) return false;
+    if (url.startsWith('data:image/')) return true;
+    return /\.(jpeg|jpg|png|gif|webp|svg)(\?.*)?$/i.test(url);
+  };
+
+  const isPdfFile = (url: string) => {
+    if (!url) return false;
+    if (url.startsWith('data:application/pdf')) return true;
+    return /\.pdf(\?.*)?$/i.test(url);
+  };
+
+  const getSafeFileUrl = (url: string) => {
+    if (!url) return '';
+    if (url.startsWith('data:')) return url;
+    return url;
+  };
+
+  const handleOpenCertFile = (fileUrl: string) => {
+    if (!fileUrl) return;
+    if (fileUrl.startsWith('data:')) {
+      try {
+        const arr = fileUrl.split(',');
+        const mimeMatch = arr[0].match(/:(.*?);/);
+        const mime = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        const blob = new Blob([u8arr], { type: mime });
+        const blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl, '_blank');
+      } catch (e) {
+        console.error('Error opening base64 file:', e);
+        toast.error('Không thể tải file này.');
+      }
+    } else {
+      window.open(fileUrl, '_blank');
+    }
+  };
 
   const fetchPendingCount = async () => {
     try {
@@ -321,16 +366,36 @@ const TutorVerification: React.FC = () => {
               <div className="cert-gallery">
                 {certificates.map((cert) => (
                   <div key={cert.cert_id} className="cert-card">
-                    <div className="cert-title">{cert.title}</div>
+                    <div className="cert-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>{cert.title}</span>
+                      <button
+                        onClick={() => setPreviewCert(cert)}
+                        className="admin-btn sm secondary"
+                        style={{ padding: '4px 8px', fontSize: '11px' }}
+                        title="Xem trực tiếp trong Modal"
+                      >
+                        <Eye size={12} /> Xem
+                      </button>
+                    </div>
                     
                     {/* View Cert doc */}
-                    <div className="cert-img-wrapper">
-                      {cert.file_url.match(/\.(jpeg|jpg|gif|png)$/) ? (
-                        <img src={cert.file_url} alt="Certificate Doc" className="cert-img" />
+                    <div 
+                      className="cert-img-wrapper" 
+                      onClick={() => setPreviewCert(cert)}
+                      style={{ cursor: 'pointer', position: 'relative' }}
+                      title="Nhấp để xem trước trực tiếp"
+                    >
+                      {isImageFile(cert.file_url) ? (
+                        <img src={getSafeFileUrl(cert.file_url)} alt="Certificate Doc" className="cert-img" />
+                      ) : isPdfFile(cert.file_url) ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '8px', color: '#818cf8', background: 'rgba(99, 102, 241, 0.08)' }}>
+                          <FileText size={42} />
+                          <span style={{ fontSize: '12px', fontWeight: 600 }}>Tệp PDF (Nhấp để xem)</span>
+                        </div>
                       ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '8px', color: 'var(--admin-text-muted)' }}>
                           <FileText size={40} color="var(--admin-primary)" />
-                          <span style={{ fontSize: '11px' }}>File chứng chỉ/PDF</span>
+                          <span style={{ fontSize: '11px' }}>Tệp tài liệu minh chứng</span>
                         </div>
                       )}
                     </div>
@@ -339,9 +404,12 @@ const TutorVerification: React.FC = () => {
                       <span className={`admin-badge ${cert.status === 'approved' ? 'success' : cert.status === 'rejected' ? 'danger' : 'warning'}`}>
                         {cert.status === 'approved' ? 'Đã duyệt' : cert.status === 'rejected' ? 'Từ chối' : 'Chờ duyệt'}
                       </span>
-                      <a href={cert.file_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: 'var(--admin-primary)', textDecoration: 'underline' }}>
-                        Tải file gốc
-                      </a>
+                      <button 
+                        onClick={() => handleOpenCertFile(cert.file_url)} 
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: 'var(--admin-primary)', textDecoration: 'underline', padding: 0 }}
+                      >
+                        Tải/Mở file gốc ↗
+                      </button>
                     </div>
 
                     {cert.admin_note && (
@@ -373,6 +441,108 @@ const TutorVerification: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* PREVIEW CERTIFICATE LIGHTBOX MODAL */}
+      {previewCert && (
+        <div 
+          className="modal-overlay" 
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(8px)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+          onClick={() => setPreviewCert(null)}
+        >
+          <div 
+            className="modal-card" 
+            style={{
+              backgroundColor: '#111827',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              color: '#f3f4f6',
+              borderRadius: '16px',
+              width: '95vw',
+              maxWidth: '1200px',
+              height: '88vh',
+              maxHeight: '92vh',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(17, 24, 39, 0.9)', flexShrink: 0 }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#a5b4fc', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <FileText size={20} />
+                  <span>{previewCert.title}</span>
+                </h3>
+                <span style={{ fontSize: '12px', color: '#9ca3af' }}>Giảng viên: {selectedTutor?.user?.full_name}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span className={`admin-badge ${previewCert.status === 'approved' ? 'success' : previewCert.status === 'rejected' ? 'danger' : 'warning'}`}>
+                  {previewCert.status === 'approved' ? 'Đã duyệt' : previewCert.status === 'rejected' ? 'Từ chối' : 'Chờ duyệt'}
+                </span>
+                <button 
+                  onClick={() => setPreviewCert(null)}
+                  style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#9ca3af', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Content Preview */}
+            <div style={{ flex: '1 1 0%', minHeight: 0, padding: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#0b0f19', overflow: 'hidden' }}>
+              {isImageFile(previewCert.file_url) ? (
+                <img 
+                  src={getSafeFileUrl(previewCert.file_url)} 
+                  alt={previewCert.title} 
+                  style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.5)' }} 
+                />
+              ) : (
+                <iframe 
+                  src={getSafeFileUrl(previewCert.file_url)} 
+                  style={{ width: '100%', height: '100%', border: 'none', borderRadius: '8px', background: '#ffffff' }} 
+                  title={previewCert.title} 
+                />
+              )}
+            </div>
+
+            {/* Actions */}
+            <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(255,255,255,0.1)', background: 'rgba(17, 24, 39, 0.9)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+              <button 
+                onClick={() => handleOpenCertFile(previewCert.file_url)} 
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#818cf8', fontSize: '13px', textDecoration: 'underline', fontWeight: 500 }}
+              >
+                ↗ Mở tab mới / Tải tệp gốc
+              </button>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button 
+                  onClick={() => { handleVerifyCertificate(previewCert.cert_id, 'approved'); setPreviewCert(null); }} 
+                  className="admin-btn success sm"
+                >
+                  <Check size={14} /> Duyệt chứng chỉ
+                </button>
+                <button 
+                  onClick={() => { handleVerifyCertificate(previewCert.cert_id, 'rejected'); setPreviewCert(null); }} 
+                  className="admin-btn danger sm"
+                >
+                  <X size={14} /> Từ chối chứng chỉ
+                </button>
+                <button onClick={() => setPreviewCert(null)} className="admin-btn secondary sm">Đóng</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 };

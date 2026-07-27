@@ -4,19 +4,19 @@ import { Plus } from 'lucide-react';
 interface SchedulesTabProps {
   allSchedules: any[];
   formatDateString: (s: string) => string;
-  setIsScheduleModalOpen: (open: boolean) => void;
+  openAddScheduleModal: () => void;
 }
 
 export const SchedulesTab: React.FC<SchedulesTabProps> = ({
   allSchedules,
   formatDateString,
-  setIsScheduleModalOpen
+  openAddScheduleModal
 }) => {
   return (
     <div className="section-card">
       <div className="section-header">
         <h2>Quản lý lịch dạy của gia sư</h2>
-        <button className="btn-primary-db" onClick={() => setIsScheduleModalOpen(true)}>
+        <button className="btn-primary-db" onClick={openAddScheduleModal}>
           <Plus size={16} /> Thêm khung giờ dạy
         </button>
       </div>
