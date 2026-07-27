@@ -47,6 +47,31 @@ const UserManagement: React.FC = () => {
   const [status, setStatus] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserItem | null>(null);
 
+  const handleOpenCertFile = (fileUrl: string) => {
+    if (!fileUrl) return;
+    if (fileUrl.startsWith('data:')) {
+      try {
+        const arr = fileUrl.split(',');
+        const mimeMatch = arr[0].match(/:(.*?);/);
+        const mime = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        const blob = new Blob([u8arr], { type: mime });
+        const blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl, '_blank');
+      } catch (e) {
+        console.error('Error opening base64 file:', e);
+        toast.error('Không thể tải file này.');
+      }
+    } else {
+      window.open(fileUrl, '_blank');
+    }
+  };
+
   // Fetch users when filters change
   const fetchUsers = async () => {
     setLoading(true);
@@ -374,9 +399,24 @@ const UserManagement: React.FC = () => {
                     <strong style={{ display: 'block', marginBottom: '4px' }}>Chứng chỉ đính kèm ({selectedUser.tutor_profile.certificates.length}):</strong>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                       {selectedUser.tutor_profile.certificates.map(cert => (
-                        <a key={cert.cert_id} href={cert.file_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', padding: '4px 8px', background: '#e0e7ff', color: '#4338ca', borderRadius: '4px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <button
+                          key={cert.cert_id}
+                          onClick={() => handleOpenCertFile(cert.file_url)}
+                          style={{
+                            fontSize: '12px',
+                            padding: '4px 8px',
+                            background: '#e0e7ff',
+                            color: '#4338ca',
+                            borderRadius: '4px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                        >
                           📄 {cert.title} ({cert.status === 'approved' ? 'Đã duyệt' : cert.status === 'rejected' ? 'Từ chối' : 'Chờ duyệt'})
-                        </a>
+                        </button>
                       ))}
                     </div>
                   </div>
