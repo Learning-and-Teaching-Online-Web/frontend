@@ -212,8 +212,14 @@ export const useTeacherDashboard = () => {
     }
   };
 
+  const isApprovedTutor = tutorProfile?.verified_status === 'approved' || authStorage.getUserRole() === 'admin';
+
   // Course Handlers
   const openCreateCourseModal = () => {
+    if (!isApprovedTutor) {
+      toast.error('Hồ sơ gia sư của bạn chưa được duyệt bởi Quản trị viên. Không thể tạo khóa học!');
+      return;
+    }
     setEditingCourse(null);
     setNewCourseTitle('');
     setNewCourseSubject('Lập trình & Web');
@@ -225,6 +231,10 @@ export const useTeacherDashboard = () => {
   };
 
   const openEditCourseModal = (course: any) => {
+    if (!isApprovedTutor) {
+      toast.error('Hồ sơ gia sư của bạn chưa được duyệt bởi Quản trị viên.');
+      return;
+    }
     setEditingCourse(course);
     setNewCourseTitle(course.title || '');
     setNewCourseSubject(course.subject || 'Lập trình & Web');
@@ -237,6 +247,10 @@ export const useTeacherDashboard = () => {
 
   const handleCourseSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isApprovedTutor) {
+      toast.error('Hồ sơ gia sư của bạn chưa được duyệt bởi Quản trị viên.');
+      return;
+    }
     if (!newCourseTitle.trim()) {
       toast.error('Vui lòng nhập tên khóa học');
       return;
@@ -269,6 +283,10 @@ export const useTeacherDashboard = () => {
   };
 
   const handleDeleteCourse = async (courseId: string, title: string) => {
+    if (!isApprovedTutor) {
+      toast.error('Hồ sơ gia sư của bạn chưa được duyệt bởi Quản trị viên.');
+      return;
+    }
     if (!window.confirm(`Bạn có chắc muốn xóa khóa học "${title}"?`)) return;
     try {
       await tutorApi.deleteCourse(courseId);
@@ -279,8 +297,20 @@ export const useTeacherDashboard = () => {
     }
   };
 
+  const openAddScheduleModal = () => {
+    if (!isApprovedTutor) {
+      toast.error('Hồ sơ gia sư của bạn chưa được duyệt bởi Quản trị viên. Không thể thêm khung giờ dạy!');
+      return;
+    }
+    setIsScheduleModalOpen(true);
+  };
+
   const handleAddScheduleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isApprovedTutor) {
+      toast.error('Hồ sơ gia sư của bạn chưa được duyệt bởi Quản trị viên. Không thể thêm khung giờ dạy!');
+      return;
+    }
     if (!scheduleCourseId) {
       toast.error('Vui lòng chọn khóa học');
       return;
@@ -338,6 +368,10 @@ export const useTeacherDashboard = () => {
 
   // Article Modal Handlers
   const openCreateArticleModal = () => {
+    if (!isApprovedTutor) {
+      toast.error('Hồ sơ gia sư của bạn chưa được duyệt bởi Quản trị viên. Không thể đăng bài viết!');
+      return;
+    }
     setEditingArticle(null);
     setArticleTitle('');
     setArticleCategory('Mẹo học tập');
@@ -349,6 +383,10 @@ export const useTeacherDashboard = () => {
   };
 
   const openEditArticleModal = (article: any) => {
+    if (!isApprovedTutor) {
+      toast.error('Hồ sơ gia sư của bạn chưa được duyệt bởi Quản trị viên.');
+      return;
+    }
     setEditingArticle(article);
     setArticleTitle(article.title || '');
     setArticleCategory(article.category || 'Mẹo học tập');
@@ -376,6 +414,10 @@ export const useTeacherDashboard = () => {
 
   const handleArticleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isApprovedTutor) {
+      toast.error('Hồ sơ gia sư của bạn chưa được duyệt bởi Quản trị viên.');
+      return;
+    }
     if (!articleTitle.trim() || !articleExcerpt.trim() || !articleContent.trim()) {
       toast.error('Vui lòng nhập đầy đủ Tiêu đề, Tóm tắt và Nội dung.');
       return;
@@ -427,6 +469,10 @@ export const useTeacherDashboard = () => {
   };
 
   const handleDeleteArticle = async (id: string, title: string) => {
+    if (!isApprovedTutor) {
+      toast.error('Hồ sơ gia sư của bạn chưa được duyệt bởi Quản trị viên.');
+      return;
+    }
     if (!window.confirm(`Bạn có chắc muốn xóa bài viết "${title}"?`)) return;
     try {
       const res = await blogApi.delete(id);
@@ -668,6 +714,7 @@ export const useTeacherDashboard = () => {
     teacherName,
     stats,
     tutorProfile,
+    isApprovedTutor,
     courses,
     bookings,
     reviews,
@@ -711,7 +758,7 @@ export const useTeacherDashboard = () => {
     openEditCourseModal,
     handleCourseSubmit,
     handleDeleteCourse,
-    isScheduleModalOpen, setIsScheduleModalOpen,
+    isScheduleModalOpen, setIsScheduleModalOpen, openAddScheduleModal,
     isWithdrawModalOpen, setIsWithdrawModalOpen,
     isArticleModalOpen, setIsArticleModalOpen,
     editingArticle,

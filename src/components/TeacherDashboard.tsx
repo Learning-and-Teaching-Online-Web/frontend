@@ -78,7 +78,7 @@ const TeacherDashboard: React.FC = () => {
     openEditCourseModal,
     handleCourseSubmit,
     handleDeleteCourse,
-    isScheduleModalOpen, setIsScheduleModalOpen,
+    isScheduleModalOpen, setIsScheduleModalOpen, openAddScheduleModal,
     isWithdrawModalOpen, setIsWithdrawModalOpen,
     isArticleModalOpen, setIsArticleModalOpen,
     editingArticle,
@@ -316,7 +316,7 @@ const TeacherDashboard: React.FC = () => {
             <SchedulesTab
               allSchedules={allSchedules}
               formatDateString={formatDateString}
-              setIsScheduleModalOpen={setIsScheduleModalOpen}
+              openAddScheduleModal={openAddScheduleModal}
             />
           )}
 
