@@ -43,6 +43,13 @@ const CourseDetail: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
+  // Enrollment check states
+  const [enrollmentStatus, setEnrollmentStatus] = useState<{
+    canComment: boolean;
+    reason: string;
+  } | null>(null);
+  const [isCheckingEnrollment, setIsCheckingEnrollment] = useState<boolean>(false);
+
   const fetchCourseComments = async (cId: string) => {
     try {
       setIsLoadingComments(true);
@@ -54,6 +61,56 @@ const CourseDetail: React.FC = () => {
       console.error('Error fetching course comments:', err);
     } finally {
       setIsLoadingComments(false);
+    }
+  };
+
+  // Check if current student can comment (has purchased the course and meets status requirements)
+  const checkEnrollmentStatus = async (courseType: string) => {
+    if (!isAuthenticated) return;
+    const userRole = authStorage.getUserRole();
+    if (userRole === 'admin' || userRole === 'tutor') {
+      // Admins & tutors can always comment (bypass check)
+      setEnrollmentStatus({ canComment: true, reason: '' });
+      return;
+    }
+    try {
+      setIsCheckingEnrollment(true);
+      const bookingsRes = await bookingApi.getMyBookings();
+      if (bookingsRes && bookingsRes.success && Array.isArray(bookingsRes.data)) {
+        const booking = bookingsRes.data.find((b: any) => b.course?.course_id === courseId);
+        if (!booking) {
+          setEnrollmentStatus({
+            canComment: false,
+            reason: 'Bạn chưa mua khóa học này nên chưa thể gửi bình luận & đánh giá.'
+          });
+          return;
+        }
+        const isPaid = booking.payment_status === 'paid' || booking.status === 'confirmed' || booking.status === 'completed';
+        if (courseType === 'online') {
+          if (booking.status === 'completed') {
+            setEnrollmentStatus({ canComment: true, reason: '' });
+          } else {
+            setEnrollmentStatus({
+              canComment: false,
+              reason: 'Khóa học Online cần kết thúc toàn bộ (trạng thái Hoàn thành) mới có thể bình luận & đánh giá.'
+            });
+          }
+        } else {
+          // offline
+          if (isPaid) {
+            setEnrollmentStatus({ canComment: true, reason: '' });
+          } else {
+            setEnrollmentStatus({
+              canComment: false,
+              reason: 'Bạn cần mua/thanh toán khóa học Offline thành công mới có thể bình luận & đánh giá.'
+            });
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error checking enrollment:', err);
+    } finally {
+      setIsCheckingEnrollment(false);
     }
   };
 
@@ -77,6 +134,11 @@ const CourseDetail: React.FC = () => {
             } catch (favErr) {
               console.error('Error fetching favorites:', favErr);
             }
+          }
+
+          // Check enrollment status after course is loaded
+          if (isAuthenticated) {
+            await checkEnrollmentStatus(res.data.type || 'online');
           }
         } else {
           setCourse(null);
@@ -682,6 +744,32 @@ const CourseDetail: React.FC = () => {
                   >
                     <LogIn size={18} /> Đăng nhập ngay
                   </button>
+                </div>
+              ) : isCheckingEnrollment ? (
+                <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>
+                  Đang kiểm tra quyền bình luận...
+                </div>
+              ) : enrollmentStatus && !enrollmentStatus.canComment ? (
+                // Locked: Student has not purchased or not completed the course
+                <div style={{
+                  padding: '20px 24px',
+                  backgroundColor: '#fef9ec',
+                  border: '1px dashed #f59e0b',
+                  borderRadius: 'var(--radius-md)',
+                  margin: '16px 0',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '14px'
+                }}>
+                  <span style={{ fontSize: '28px', flexShrink: 0 }}>🔒</span>
+                  <div>
+                    <p style={{ fontWeight: 700, fontSize: '15px', color: '#92400e', marginBottom: '6px' }}>
+                      Chưa đủ điều kiện bình luận & đánh giá
+                    </p>
+                    <p style={{ fontSize: '14px', color: '#a16207', lineHeight: 1.6, margin: 0 }}>
+                      {enrollmentStatus.reason}
+                    </p>
+                  </div>
                 </div>
               ) : (
                 <>
