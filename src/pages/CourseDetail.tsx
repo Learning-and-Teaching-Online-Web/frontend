@@ -269,13 +269,33 @@ const CourseDetail: React.FC = () => {
       <div className="detail-hero-banner">
         <div className="container detail-hero-layout">
           <div className="detail-hero-left">
-            <span className="detail-category-tag">{course.subject}</span>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+              <span className="detail-category-tag">{course.subject}</span>
+              <span className="detail-category-tag" style={{
+                background: course.type === 'offline' ? '#fef3c7' : '#e0e7ff',
+                color: course.type === 'offline' ? '#d97706' : '#4338ca'
+              }}>
+                {course.type === 'offline' ? '📹 Offline (Video có sẵn)' : '🔴 Online (Live trực tuyến)'}
+              </span>
+            </div>
             <div className="detail-tutor-meta">
               bởi <span style={{ fontWeight: 600 }}>{course.instructor}</span>
             </div>
             <h1 className="detail-title">{course.title}</h1>
             
             <div className="detail-meta-list">
+              {course.type === 'online' && course.start_date && (
+                <div className="detail-meta-item">
+                  <Clock size={16} color="var(--primary)" />
+                  <span>Khai giảng: {new Date(course.start_date).toLocaleDateString('vi-VN')}</span>
+                </div>
+              )}
+              {course.type === 'online' && course.end_date && (
+                <div className="detail-meta-item">
+                  <Clock size={16} color="#ef4444" />
+                  <span>Bế giảng: {new Date(course.end_date).toLocaleDateString('vi-VN')}</span>
+                </div>
+              )}
               <div className="detail-meta-item">
                 <Clock size={16} color="var(--primary)" />
                 <span>{course.duration}</span>
@@ -314,10 +334,10 @@ const CourseDetail: React.FC = () => {
                 {course.isFree ? (
                   <span className="detail-price-main" style={{ color: '#10b981' }}>Miễn phí</span>
                 ) : (
-                  <span className="detail-price-main">${course.price.toFixed(1)}</span>
+                  <span className="detail-price-main">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(course.price)}</span>
                 )}
                 {course.oldPrice && (
-                  <span className="detail-price-original">${course.oldPrice.toFixed(1)}</span>
+                  <span className="detail-price-original">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(course.oldPrice)}</span>
                 )}
               </div>
 
@@ -326,11 +346,11 @@ const CourseDetail: React.FC = () => {
                 onClick={handleStartNow}
                 style={course.isFree ? { background: 'linear-gradient(135deg, #10b981, #059669)' } : {}}
               >
-                {course.isFree ? '🎓 Đăng ký miễn phí ngay' : '💳 Đăng ký (Sắp hỗ trợ thanh toán)'}
+                {course.isFree ? '🎓 Đăng ký trọn gói ngay' : '💳 Đăng ký khóa học ngay'}
               </button>
               {course.isFree && (
                 <p style={{ textAlign: 'center', fontSize: '13px', color: '#10b981', marginTop: '8px', fontWeight: 500 }}>
-                  ✓ Hoàn toàn miễn phí, không cần thẻ tín dụng
+                  ✓ Đăng ký trọn gói toàn bộ bài học & lịch trình
                 </p>
               )}
 
@@ -356,7 +376,7 @@ const CourseDetail: React.FC = () => {
                 className={`tab-button ${activeTab === 'curriculum' ? 'active' : ''}`}
                 onClick={() => setActiveTab('curriculum')}
               >
-                Chương trình học
+                Chương trình học & Lịch trình
               </button>
               <button 
                 className={`tab-button ${activeTab === 'instructor' ? 'active' : ''}`}
@@ -382,114 +402,155 @@ const CourseDetail: React.FC = () => {
             <div className="tab-content">
               {activeTab === 'overview' && (
                 <div>
-                  <p>{course.description}</p>
-                  <p>LearnPress là một hệ thống quản lý học tập toàn diện cho việc đào tạo trực tuyến. Bạn có thể xem lộ trình giảng dạy, làm các bài kiểm tra thực hành và tương tác với giảng viên một cách trực quan.</p>
+                  {course.type === 'offline' && (
+                    <div style={{ padding: '12px 16px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '10px', marginBottom: '16px', color: '#92400e', fontSize: '14px', lineHeight: 1.5 }}>
+                      <strong>📹 Khóa học Video Offline:</strong> Bạn có thể truy cập toàn bộ Video bài giảng và Tài liệu học tập bên dưới để tự học mọi lúc mọi nơi theo tiến độ cá nhân.
+                    </div>
+                  )}
+                  {course.type === 'online' && (
+                    <div style={{ padding: '12px 16px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '10px', marginBottom: '16px', color: '#1e40af', fontSize: '14px', lineHeight: 1.5 }}>
+                      <strong>🔴 Lớp Online Live:</strong> Học viên tham gia tương tác trực tuyến trực tiếp với Gia sư theo thời gian biểu hẹn trước.
+                    </div>
+                  )}
+                  <p style={{ whiteSpace: 'pre-line', lineHeight: 1.6 }}>{course.description || 'Chưa có mô tả chi tiết cho khóa học này.'}</p>
                 </div>
               )}
 
               {activeTab === 'curriculum' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                  <h4 style={{ fontSize: '18px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
-                    Chương trình giảng dạy ({course.curriculum?.length || 0} bài học)
-                  </h4>
-                  {course.curriculum && course.curriculum.length > 0 ? (
-                    course.curriculum.map((item: any, i: number) => {
-                      const embedUrl = getEmbedUrl(item.url);
-                      return (
-                        <div
-                          key={item.id || i}
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            padding: '14px 18px',
-                            background: 'var(--bg-light)',
-                            borderRadius: 'var(--radius-md)',
-                            border: '1px solid var(--border)',
-                            gap: '12px',
-                            flexWrap: 'wrap'
-                          }}
-                        >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: '220px' }}>
-                            <div style={{
-                              width: '38px',
-                              height: '38px',
-                              borderRadius: '8px',
-                              background: item.type === 'video' ? '#eff6ff' : item.type === 'pdf' ? '#fef2f2' : '#f0fdf4',
-                              color: item.type === 'video' ? '#2563eb' : item.type === 'pdf' ? '#dc2626' : '#16a34a',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              flexShrink: 0
-                            }}>
-                              {item.type === 'video' ? <Video size={20} /> : item.type === 'pdf' ? <FileText size={20} /> : <BookOpen size={20} />}
-                            </div>
-                            <div>
-                              <div style={{ fontWeight: 600, fontSize: '15px', color: 'var(--text-main)' }}>
-                                Bài {i + 1}: {item.title}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  
+                  {/* Lịch học cho khóa Online */}
+                  {course.type === 'online' && (
+                    <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                      <h4 style={{ fontSize: '16px', color: '#1e293b', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Clock size={18} color="var(--primary)" /> Lịch trình giảng dạy trực tuyến (Live)
+                      </h4>
+                      {course.schedules && course.schedules.length > 0 ? (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px' }}>
+                          {course.schedules.map((sch: any, idx: number) => (
+                            <div key={sch.schedule_id || idx} style={{ background: '#fff', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13px' }}>
+                              <div style={{ fontWeight: 600, color: '#334155' }}>
+                                Buổi {idx + 1}: {new Date(sch.start_time).toLocaleDateString('vi-VN')}
                               </div>
-                              {item.description && (
-                                <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                                  {item.description}
+                              <div style={{ color: 'var(--primary)', marginTop: '2px', fontWeight: 500 }}>
+                                {new Date(sch.start_time).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} - {new Date(sch.end_time).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>Gia sư sẽ bổ sung khung giờ học trực tuyến chi tiết trước ngày khai giảng.</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Bài giảng Video / Giáo trình */}
+                  <div>
+                    <h4 style={{ fontSize: '18px', borderBottom: '1px solid var(--border)', paddingBottom: '8px', marginBottom: '12px' }}>
+                      Danh sách Bài giảng & Tài liệu học tập ({course.curriculum?.length || 0} bài)
+                    </h4>
+                    {course.curriculum && course.curriculum.length > 0 ? (
+                      course.curriculum.map((item: any, i: number) => {
+                        const embedUrl = getEmbedUrl(item.url);
+                        return (
+                          <div
+                            key={item.id || i}
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              padding: '14px 18px',
+                              background: 'var(--bg-light)',
+                              borderRadius: 'var(--radius-md)',
+                              border: '1px solid var(--border)',
+                              gap: '12px',
+                              flexWrap: 'wrap',
+                              marginBottom: '10px'
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: '220px' }}>
+                              <div style={{
+                                width: '38px',
+                                height: '38px',
+                                borderRadius: '8px',
+                                background: item.type === 'video' ? '#eff6ff' : item.type === 'pdf' ? '#fef2f2' : '#f0fdf4',
+                                color: item.type === 'video' ? '#2563eb' : item.type === 'pdf' ? '#dc2626' : '#16a34a',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0
+                              }}>
+                                {item.type === 'video' ? <Video size={20} /> : item.type === 'pdf' ? <FileText size={20} /> : <BookOpen size={20} />}
+                              </div>
+                              <div>
+                                <div style={{ fontWeight: 600, fontSize: '15px', color: 'var(--text-main)' }}>
+                                  Bài {i + 1}: {item.title}
                                 </div>
+                                {item.description && (
+                                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                    {item.description}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              {item.url && item.url !== '#' && (
+                                embedUrl ? (
+                                  <button
+                                    onClick={() => setSelectedLessonModal(item)}
+                                    style={{
+                                      border: 'none',
+                                      background: 'var(--primary)',
+                                      color: '#fff',
+                                      fontSize: '13px',
+                                      fontWeight: 600,
+                                      padding: '6px 14px',
+                                      borderRadius: '6px',
+                                      cursor: 'pointer',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '6px'
+                                    }}
+                                  >
+                                    <PlayCircle size={15} /> Xem Video
+                                  </button>
+                                ) : (
+                                  <a
+                                    href={item.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                      fontSize: '13px',
+                                      color: 'var(--primary)',
+                                      fontWeight: 600,
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '4px',
+                                      textDecoration: 'none',
+                                      background: 'rgba(99, 102, 241, 0.1)',
+                                      padding: '6px 12px',
+                                      borderRadius: '6px'
+                                    }}
+                                  >
+                                    {item.type === 'pdf' ? 'Tải PDF' : 'Mở liên kết'} <ExternalLink size={14} />
+                                  </a>
+                                )
                               )}
                             </div>
                           </div>
+                        );
+                      })
+                    ) : (
+                      <p style={{ color: 'var(--text-muted)', padding: '20px 0' }}>
+                        Giảng viên chưa tải bài giảng nào lên cho khóa học này.
+                      </p>
+                    )}
+                  </div>
 
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            {item.url && item.url !== '#' && (
-                              embedUrl ? (
-                                <button
-                                  onClick={() => setSelectedLessonModal(item)}
-                                  style={{
-                                    border: 'none',
-                                    background: 'var(--primary)',
-                                    color: '#fff',
-                                    fontSize: '13px',
-                                    fontWeight: 600,
-                                    padding: '6px 14px',
-                                    borderRadius: '6px',
-                                    cursor: 'pointer',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '6px'
-                                  }}
-                                >
-                                  <PlayCircle size={15} /> Xem Video
-                                </button>
-                              ) : (
-                                <a
-                                  href={item.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{
-                                    fontSize: '13px',
-                                    color: 'var(--primary)',
-                                    fontWeight: 600,
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '4px',
-                                    textDecoration: 'none',
-                                    background: 'rgba(99, 102, 241, 0.1)',
-                                    padding: '6px 12px',
-                                    borderRadius: '6px'
-                                  }}
-                                >
-                                  {item.type === 'pdf' ? 'Tải PDF' : 'Mở liên kết'} <ExternalLink size={14} />
-                                </a>
-                              )
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <p style={{ color: 'var(--text-muted)', padding: '20px 0' }}>
-                      Giảng viên chưa tải bài học nào lên cho khóa học này.
-                    </p>
-                  )}
                 </div>
               )}
+
 
               {activeTab === 'instructor' && (
                 <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', padding: '8px 0' }}>

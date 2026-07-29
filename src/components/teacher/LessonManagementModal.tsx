@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Plus, Video, FileText, BookOpen, Trash2, ExternalLink, Edit2, Check } from 'lucide-react';
+import { X, Plus, Video, BookOpen, Trash2, ExternalLink, Edit2, Check } from 'lucide-react';
 
 interface LessonManagementModalProps {
   isOpen: boolean;
@@ -10,15 +10,13 @@ interface LessonManagementModalProps {
   setNewLessonTitle: (v: string) => void;
   newLessonUrl: string;
   setNewLessonUrl: (v: string) => void;
-  newLessonType: 'video' | 'pdf' | 'text';
-  setNewLessonType: (v: 'video' | 'pdf' | 'text') => void;
   newLessonDesc: string;
   setNewLessonDesc: (v: string) => void;
   editingLesson?: any | null;
   onEditLesson?: (les: any) => void;
   onCancelEdit?: () => void;
   handleAddLessonSubmit: (e: React.FormEvent) => Promise<void>;
-  handleDeleteLesson: (docId: string, title: string) => Promise<void>;
+  handleDeleteLesson: (id: string, title: string) => Promise<void>;
 }
 
 export const LessonManagementModal: React.FC<LessonManagementModalProps> = ({
@@ -30,8 +28,6 @@ export const LessonManagementModal: React.FC<LessonManagementModalProps> = ({
   setNewLessonTitle,
   newLessonUrl,
   setNewLessonUrl,
-  newLessonType,
-  setNewLessonType,
   newLessonDesc,
   setNewLessonDesc,
   editingLesson,
@@ -47,9 +43,9 @@ export const LessonManagementModal: React.FC<LessonManagementModalProps> = ({
       <div className="modal-card" style={{ maxWidth: '800px', width: '95%' }}>
         <div className="modal-header">
           <div>
-            <h3>Quản lý Bài học & Video Giảng dạy</h3>
+            <h3>Quản lý Bài giảng Video (Khóa Offline)</h3>
             <span style={{ fontSize: '13px', color: 'var(--text-light)', fontWeight: 500 }}>
-              Khóa học: <strong>{selectedCourse.title}</strong>
+              Khóa học: <strong>{selectedCourse.title}</strong> ({selectedCourse.type === 'offline' ? 'Offline Video' : 'Online Live'})
             </span>
           </div>
           <button onClick={onClose} className="btn-close"><X size={20} /></button>
@@ -68,46 +64,36 @@ export const LessonManagementModal: React.FC<LessonManagementModalProps> = ({
             <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-dark)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               {editingLesson ? (
                 <>
-                  <Edit2 size={16} style={{ color: '#7c3aed' }} /> Chỉnh sửa bài học: <span style={{ color: '#6d28d9' }}>{editingLesson.title}</span>
+                  <Edit2 size={16} style={{ color: '#7c3aed' }} /> Chỉnh sửa bài giảng: <span style={{ color: '#6d28d9' }}>{editingLesson.title}</span>
                 </>
               ) : (
                 <>
-                  <Plus size={16} style={{ color: '#4f46e5' }} /> Thêm bài học / Video mới
+                  <Plus size={16} style={{ color: '#4f46e5' }} /> Thêm bài giảng Video mới
                 </>
               )}
             </h4>
             
             <form onSubmit={handleAddLessonSubmit}>
               <div className="form-group-db">
-                <label>Tên bài học *</label>
+                <label>Tên bài giảng / Tiêu đề bài học *</label>
                 <input
                   type="text"
                   required
-                  placeholder="VD: Bài 1: Giới thiệu cú pháp & biến trong Python..."
+                  placeholder="VD: Bài 1: Tổng quan & Cú pháp cơ bản..."
                   value={newLessonTitle}
                   onChange={(e) => setNewLessonTitle(e.target.value)}
                 />
               </div>
 
-              <div className="form-row-db">
-                <div className="form-group-db">
-                  <label>Định dạng bài học</label>
-                  <select value={newLessonType} onChange={(e: any) => setNewLessonType(e.target.value)}>
-                    <option value="video">🎥 Video giảng dạy (Youtube / MP4)</option>
-                    <option value="pdf">📄 Tài liệu PDF / File bài giảng</option>
-                    <option value="text">📝 Bài đọc / Văn bản lý thuyết</option>
-                  </select>
-                </div>
-
-                <div className="form-group-db">
-                  <label>Đường dẫn Video / Tệp đính kèm (URL)</label>
-                  <input
-                    type="url"
-                    placeholder={newLessonType === 'video' ? 'https://www.youtube.com/watch?v=...' : 'https://...'}
-                    value={newLessonUrl}
-                    onChange={(e) => setNewLessonUrl(e.target.value)}
-                  />
-                </div>
+              <div className="form-group-db">
+                <label>Đường dẫn Video bài giảng (Youtube Embed / Cloud URL) *</label>
+                <input
+                  type="url"
+                  required
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  value={newLessonUrl}
+                  onChange={(e) => setNewLessonUrl(e.target.value)}
+                />
               </div>
 
               <div className="form-group-db">
@@ -138,11 +124,11 @@ export const LessonManagementModal: React.FC<LessonManagementModalProps> = ({
                 >
                   {editingLesson ? (
                     <>
-                      <Check size={16} /> Cập nhật bài học
+                      <Check size={16} /> Cập nhật bài giảng
                     </>
                   ) : (
                     <>
-                      <Plus size={16} /> Đăng bài học
+                      <Plus size={16} /> Đăng bài giảng
                     </>
                   )}
                 </button>
@@ -153,15 +139,16 @@ export const LessonManagementModal: React.FC<LessonManagementModalProps> = ({
           {/* SECTION 2: CURRENT LESSONS LIST */}
           <div>
             <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-dark)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <BookOpen size={16} style={{ color: '#4f46e5' }} /> Danh sách bài học ({lessons.length})
+              <BookOpen size={16} style={{ color: '#4f46e5' }} /> Danh sách bài giảng ({lessons.length})
             </h4>
 
             {lessons.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {lessons.map((les: any, idx: number) => {
-                  const isBeingEdited = editingLesson && editingLesson.doc_id === les.doc_id;
+                  const id = les.lesson_id || les.doc_id;
+                  const isBeingEdited = editingLesson && (editingLesson.lesson_id === id || editingLesson.doc_id === id);
                   return (
-                    <div key={les.doc_id || idx} style={{
+                    <div key={id || idx} style={{
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
@@ -177,14 +164,14 @@ export const LessonManagementModal: React.FC<LessonManagementModalProps> = ({
                           width: '36px',
                           height: '36px',
                           borderRadius: '8px',
-                          background: les.file_type === 'video' ? '#eff6ff' : les.file_type === 'pdf' ? '#fef2f2' : '#f0fdf4',
-                          color: les.file_type === 'video' ? '#2563eb' : les.file_type === 'pdf' ? '#dc2626' : '#16a34a',
+                          background: '#eff6ff',
+                          color: '#2563eb',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           flexShrink: 0
                         }}>
-                          {les.file_type === 'video' ? <Video size={18} /> : les.file_type === 'pdf' ? <FileText size={18} /> : <BookOpen size={18} />}
+                          <Video size={18} />
                         </div>
                         <div>
                           <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-dark)' }}>
@@ -204,9 +191,9 @@ export const LessonManagementModal: React.FC<LessonManagementModalProps> = ({
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                        {les.file_url && les.file_url !== '#' && (
+                        {(les.video_url || les.file_url) && (
                           <a
-                            href={les.file_url}
+                            href={les.video_url || les.file_url}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{
@@ -222,22 +209,22 @@ export const LessonManagementModal: React.FC<LessonManagementModalProps> = ({
                               borderRadius: '6px'
                             }}
                           >
-                            Mở link <ExternalLink size={13} />
+                            Xem Video <ExternalLink size={13} />
                           </a>
                         )}
                         <button
                           onClick={() => onEditLesson && onEditLesson(les)}
                           className="btn-secondary-db"
                           style={{ padding: '5px 10px', fontSize: '12px', background: 'rgba(99, 102, 241, 0.1)', color: '#4f46e5', border: '1px solid rgba(99, 102, 241, 0.2)' }}
-                          title="Sửa bài học này"
+                          title="Sửa bài giảng này"
                         >
                           <Edit2 size={13} /> Sửa
                         </button>
                         <button
-                          onClick={() => handleDeleteLesson(les.doc_id, les.title)}
+                          onClick={() => handleDeleteLesson(id, les.title)}
                           className="btn-action-danger"
                           style={{ padding: '5px 10px', fontSize: '12px' }}
-                          title="Xóa bài học này"
+                          title="Xóa bài giảng này"
                         >
                           <Trash2 size={13} /> Xóa
                         </button>
@@ -248,7 +235,7 @@ export const LessonManagementModal: React.FC<LessonManagementModalProps> = ({
               </div>
             ) : (
               <div style={{ textAlign: 'center', padding: '24px', background: 'var(--bg-dashboard)', borderRadius: '10px', color: 'var(--text-light)', fontSize: '13px' }}>
-                Chưa có bài học nào trong khóa này. Hãy sử dụng form ở trên để đăng bài học hoặc video đầu tiên!
+                Chưa có bài giảng video nào trong khóa này. Hãy điền đường dẫn Video bài giảng ở trên để tải bài học đầu tiên!
               </div>
             )}
           </div>

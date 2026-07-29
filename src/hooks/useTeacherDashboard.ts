@@ -65,7 +65,6 @@ export const useTeacherDashboard = () => {
   const [courseLessons, setCourseLessons] = useState<any[]>([]);
   const [newLessonTitle, setNewLessonTitle] = useState('');
   const [newLessonUrl, setNewLessonUrl] = useState('');
-  const [newLessonType, setNewLessonType] = useState<'video' | 'pdf' | 'text'>('video');
   const [newLessonDesc, setNewLessonDesc] = useState('');
   const [editingLesson, setEditingLesson] = useState<any | null>(null);
 
@@ -73,9 +72,17 @@ export const useTeacherDashboard = () => {
   const [newCourseTitle, setNewCourseTitle] = useState('');
   const [newCourseSubject, setNewCourseSubject] = useState('Lập trình & Web');
   const [newCoursePrice, setNewCoursePrice] = useState(300000);
+  const [newCourseType, setNewCourseType] = useState<'online' | 'offline'>('online');
+  const [newCourseStartDate, setNewCourseStartDate] = useState('');
+  const [newCourseEndDate, setNewCourseEndDate] = useState('');
+  const [newCourseDurationMonths, setNewCourseDurationMonths] = useState<number>(3);
   const [newCourseLevel, setNewCourseLevel] = useState('Beginner');
   const [newCourseSessions, setNewCourseSessions] = useState(10);
   const [newCourseDuration, setNewCourseDuration] = useState(90);
+  const [newCourseDescription, setNewCourseDescription] = useState('');
+  const [newCourseThumbnail, setNewCourseThumbnail] = useState('');
+  const [newCourseMaxStudents, setNewCourseMaxStudents] = useState<number>(1);
+  const [newCourseStatus, setNewCourseStatus] = useState<'published' | 'draft'>('published');
 
   // Form States - Schedule
   const [scheduleCourseId, setScheduleCourseId] = useState('');
@@ -127,7 +134,7 @@ export const useTeacherDashboard = () => {
         setTransactions(walletRes.data.transactions || []);
       }
 
-      // 6. Fetch Articles (Filtered to tutor's own articles unless admin)
+      // 6. Fetch Articles
       const articlesRes = await blogApi.getAll();
       if (articlesRes && articlesRes.success && Array.isArray(articlesRes.data)) {
         const currentTeacherName = authStorage.getUserName() || teacherName;
@@ -224,9 +231,17 @@ export const useTeacherDashboard = () => {
     setNewCourseTitle('');
     setNewCourseSubject('Lập trình & Web');
     setNewCoursePrice(300000);
+    setNewCourseType('online');
+    setNewCourseStartDate('');
+    setNewCourseEndDate('');
+    setNewCourseDurationMonths(3);
     setNewCourseLevel('Beginner');
     setNewCourseSessions(10);
     setNewCourseDuration(90);
+    setNewCourseDescription('');
+    setNewCourseThumbnail('');
+    setNewCourseMaxStudents(1);
+    setNewCourseStatus('published');
     setIsCourseModalOpen(true);
   };
 
@@ -239,9 +254,17 @@ export const useTeacherDashboard = () => {
     setNewCourseTitle(course.title || '');
     setNewCourseSubject(course.subject || 'Lập trình & Web');
     setNewCoursePrice(Number(course.price) || 300000);
+    setNewCourseType(course.type || 'online');
+    setNewCourseStartDate(course.start_date ? course.start_date.split('T')[0] : '');
+    setNewCourseEndDate(course.end_date ? course.end_date.split('T')[0] : '');
+    setNewCourseDurationMonths(course.duration_months || 3);
     setNewCourseLevel(course.level || 'Beginner');
     setNewCourseSessions(course.total_sessions || 10);
     setNewCourseDuration(course.duration_minutes || 90);
+    setNewCourseDescription(course.description || '');
+    setNewCourseThumbnail(course.thumbnail_url || '');
+    setNewCourseMaxStudents(course.max_students || 1);
+    setNewCourseStatus(course.status || 'published');
     setIsCourseModalOpen(true);
   };
 
@@ -257,14 +280,25 @@ export const useTeacherDashboard = () => {
     }
 
     try {
-      const payload = {
+      const payload: any = {
         title: newCourseTitle.trim(),
         subject: newCourseSubject,
+        description: newCourseDescription.trim() || undefined,
         price: Number(newCoursePrice),
+        type: newCourseType,
         level: newCourseLevel,
         duration_minutes: Number(newCourseDuration),
-        total_sessions: Number(newCourseSessions)
+        total_sessions: Number(newCourseSessions),
+        max_students: Number(newCourseMaxStudents) || 1,
+        thumbnail_url: newCourseThumbnail.trim() || undefined,
+        status: newCourseStatus
       };
+
+      if (newCourseType === 'online') {
+        payload.start_date = newCourseStartDate || undefined;
+        payload.end_date = newCourseEndDate || undefined;
+        payload.duration_months = Number(newCourseDurationMonths) || undefined;
+      }
 
       if (editingCourse) {
         await tutorApi.updateCourse(editingCourse.course_id, payload);
@@ -596,32 +630,30 @@ export const useTeacherDashboard = () => {
     }
   };
 
-  // Lesson Management Handlers
+  // Lesson Management Handlers (CourseLesson video lectures)
   const openLessonsModal = async (course: any) => {
     setSelectedCourseForLessons(course);
     setEditingLesson(null);
     setNewLessonTitle('');
     setNewLessonUrl('');
-    setNewLessonType('video');
     setNewLessonDesc('');
     setIsLessonModalOpen(true);
     try {
-      const res = await courseApi.getCourseDocuments(course.course_id);
-      if (res && res.success) {
-        setCourseLessons(res.data || []);
+      const detailRes = await courseApi.getDetail(course.course_id);
+      if (detailRes && detailRes.success && detailRes.data) {
+        setCourseLessons(detailRes.data.lessons || []);
       } else {
-        setCourseLessons(course.documents || []);
+        setCourseLessons(course.lessons || []);
       }
     } catch (err) {
-      setCourseLessons(course.documents || []);
+      setCourseLessons(course.lessons || []);
     }
   };
 
   const handleEditLesson = (lesson: any) => {
     setEditingLesson(lesson);
     setNewLessonTitle(lesson.title || '');
-    setNewLessonUrl(lesson.file_url === '#' ? '' : lesson.file_url || '');
-    setNewLessonType(lesson.file_type || 'video');
+    setNewLessonUrl(lesson.video_url || '');
     setNewLessonDesc(lesson.description || '');
   };
 
@@ -629,72 +661,70 @@ export const useTeacherDashboard = () => {
     setEditingLesson(null);
     setNewLessonTitle('');
     setNewLessonUrl('');
-    setNewLessonType('video');
     setNewLessonDesc('');
   };
 
   const handleAddLessonSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedCourseForLessons) return;
-    if (!newLessonTitle.trim()) {
-      toast.error('Vui lòng nhập Tên bài học.');
+    if (!newLessonTitle.trim() || !newLessonUrl.trim()) {
+      toast.error('Vui lòng nhập Tên bài học và Đường dẫn Video.');
       return;
     }
 
     try {
       let res;
       if (editingLesson) {
-        res = await courseApi.updateCourseDocument(editingLesson.doc_id, {
+        res = await courseApi.updateLesson(selectedCourseForLessons.course_id, editingLesson.lesson_id, {
           title: newLessonTitle.trim(),
-          file_url: newLessonUrl.trim() || undefined,
-          file_type: newLessonType,
+          video_url: newLessonUrl.trim(),
           description: newLessonDesc.trim() || undefined
         });
       } else {
-        res = await courseApi.addCourseDocument(selectedCourseForLessons.course_id, {
+        res = await courseApi.addLesson(selectedCourseForLessons.course_id, {
           title: newLessonTitle.trim(),
-          file_url: newLessonUrl.trim() || undefined,
-          file_type: newLessonType,
+          video_url: newLessonUrl.trim(),
           description: newLessonDesc.trim() || undefined
         });
       }
 
       if (res && res.success) {
-        toast.success(editingLesson ? 'Cập nhật bài học thành công!' : 'Đăng bài học mới thành công!');
+        toast.success(editingLesson ? 'Cập nhật bài giảng video thành công!' : 'Đăng bài giảng video mới thành công!');
         setEditingLesson(null);
         setNewLessonTitle('');
         setNewLessonUrl('');
         setNewLessonDesc('');
         // Refresh lessons list
-        const updatedDocs = await courseApi.getCourseDocuments(selectedCourseForLessons.course_id);
-        if (updatedDocs && updatedDocs.success) {
-          setCourseLessons(updatedDocs.data);
+        const detailRes = await courseApi.getDetail(selectedCourseForLessons.course_id);
+        if (detailRes && detailRes.success && detailRes.data) {
+          setCourseLessons(detailRes.data.lessons || []);
         }
         loadDashboardData();
       } else {
-        toast.error(res?.error || (editingLesson ? 'Không thể cập nhật bài học.' : 'Không thể tạo bài học.'));
+        toast.error(res?.error || (editingLesson ? 'Không thể cập nhật bài giảng.' : 'Không thể tạo bài giảng.'));
       }
     } catch (err: any) {
-      toast.error(err.response?.data?.error || 'Có lỗi xảy ra khi lưu bài học.');
+      toast.error(err.response?.data?.error || 'Có lỗi xảy ra khi lưu bài giảng video.');
     }
   };
 
-  const handleDeleteLesson = async (docId: string, title: string) => {
-    if (!window.confirm(`Bạn có chắc muốn xóa bài học "${title}"?`)) return;
+  const handleDeleteLesson = async (lessonId: string, title: string) => {
+    if (!selectedCourseForLessons) return;
+    if (!window.confirm(`Bạn có chắc muốn xóa bài giảng "${title}"?`)) return;
     try {
-      const res = await courseApi.deleteCourseDocument(docId);
+      const res = await courseApi.deleteLesson(selectedCourseForLessons.course_id, lessonId);
       if (res && res.success) {
-        toast.success('Xóa bài học thành công!');
-        setCourseLessons(prev => prev.filter(l => l.doc_id !== docId));
-        if (editingLesson && editingLesson.doc_id === docId) {
+        toast.success('Xóa bài giảng video thành công!');
+        setCourseLessons(prev => prev.filter(l => l.lesson_id !== lessonId));
+        if (editingLesson && editingLesson.lesson_id === lessonId) {
           cancelEditLesson();
         }
         loadDashboardData();
       } else {
-        toast.error(res?.error || 'Xóa bài học thất bại.');
+        toast.error(res?.error || 'Xóa bài giảng thất bại.');
       }
     } catch (err: any) {
-      toast.error(err.response?.data?.error || 'Có lỗi xảy ra khi xóa bài học.');
+      toast.error(err.response?.data?.error || 'Có lỗi xảy ra khi xóa bài giảng.');
     }
   };
 
@@ -730,7 +760,6 @@ export const useTeacherDashboard = () => {
     courseLessons, setCourseLessons,
     newLessonTitle, setNewLessonTitle,
     newLessonUrl, setNewLessonUrl,
-    newLessonType, setNewLessonType,
     newLessonDesc, setNewLessonDesc,
     editingLesson,
     handleEditLesson,
@@ -766,9 +795,17 @@ export const useTeacherDashboard = () => {
     newCourseTitle, setNewCourseTitle,
     newCourseSubject, setNewCourseSubject,
     newCoursePrice, setNewCoursePrice,
+    newCourseType, setNewCourseType,
+    newCourseStartDate, setNewCourseStartDate,
+    newCourseEndDate, setNewCourseEndDate,
+    newCourseDurationMonths, setNewCourseDurationMonths,
     newCourseLevel, setNewCourseLevel,
     newCourseSessions, setNewCourseSessions,
     newCourseDuration, setNewCourseDuration,
+    newCourseDescription, setNewCourseDescription,
+    newCourseThumbnail, setNewCourseThumbnail,
+    newCourseMaxStudents, setNewCourseMaxStudents,
+    newCourseStatus, setNewCourseStatus,
     // Schedule form
     scheduleCourseId, setScheduleCourseId,
     scheduleDate, setScheduleDate,
