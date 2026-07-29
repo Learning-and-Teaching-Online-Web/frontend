@@ -83,6 +83,9 @@ export const useTeacherDashboard = () => {
   const [newCourseThumbnail, setNewCourseThumbnail] = useState('');
   const [newCourseMaxStudents, setNewCourseMaxStudents] = useState<number>(1);
   const [newCourseStatus, setNewCourseStatus] = useState<'published' | 'draft'>('published');
+  const [newCourseScheduleDays, setNewCourseScheduleDays] = useState<number[]>([1, 3, 5]); // 1=Mon, 3=Wed, 5=Fri
+  const [newCourseStartTime, setNewCourseStartTime] = useState<string>('19:30');
+  const [newCourseEndTime, setNewCourseEndTime] = useState<string>('21:00');
 
   // Form States - Schedule
   const [scheduleCourseId, setScheduleCourseId] = useState('');
@@ -242,6 +245,9 @@ export const useTeacherDashboard = () => {
     setNewCourseThumbnail('');
     setNewCourseMaxStudents(1);
     setNewCourseStatus('published');
+    setNewCourseScheduleDays([1, 3, 5]);
+    setNewCourseStartTime('19:30');
+    setNewCourseEndTime('21:00');
     setIsCourseModalOpen(true);
   };
 
@@ -265,6 +271,9 @@ export const useTeacherDashboard = () => {
     setNewCourseThumbnail(course.thumbnail_url || '');
     setNewCourseMaxStudents(course.max_students || 1);
     setNewCourseStatus(course.status || 'published');
+    setNewCourseScheduleDays([1, 3, 5]);
+    setNewCourseStartTime('19:30');
+    setNewCourseEndTime('21:00');
     setIsCourseModalOpen(true);
   };
 
@@ -304,7 +313,55 @@ export const useTeacherDashboard = () => {
         await tutorApi.updateCourse(editingCourse.course_id, payload);
         toast.success('Cập nhật khóa học thành công!');
       } else {
-        await tutorApi.createCourse(payload);
+        const createRes = await tutorApi.createCourse(payload);
+        const createdCourseId = createRes?.data?.course_id || createRes?.data?.id;
+
+        // Auto generate weekly schedules for Online course if dates and time are set
+        if (newCourseType === 'online' && createdCourseId && newCourseStartDate && newCourseEndDate && newCourseScheduleDays.length > 0 && newCourseStartTime && newCourseEndTime) {
+          const startD = new Date(newCourseStartDate);
+          const endD = new Date(newCourseEndDate);
+          const autoSlots: any[] = [];
+
+          let curr = new Date(startD);
+          while (curr <= endD) {
+            const dayOfWeek = curr.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+            if (newCourseScheduleDays.includes(dayOfWeek)) {
+              const yyyy = curr.getFullYear();
+              const mm = String(curr.getMonth() + 1).padStart(2, '0');
+              const dd = String(curr.getDate()).padStart(2, '0');
+              const dateStr = `${yyyy}-${mm}-${dd}`;
+
+              const startISO = `${dateStr}T${newCourseStartTime}:00+07:00`;
+              const endISO = `${dateStr}T${newCourseEndTime}:00+07:00`;
+
+              autoSlots.push({
+                start_time: startISO,
+                end_time: endISO,
+                is_recurring: true,
+                day_of_week: dayOfWeek,
+                recurrence_end: newCourseEndDate,
+                max_slot: Number(newCourseMaxStudents) || 1
+              });
+            }
+            curr.setDate(curr.getDate() + 1);
+          }
+
+          if (autoSlots.length > 0) {
+            let createdCount = 0;
+            for (const slot of autoSlots) {
+              try {
+                await tutorApi.addSchedule(createdCourseId, slot);
+                createdCount++;
+              } catch (e) {
+                // Ignore schedule conflict warnings
+              }
+            }
+            if (createdCount > 0) {
+              toast.success(`Đã tự động tạo ${createdCount} buổi học theo thời gian biểu!`);
+            }
+          }
+        }
+
         toast.success('Tạo khóa học mới thành công!');
       }
 
@@ -806,6 +863,9 @@ export const useTeacherDashboard = () => {
     newCourseThumbnail, setNewCourseThumbnail,
     newCourseMaxStudents, setNewCourseMaxStudents,
     newCourseStatus, setNewCourseStatus,
+    newCourseScheduleDays, setNewCourseScheduleDays,
+    newCourseStartTime, setNewCourseStartTime,
+    newCourseEndTime, setNewCourseEndTime,
     // Schedule form
     scheduleCourseId, setScheduleCourseId,
     scheduleDate, setScheduleDate,

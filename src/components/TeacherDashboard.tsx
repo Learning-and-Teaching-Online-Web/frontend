@@ -100,6 +100,9 @@ const TeacherDashboard: React.FC = () => {
     newCourseThumbnail, setNewCourseThumbnail,
     newCourseMaxStudents, setNewCourseMaxStudents,
     newCourseStatus, setNewCourseStatus,
+    newCourseScheduleDays, setNewCourseScheduleDays,
+    newCourseStartTime, setNewCourseStartTime,
+    newCourseEndTime, setNewCourseEndTime,
 
     // Schedule Form
     scheduleCourseId, setScheduleCourseId,
@@ -494,34 +497,115 @@ const TeacherDashboard: React.FC = () => {
 
               {/* Conditional fields for ONLINE */}
               {newCourseType === 'online' && (
-                <div className="form-row-db">
-                  <div className="form-group-db">
-                    <label>Ngày Khai Giảng (Bắt đầu)</label>
-                    <input
-                      type="date"
-                      value={newCourseStartDate}
-                      onChange={(e) => setNewCourseStartDate(e.target.value)}
-                    />
+                <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #cbd5e1', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ fontWeight: 700, fontSize: '13px', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Calendar size={16} color="#4f46e5" />
+                    <span>Thiết lập Lịch Học Live & Ngày Khai Giảng Tự Động</span>
                   </div>
 
-                  <div className="form-group-db">
-                    <label>Ngày Bế Giảng (Kết thúc)</label>
-                    <input
-                      type="date"
-                      value={newCourseEndDate}
-                      onChange={(e) => setNewCourseEndDate(e.target.value)}
-                    />
+                  <div className="form-row-db">
+                    <div className="form-group-db">
+                      <label>Ngày Khai Giảng (Bắt đầu) *</label>
+                      <input
+                        type="date"
+                        value={newCourseStartDate}
+                        onChange={(e) => setNewCourseStartDate(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="form-group-db">
+                      <label>Ngày Bế Giảng (Kết thúc) *</label>
+                      <input
+                        type="date"
+                        value={newCourseEndDate}
+                        onChange={(e) => setNewCourseEndDate(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="form-group-db">
+                      <label>Thời gian đào tạo (Số tháng)</label>
+                      <input
+                        type="number"
+                        min={1}
+                        value={newCourseDurationMonths}
+                        onChange={(e) => setNewCourseDurationMonths(Number(e.target.value))}
+                      />
+                    </div>
                   </div>
 
-                  <div className="form-group-db">
-                    <label>Thời gian đào tạo (Số tháng)</label>
-                    <input
-                      type="number"
-                      min={1}
-                      value={newCourseDurationMonths}
-                      onChange={(e) => setNewCourseDurationMonths(Number(e.target.value))}
-                    />
+                  {/* Day of week pill selector */}
+                  <div className="form-group-db" style={{ marginBottom: 0 }}>
+                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>
+                      Chọn các Thứ dạy trong tuần (Nhấp để chọn/bỏ chọn):
+                    </label>
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '4px' }}>
+                      {[
+                        { label: 'Thứ 2', val: 1 },
+                        { label: 'Thứ 3', val: 2 },
+                        { label: 'Thứ 4', val: 3 },
+                        { label: 'Thứ 5', val: 4 },
+                        { label: 'Thứ 6', val: 5 },
+                        { label: 'Thứ 7', val: 6 },
+                        { label: 'Chủ Nhật', val: 0 }
+                      ].map(day => {
+                        const isSelected = newCourseScheduleDays.includes(day.val);
+                        return (
+                          <button
+                            key={day.val}
+                            type="button"
+                            onClick={() => {
+                              if (isSelected) {
+                                setNewCourseScheduleDays(newCourseScheduleDays.filter(d => d !== day.val));
+                              } else {
+                                setNewCourseScheduleDays([...newCourseScheduleDays, day.val]);
+                              }
+                            }}
+                            style={{
+                              padding: '6px 12px',
+                              borderRadius: '8px',
+                              border: isSelected ? '1px solid #4f46e5' : '1px solid #cbd5e1',
+                              background: isSelected ? '#4f46e5' : '#fff',
+                              color: isSelected ? '#fff' : '#475569',
+                              fontWeight: 600,
+                              fontSize: '12px',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            {isSelected ? '✓ ' : ''}{day.label}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
+
+                  {/* Start & End time */}
+                  <div className="form-row-db" style={{ marginTop: '4px' }}>
+                    <div className="form-group-db">
+                      <label style={{ fontSize: '12px' }}>Giờ bắt đầu học *</label>
+                      <input
+                        type="time"
+                        value={newCourseStartTime}
+                        onChange={(e) => setNewCourseStartTime(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="form-group-db">
+                      <label style={{ fontSize: '12px' }}>Giờ kết thúc học *</label>
+                      <input
+                        type="time"
+                        value={newCourseEndTime}
+                        onChange={(e) => setNewCourseEndTime(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Schedule calculated preview banner */}
+                  {newCourseStartDate && newCourseEndDate && newCourseScheduleDays.length > 0 && (
+                    <div style={{ fontSize: '12px', color: '#047857', background: '#ecfdf5', padding: '8px 12px', borderRadius: '6px', fontWeight: 500, border: '1px solid #a7f3d0' }}>
+                      ✨ <strong>Tự động tạo lịch:</strong> Hệ thống sẽ sinh các buổi học live vào <strong>{newCourseStartTime} - {newCourseEndTime}</strong> ({newCourseScheduleDays.map(d => d === 0 ? 'Chủ Nhật' : `Thứ ${d + 1}`).join(', ')}) từ {newCourseStartDate} đến {newCourseEndDate}.
+                    </div>
+                  )}
                 </div>
               )}
 

@@ -89,8 +89,11 @@ export const useStudentDashboard = () => {
 
         // Helper mapper functions for bookings
         const mapBookingToEnrolledCourse = (b: any): EnrolledCourse => {
+          const hasReview = Array.isArray(b.reviews) ? b.reviews.length > 0 : !!b.reviews;
           return {
             course_id: b.course?.course_id || '',
+            booking_id: b.booking_id,
+            type: b.course?.type || 'online',
             title: b.course?.title || 'Khóa học',
             subject: b.course?.subject || 'Môn học',
             instructor: b.course?.tutor?.user?.full_name || 'Giảng viên',
@@ -98,20 +101,30 @@ export const useStudentDashboard = () => {
             progress: b.status === 'completed' ? 100 : 50,
             completedLessons: b.status === 'completed' ? (b.course?.total_sessions || 1) : 0,
             totalLessons: b.course?.total_sessions || 1,
-            nextSessionTime: b.schedule?.start_time || undefined
+            nextSessionTime: b.schedule?.start_time || undefined,
+            bookingStatus: b.status,
+            paymentStatus: b.payment_status,
+            isReviewed: hasReview
           };
         };
 
         const mapBookingToClassSession = (b: any): ClassSession => {
+          const hasReview = Array.isArray(b.reviews) ? b.reviews.length > 0 : !!b.reviews;
           return {
             session_id: b.booking_id,
+            booking_id: b.booking_id,
+            course_id: b.course?.course_id,
+            type: b.course?.type || 'online',
             courseTitle: b.course?.title || 'Khóa học',
             tutorName: b.course?.tutor?.user?.full_name || 'Giảng viên',
             tutorAvatar: b.course?.tutor?.user?.avatar_url || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
             startTime: b.schedule?.start_time || new Date().toISOString(),
             endTime: b.schedule?.end_time || new Date().toISOString(),
             status: b.status === 'confirmed' ? 'scheduled' : (b.status === 'completed' ? 'completed' : 'cancelled'),
-            meetingLink: `https://meet.jit.si/novalearn-${b.booking_id}`
+            meetingLink: `https://meet.jit.si/novalearn-${b.booking_id}`,
+            bookingStatus: b.status,
+            paymentStatus: b.payment_status,
+            isReviewed: hasReview
           };
         };
 
