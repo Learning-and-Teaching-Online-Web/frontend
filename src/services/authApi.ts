@@ -10,12 +10,22 @@ export const authApi = {
     email: string;
     password: string;
     fullName: string;
-    phone: string;
-    gender: string;
-    dateOfBirth: string;
-    role: 'student' | 'tutor';
+    phone?: string;
+    gender?: string;
+    dateOfBirth?: string;
+    role?: 'student' | 'tutor';
   }) => {
     const response = await axiosClient.post('/auth/signup', data);
+    return response.data;
+  },
+
+  refreshToken: async (refreshToken: string) => {
+    const response = await axiosClient.post('/auth/refresh', { refreshToken });
+    return response.data;
+  },
+
+  logout: async (refreshToken?: string) => {
+    const response = await axiosClient.post('/auth/signout', { refreshToken });
     return response.data;
   },
 
@@ -34,3 +44,5 @@ export const authApi = {
     return response.data;
   }
 };
+
+export default authApi;

@@ -1,4 +1,5 @@
 const TOKEN_KEY = 'access_token';
+const REFRESH_TOKEN_KEY = 'refresh_token';
 const AUTH_FLAG_KEY = 'isAuthenticated';
 const ROLE_KEY = 'userRole';
 const NAME_KEY = 'userName';
@@ -6,6 +7,10 @@ const NAME_KEY = 'userName';
 export const authStorage = {
   getToken: (): string | null => {
     return sessionStorage.getItem(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY);
+  },
+
+  getRefreshToken: (): string | null => {
+    return sessionStorage.getItem(REFRESH_TOKEN_KEY) || localStorage.getItem(REFRESH_TOKEN_KEY);
   },
 
   getUserRole: (): string | null => {
@@ -21,26 +26,34 @@ export const authStorage = {
     return flag === 'true';
   },
 
-  setAuthSession: (token?: string | null, role?: string | null, name?: string | null) => {
+  setAuthSession: (token?: string | null, refreshToken?: string | null, role?: string | null, name?: string | null) => {
     sessionStorage.setItem(AUTH_FLAG_KEY, 'true');
     if (token) sessionStorage.setItem(TOKEN_KEY, token);
+    if (refreshToken) sessionStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
     if (role) sessionStorage.setItem(ROLE_KEY, role);
     if (name) sessionStorage.setItem(NAME_KEY, name);
 
     // Clear legacy localStorage
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(AUTH_FLAG_KEY);
     localStorage.removeItem(ROLE_KEY);
     localStorage.removeItem(NAME_KEY);
   },
 
+  updateAccessToken: (token: string) => {
+    sessionStorage.setItem(TOKEN_KEY, token);
+  },
+
   clearAuthSession: () => {
     sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(REFRESH_TOKEN_KEY);
     sessionStorage.removeItem(AUTH_FLAG_KEY);
     sessionStorage.removeItem(ROLE_KEY);
     sessionStorage.removeItem(NAME_KEY);
 
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(AUTH_FLAG_KEY);
     localStorage.removeItem(ROLE_KEY);
     localStorage.removeItem(NAME_KEY);
