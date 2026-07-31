@@ -10,7 +10,13 @@ export const mapBackendCourseToFrontend = (beCourse: any) => {
     price: Number(beCourse.price),
     oldPrice: beCourse.oldPrice || undefined,
     isFree: isFree,
-    duration: `${beCourse.total_sessions || 1} Buổi (${beCourse.duration_minutes || 60} Phút/Buổi)`,
+    type: beCourse.type || 'online',
+    start_date: beCourse.start_date || null,
+    end_date: beCourse.end_date || null,
+    duration_months: beCourse.duration_months || null,
+    duration: beCourse.duration_months 
+      ? `${beCourse.duration_months} Tháng (${beCourse.total_sessions || 1} Buổi)`
+      : `${beCourse.total_sessions || 1} Buổi (${beCourse.duration_minutes || 60} Phút/Buổi)`,
     studentsCount: beCourse.studentsCount !== undefined ? beCourse.studentsCount : 0,
     rating: Number(beCourse.tutor?.rating) || 5,
     reviewCount: beCourse.tutor?.review_count || 0,
@@ -21,17 +27,18 @@ export const mapBackendCourseToFrontend = (beCourse: any) => {
     instructorBio: beCourse.tutor?.bio || null,
     instructorSpecialization: beCourse.tutor?.specialization || null,
     thumbnail: beCourse.thumbnail_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500&auto=format&fit=crop&q=60',
-    lessonsCount: (beCourse.documents && beCourse.documents.length > 0) ? beCourse.documents.length : (beCourse.total_sessions || 0),
+    lessonsCount: (beCourse.lessons && beCourse.lessons.length > 0) ? beCourse.lessons.length : (beCourse.total_sessions || 0),
     quizzesCount: beCourse.quizzes?.length || 0,
     schedules: beCourse.schedules || [],
+    lessons: beCourse.lessons || [],
     documents: beCourse.documents || [],
-    curriculum: (beCourse.documents || []).map((doc: any, index: number) => ({
-      id: doc.doc_id,
-      title: doc.title,
-      description: doc.description || '',
-      type: doc.file_type || 'video',
-      url: doc.file_url || '',
-      createdAt: doc.created_at
+    curriculum: (beCourse.lessons || []).map((lesson: any) => ({
+      id: lesson.lesson_id,
+      title: lesson.title,
+      description: lesson.description || '',
+      type: 'video',
+      url: lesson.video_url || '',
+      createdAt: lesson.created_at
     })),
     tutor_id: beCourse.tutor_id || '',
   };
@@ -68,7 +75,23 @@ export const courseApi = {
     return response.data;
   },
 
-  // Course Documents / Lessons
+  // Course Video Lessons (CourseLesson)
+  addLesson: async (courseId: string, data: { title: string; video_url: string; description?: string; order_index?: number }) => {
+    const response = await axiosClient.post(`/courses/${courseId}/lessons`, data);
+    return response.data;
+  },
+
+  updateLesson: async (courseId: string, lessonId: string, data: { title?: string; video_url?: string; description?: string; order_index?: number }) => {
+    const response = await axiosClient.patch(`/courses/${courseId}/lessons/${lessonId}`, data);
+    return response.data;
+  },
+
+  deleteLesson: async (courseId: string, lessonId: string) => {
+    const response = await axiosClient.delete(`/courses/${courseId}/lessons/${lessonId}`);
+    return response.data;
+  },
+
+  // Course Documents / Attachments
   getCourseDocuments: async (courseId: string) => {
     const response = await axiosClient.get(`/courses/${courseId}/documents`);
     return response.data;

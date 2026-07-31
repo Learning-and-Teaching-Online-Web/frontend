@@ -4,6 +4,7 @@ import '../styles/SidebarFilters.css';
 
 export interface FilterState {
   search: string;
+  courseTypes: ('online' | 'offline')[];
   categories: string[];
   instructors: string[];
   priceTypes: ('free' | 'paid')[];
@@ -66,7 +67,6 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({ filters, onFilterChange
       return filteredCategories;
     }
     const initialList = filteredCategories.slice(0, 4);
-    // Keep checked categories visible even when collapsed
     filters.categories.forEach(checkedCat => {
       if (!initialList.includes(checkedCat) && filteredCategories.includes(checkedCat)) {
         initialList.push(checkedCat);
@@ -112,6 +112,10 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({ filters, onFilterChange
     return initialList;
   }, [filteredInstructors, instructorSearch, isInstExpanded, filters.instructors]);
 
+  const getTypeCount = (type: 'online' | 'offline') => {
+    return courses.filter(c => (c.type || 'online') === type).length;
+  };
+
   const getCategoryCount = (cat: string) => {
     return categoryMap[cat] || 0;
   };
@@ -138,7 +142,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({ filters, onFilterChange
     key: keyof Omit<FilterState, 'search'>,
     value: any
   ) => {
-    const currentList = filters[key] as any[];
+    const currentList = (filters[key] || []) as any[];
     let newList;
     if (currentList.includes(value)) {
       newList = currentList.filter(item => item !== value);
@@ -188,7 +192,50 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({ filters, onFilterChange
         <Search className="search-filter-icon" size={18} />
       </div>
 
-      {/* 2. Course Category */}
+      {/* 2. Hình thức học (Course Types) */}
+      <div className="filter-group">
+        <h3 className="filter-title">Hình thức học</h3>
+        <div className="filter-options">
+          <label className="filter-checkbox-label">
+            <div className="filter-checkbox-left">
+              <input 
+                type="checkbox" 
+                className="filter-checkbox-input"
+                checked={filters.courseTypes?.length === 0}
+                onChange={() => onFilterChange({ ...filters, courseTypes: [] })}
+              />
+              <span>Tất cả</span>
+            </div>
+            <span className="filter-checkbox-count">{courses.length}</span>
+          </label>
+          <label className="filter-checkbox-label">
+            <div className="filter-checkbox-left">
+              <input 
+                type="checkbox" 
+                className="filter-checkbox-input"
+                checked={filters.courseTypes?.includes('online')}
+                onChange={() => handleCheckboxChange('courseTypes', 'online')}
+              />
+              <span>🔴 Online (Live trực tuyến)</span>
+            </div>
+            <span className="filter-checkbox-count">{getTypeCount('online')}</span>
+          </label>
+          <label className="filter-checkbox-label">
+            <div className="filter-checkbox-left">
+              <input 
+                type="checkbox" 
+                className="filter-checkbox-input"
+                checked={filters.courseTypes?.includes('offline')}
+                onChange={() => handleCheckboxChange('courseTypes', 'offline')}
+              />
+              <span>📹 Offline (Video bài giảng)</span>
+            </div>
+            <span className="filter-checkbox-count">{getTypeCount('offline')}</span>
+          </label>
+        </div>
+      </div>
+
+      {/* 3. Course Category */}
       <div className="filter-group">
         <h3 className="filter-title">Danh mục khóa học</h3>
 
@@ -262,7 +309,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({ filters, onFilterChange
         )}
       </div>
 
-      {/* 3. Instructors */}
+      {/* 4. Instructors */}
       {availableInstructors.length > 0 && (
         <div className="filter-group">
           <h3 className="filter-title">Giảng viên</h3>
@@ -337,7 +384,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({ filters, onFilterChange
         </div>
       )}
 
-      {/* 4. Price */}
+      {/* 5. Price */}
       <div className="filter-group">
         <h3 className="filter-title">Giá</h3>
         <div className="filter-options">
@@ -380,7 +427,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({ filters, onFilterChange
         </div>
       </div>
 
-      {/* 5. Review */}
+      {/* 6. Review */}
       <div className="filter-group">
         <h3 className="filter-title">Đánh giá</h3>
         <div className="filter-options">
@@ -404,7 +451,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({ filters, onFilterChange
         </div>
       </div>
 
-      {/* 6. Level */}
+      {/* 7. Level */}
       <div className="filter-group">
         <h3 className="filter-title">Trình độ</h3>
         <div className="filter-options">

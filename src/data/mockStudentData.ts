@@ -15,6 +15,8 @@ export interface StudentProfile {
 
 export interface EnrolledCourse {
   course_id: string;
+  booking_id?: string;
+  type?: 'online' | 'offline';
   title: string;
   subject: string;
   instructor: string;
@@ -23,11 +25,16 @@ export interface EnrolledCourse {
   completedLessons: number;
   totalLessons: number;
   nextSessionTime?: string;
+  bookingStatus?: string;
+  paymentStatus?: string;
+  isReviewed?: boolean;
 }
 
 export interface ClassSession {
   session_id: string;
   booking_id?: string;
+  course_id?: string;
+  type?: 'online' | 'offline';
   courseTitle: string;
   tutorName: string;
   tutorAvatar: string;
@@ -35,6 +42,9 @@ export interface ClassSession {
   endTime: string;   // ISO format string
   status: 'scheduled' | 'ongoing' | 'completed' | 'cancelled';
   meetingLink: string;
+  bookingStatus?: string;
+  paymentStatus?: string;
+  isReviewed?: boolean;
 }
 
 export interface QuizAttempt {

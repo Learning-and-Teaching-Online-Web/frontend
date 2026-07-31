@@ -16,6 +16,7 @@ const CourseList: React.FC = () => {
 
   const [filters, setFilters] = useState<FilterState>({
     search: '',
+    courseTypes: [],
     categories: [],
     instructors: [],
     priceTypes: [],
@@ -61,6 +62,12 @@ const CourseList: React.FC = () => {
         if (!matchesTitle && !matchesDesc) return false;
       }
 
+      // Course Type (Online / Offline)
+      if (filters.courseTypes && filters.courseTypes.length > 0) {
+        const courseType = course.type || 'online';
+        if (!filters.courseTypes.includes(courseType)) return false;
+      }
+
       // Categories (OR logic: match any of the selected categories)
       if (filters.categories.length > 0) {
         const hasMatchingCat = course.categories.some((cat: string) => filters.categories.includes(cat));
@@ -92,6 +99,7 @@ const CourseList: React.FC = () => {
       return true;
     });
   }, [courses, filters]);
+
 
   // 2. Sort courses
   const sortedCourses = useMemo(() => {

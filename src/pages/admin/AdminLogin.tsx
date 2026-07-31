@@ -23,9 +23,10 @@ const AdminLogin: React.FC = () => {
       setIsLoading(true);
       const res = await authApi.login({ email, password });
 
-      const user = res.metadata?.user || res.user || res.data?.user;
-      const token = res.data?.session?.access_token;
-      const userRole = user?.user_metadata?.role || user?.role;
+      const user = res.data?.user || res.user;
+      const token = res.data?.access_token || res.access_token;
+      const refreshToken = res.data?.refresh_token || res.refresh_token;
+      const userRole = user?.role;
 
       if (userRole !== 'admin') {
         toast.error('Tài khoản không có quyền quản trị viên!');
@@ -33,10 +34,10 @@ const AdminLogin: React.FC = () => {
         return;
       }
 
-      const userName = user?.user_metadata?.full_name || user?.fullName || user?.email?.split('@')[0] || 'Admin';
+      const userName = user?.full_name || user?.user_profile?.full_name || user?.email?.split('@')[0] || 'Admin';
 
       // Save admin session in authStorage
-      authStorage.setAuthSession(token, userRole, userName);
+      authStorage.setAuthSession(token, refreshToken, userRole, userName);
 
       window.dispatchEvent(new Event('authChange'));
       toast.success('Đăng nhập thành công!');
