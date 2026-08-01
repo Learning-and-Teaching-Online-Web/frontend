@@ -13,7 +13,7 @@ export const ReviewsTab: React.FC<ReviewsTabProps> = ({ reviews }) => {
 
       <div className="reviews-list">
         {reviews.map(rev => {
-          const studentName = rev.student?.user?.full_name || rev.student_name || 'Học sinh';
+          const studentName = rev.student?.user?.user_profile?.full_name || rev.student?.user?.full_name || rev.student?.user?.email?.split('@')[0] || rev.student_name || 'Học sinh';
           const studentAvatar = rev.student?.user?.avatar_url || rev.student_avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=60';
           const courseTitle = rev.booking?.course?.title || rev.course_title || 'Khóa học';
 

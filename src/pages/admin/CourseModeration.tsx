@@ -31,6 +31,7 @@ interface CourseItem {
       full_name: string;
       email: string;
       avatar_url?: string | null;
+      user_profile?: any;
     };
   };
   created_at: string;
@@ -157,7 +158,7 @@ const CourseModeration: React.FC = () => {
                       <td>{course.subject}</td>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                          <span style={{ fontWeight: 550 }}>{course.tutor?.user?.full_name}</span>
+                          <span style={{ fontWeight: 550 }}>{course.tutor?.user?.user_profile?.full_name || course.tutor?.user?.full_name || course.tutor?.user?.email?.split('@')[0] || 'Giảng viên'}</span>
                           {course.tutor?.verified_status !== 'approved' && (
                             <span className="admin-badge warning" style={{ fontSize: '10px', padding: '2px 6px' }} title="Tài khoản Gia sư chưa được Admin duyệt">
                               {course.tutor?.verified_status === 'pending' ? 'GS Chờ duyệt' : 'GS Chưa duyệt'}
@@ -293,7 +294,7 @@ const CourseModeration: React.FC = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px', background: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
               <div>
                 <span style={{ fontSize: '12px', color: '#64748b', display: 'block' }}>Giảng viên phụ trách</span>
-                <strong style={{ fontSize: '14px', color: '#0f172a' }}>{selectedCourse.tutor?.user?.full_name} ({selectedCourse.tutor?.user?.email})</strong>
+                <strong style={{ fontSize: '14px', color: '#0f172a' }}>{selectedCourse.tutor?.user?.user_profile?.full_name || selectedCourse.tutor?.user?.full_name || selectedCourse.tutor?.user?.email?.split('@')[0] || 'Giảng viên'} ({selectedCourse.tutor?.user?.email})</strong>
               </div>
               <div>
                 <span style={{ fontSize: '12px', color: '#64748b', display: 'block' }}>Tổng số buổi / Thời lượng</span>

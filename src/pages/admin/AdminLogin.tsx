@@ -34,7 +34,7 @@ const AdminLogin: React.FC = () => {
         return;
       }
 
-      const userName = user?.full_name || user?.user_profile?.full_name || user?.email?.split('@')[0] || 'Admin';
+      const userName = user?.user_profile?.full_name || user?.full_name || user?.email?.split('@')[0] || 'Admin';
 
       // Save admin session in authStorage
       authStorage.setAuthSession(token, refreshToken, userRole, userName);
