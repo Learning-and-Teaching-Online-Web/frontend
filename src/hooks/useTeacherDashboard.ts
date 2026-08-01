@@ -69,6 +69,17 @@ export const useTeacherDashboard = () => {
   const [newLessonDesc, setNewLessonDesc] = useState('');
   const [editingLesson, setEditingLesson] = useState<any | null>(null);
 
+  // Modal 6: Document Management (For Online Courses)
+  const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
+  const [courseDocuments, setCourseDocuments] = useState<any[]>([]);
+  const [newDocTitle, setNewDocTitle] = useState('');
+  const [newDocUrl, setNewDocUrl] = useState('');
+  const [newDocFileBase64, setNewDocFileBase64] = useState('');
+  const [newDocFileName, setNewDocFileName] = useState('');
+  const [newDocType, setNewDocType] = useState('pdf');
+  const [newDocDesc, setNewDocDesc] = useState('');
+  const [editingDocument, setEditingDocument] = useState<any | null>(null);
+
   // Form States - Course
   const [newCourseTitle, setNewCourseTitle] = useState('');
   const [newCourseSubject, setNewCourseSubject] = useState('Lập trình & Web');
@@ -590,6 +601,95 @@ export const useTeacherDashboard = () => {
     }
   };
 
+  // ==============================================================
+  // Document Management Handlers (For Online Courses)
+  // ==============================================================
+  const openDocumentsModal = async (course: any) => {
+    setSelectedCourseForLessons(course);
+    setEditingDocument(null);
+    setNewDocTitle('');
+    setNewDocUrl('');
+    setNewDocFileBase64('');
+    setNewDocFileName('');
+    setNewDocType('pdf');
+    setNewDocDesc('');
+    setIsDocumentModalOpen(true);
+    try {
+      const docsRes = await courseApi.getCourseDocuments(course.course_id);
+      if (docsRes && docsRes.success) {
+        setCourseDocuments(docsRes.data || []);
+      } else {
+        setCourseDocuments([]);
+      }
+    } catch (err) {
+      setCourseDocuments([]);
+    }
+  };
+
+  const handleEditDocument = (doc: any) => {
+    setEditingDocument(doc);
+    setNewDocTitle(doc.title || '');
+    setNewDocUrl(doc.file_url || '');
+    setNewDocFileBase64('');
+    setNewDocFileName('');
+    setNewDocType(doc.file_type || 'pdf');
+    setNewDocDesc(doc.description || '');
+  };
+
+  const cancelEditDocument = () => {
+    setEditingDocument(null);
+    setNewDocTitle('');
+    setNewDocUrl('');
+    setNewDocFileBase64('');
+    setNewDocFileName('');
+    setNewDocType('pdf');
+    setNewDocDesc('');
+  };
+
+  const handleAddDocumentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCourseForLessons) return;
+    try {
+      if (editingDocument) {
+        await courseApi.updateCourseDocument(editingDocument.doc_id, {
+          title: newDocTitle,
+          file_url: newDocUrl,
+          file_type: newDocType,
+          description: newDocDesc,
+          ...(newDocFileBase64 ? { file_base64: newDocFileBase64, file_name: newDocFileName } : {})
+        });
+        toast.success('Cập nhật tài liệu thành công!');
+      } else {
+        await courseApi.addCourseDocument(selectedCourseForLessons.course_id, {
+          title: newDocTitle,
+          file_url: newDocUrl,
+          file_type: newDocType,
+          description: newDocDesc,
+          ...(newDocFileBase64 ? { file_base64: newDocFileBase64, file_name: newDocFileName } : {})
+        });
+        toast.success('Thêm tài liệu mới thành công!');
+      }
+      const docsRes = await courseApi.getCourseDocuments(selectedCourseForLessons.course_id);
+      setCourseDocuments(docsRes.data || []);
+      cancelEditDocument();
+      loadDashboardData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Có lỗi xảy ra khi lưu tài liệu');
+    }
+  };
+
+  const handleDeleteDocument = async (docId: string, title: string) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa tài liệu "${title}"?`)) return;
+    try {
+      await courseApi.deleteCourseDocument(docId);
+      toast.success('Đã xóa tài liệu!');
+      setCourseDocuments(prev => prev.filter(d => d.doc_id !== docId));
+      loadDashboardData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Có lỗi xảy ra khi xóa tài liệu');
+    }
+  };
+
   // Profile & Certificate Handlers
   const handleUpdateProfileSubmit = async (data: any) => {
     try {
@@ -881,11 +981,26 @@ export const useTeacherDashboard = () => {
     newLessonUrl, setNewLessonUrl,
     newLessonDesc, setNewLessonDesc,
     editingLesson,
+    openLessonsModal,
     handleEditLesson,
     cancelEditLesson,
-    openLessonsModal,
     handleAddLessonSubmit,
     handleDeleteLesson,
+    // Document Management
+    isDocumentModalOpen, setIsDocumentModalOpen,
+    courseDocuments, setCourseDocuments,
+    newDocTitle, setNewDocTitle,
+    newDocUrl, setNewDocUrl,
+    newDocFileBase64, setNewDocFileBase64,
+    newDocFileName, setNewDocFileName,
+    newDocType, setNewDocType,
+    newDocDesc, setNewDocDesc,
+    editingDocument,
+    openDocumentsModal,
+    handleEditDocument,
+    cancelEditDocument,
+    handleAddDocumentSubmit,
+    handleDeleteDocument,
     // Profile & Certificate Handlers
     handleUpdateProfileSubmit,
     isCertModalOpen, setIsCertModalOpen,

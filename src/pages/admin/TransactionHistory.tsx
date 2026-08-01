@@ -14,6 +14,7 @@ interface TransactionItem {
   user: {
     full_name: string;
     email: string;
+    user_profile?: any;
   };
   booking: {
     course: {
@@ -34,6 +35,7 @@ interface PayoutItem {
     user: {
       full_name: string;
       email: string;
+      user_profile?: any;
     };
   };
 }
@@ -168,7 +170,7 @@ const TransactionHistory: React.FC = () => {
                           {tx.transaction_id.slice(0, 8)}...
                         </td>
                         <td>
-                          <span style={{ fontWeight: 600 }}>{tx.user?.full_name}</span>
+                          <span style={{ fontWeight: 600 }}>{tx.user?.user_profile?.full_name || tx.user?.full_name || tx.user?.email?.split('@')[0] || 'Người dùng'}</span>
                           <span style={{ display: 'block', fontSize: '11px', color: 'var(--admin-text-muted)' }}>{tx.user?.email}</span>
                         </td>
                         <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -255,7 +257,7 @@ const TransactionHistory: React.FC = () => {
                     payouts.map((po) => (
                       <tr key={po.payout_id}>
                         <td>
-                          <span style={{ fontWeight: 600 }}>{po.tutor?.user?.full_name}</span>
+                          <span style={{ fontWeight: 600 }}>{po.tutor?.user?.user_profile?.full_name || po.tutor?.user?.full_name || po.tutor?.user?.email?.split('@')[0] || 'Giảng viên'}</span>
                           <span style={{ display: 'block', fontSize: '11px', color: 'var(--admin-text-muted)' }}>{po.tutor?.user?.email}</span>
                         </td>
                         <td>

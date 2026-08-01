@@ -14,7 +14,7 @@ const BlogDetail: React.FC = () => {
 
   // Auth states
   const isAuthenticated = authStorage.isAuthenticated();
-  const userName = authStorage.getUserName() || 'Người dùng';
+  const userName = authStorage.getUserName() || '';
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -280,7 +280,7 @@ const BlogDetail: React.FC = () => {
                         
                         <div className="comment-content">
                           <div className="comment-meta">
-                            <span className="comment-author-name">{comment.user?.full_name || 'Người dùng'}</span>
+                            <span className="comment-author-name">{comment.user?.user_profile?.full_name || comment.user?.full_name || comment.user?.email?.split('@')[0] || 'Người dùng'}</span>
                             <span className="comment-post-date">
                               {new Date(comment.created_at).toLocaleDateString('vi-VN', {
                                 day: '2-digit',

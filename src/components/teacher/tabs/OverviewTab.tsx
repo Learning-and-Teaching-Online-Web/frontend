@@ -49,7 +49,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
             </thead>
             <tbody>
               {pendingBookings.slice(0, 3).map(b => {
-                const studentName = b.student?.user?.full_name || b.student_name || 'Học sinh';
+                const studentName = b.student?.user?.user_profile?.full_name || b.student?.user?.full_name || b.student?.user?.email?.split('@')[0] || b.student_name || 'Học sinh';
                 const studentEmail = b.student?.user?.email || b.student_email || '';
                 const studentAvatar = b.student?.user?.avatar_url || b.student_avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=60';
                 const courseTitle = b.course?.title || b.course_title || 'Khóa học';

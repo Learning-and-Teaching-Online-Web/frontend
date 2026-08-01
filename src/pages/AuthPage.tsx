@@ -66,7 +66,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
       const token = response?.data?.access_token;
       const refreshToken = response?.data?.refresh_token;
       const role = user?.role || (loginIdentifier.toLowerCase().includes('tutor') ? 'tutor' : 'student');
-      const fullName = user?.full_name || loginIdentifier.split('@')[0];
+      const fullName = user?.user_profile?.full_name || user?.full_name || loginIdentifier.split('@')[0];
 
       authStorage.setAuthSession(token, refreshToken, role, fullName);
 

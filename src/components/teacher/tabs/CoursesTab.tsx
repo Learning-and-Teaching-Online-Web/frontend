@@ -7,6 +7,7 @@ interface CoursesTabProps {
   openCreateCourseModal: () => void;
   openEditCourseModal: (course: any) => void;
   openLessonsModal: (course: any) => void;
+  openDocumentsModal: (course: any) => void;
   handleDeleteCourse: (courseId: string, title: string) => void;
 }
 
@@ -16,6 +17,7 @@ export const CoursesTab: React.FC<CoursesTabProps> = ({
   openCreateCourseModal,
   openEditCourseModal,
   openLessonsModal,
+  openDocumentsModal,
   handleDeleteCourse
 }) => {
   const [filterType, setFilterType] = useState<'all' | 'online' | 'offline'>('all');
@@ -178,10 +180,16 @@ export const CoursesTab: React.FC<CoursesTabProps> = ({
                     <button
                       className="btn-secondary-db"
                       style={{ padding: '5px 10px', fontSize: '12px', background: isOffline ? 'rgba(217, 119, 6, 0.1)' : 'rgba(99, 102, 241, 0.1)', color: isOffline ? '#d97706' : '#4f46e5', border: isOffline ? '1px solid rgba(217, 119, 6, 0.2)' : '1px solid rgba(99, 102, 241, 0.2)' }}
-                      onClick={() => openLessonsModal(course)}
+                      onClick={() => {
+                        if (isOffline) {
+                          openLessonsModal(course);
+                        } else {
+                          openDocumentsModal(course);
+                        }
+                      }}
                       title="Quản lý các bài giảng video & tài liệu"
                     >
-                      <BookOpen size={13} /> {isOffline ? `Bài giảng (${lessonsCount})` : `Tài liệu (${lessonsCount})`}
+                      <BookOpen size={13} /> {isOffline ? `Bài giảng (${lessonsCount})` : `Tài liệu (${course.documents?.length || 0})`}
                     </button>
                     <button
                       className="btn-secondary-db"

@@ -13,6 +13,7 @@ interface StudentItem {
   role: 'student' | 'tutor' | 'admin';
   status: 'active' | 'suspended' | 'deleted';
   created_at: string;
+  user_profile?: any;
   student_profile?: {
     grade_level?: string | null;
     learning_goals?: string | null;
@@ -138,10 +139,10 @@ const StudentManagement: React.FC = () => {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                           <img
                             src={student.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'}
-                            alt={student.full_name}
+                            alt={student.user_profile?.full_name || student.full_name || 'Avatar'}
                             style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }}
                           />
-                          <span>{student.full_name}</span>
+                          <span>{student.user_profile?.full_name || student.full_name || student.email?.split('@')[0] || 'Người dùng'}</span>
                         </div>
                       </td>
                       <td>{student.email}</td>
@@ -229,11 +230,11 @@ const StudentManagement: React.FC = () => {
             <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #f1f5f9' }}>
               <img
                 src={selectedStudent.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'}
-                alt={selectedStudent.full_name}
+                alt={selectedStudent.user_profile?.full_name || selectedStudent.full_name || 'Avatar'}
                 style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #6366f1' }}
               />
               <div>
-                <h4 style={{ margin: '0 0 4px 0', fontSize: '18px', color: '#0f172a' }}>{selectedStudent.full_name}</h4>
+                <h4 style={{ margin: '0 0 4px 0', fontSize: '18px', color: '#0f172a' }}>{selectedStudent.user_profile?.full_name || selectedStudent.full_name || selectedStudent.email?.split('@')[0] || 'Người dùng'}</h4>
                 <span className={`admin-badge ${selectedStudent.status === 'active' ? 'success' : 'danger'}`}>
                   {selectedStudent.status === 'active' ? 'Tài khoản Hoạt động' : 'Tài khoản Đang khóa'}
                 </span>

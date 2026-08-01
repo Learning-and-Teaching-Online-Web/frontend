@@ -32,7 +32,7 @@ const CourseDetail: React.FC = () => {
 
   // Auth states
   const isAuthenticated = authStorage.isAuthenticated();
-  const userName = authStorage.getUserName() || 'Người dùng';
+  const userName = authStorage.getUserName() || '';
 
   // Course Comments states
   const [commentsList, setCommentsList] = useState<any[]>([]);
@@ -703,7 +703,7 @@ const CourseDetail: React.FC = () => {
                                 style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }}
                               />
                               <div>
-                                <div style={{ fontWeight: 600, fontSize: '15px' }}>{comm.user?.full_name || 'Người dùng'}</div>
+                                <div style={{ fontWeight: 600, fontSize: '15px' }}>{comm.user?.user_profile?.full_name || comm.user?.full_name || comm.user?.email?.split('@')[0] || 'Người dùng'}</div>
                                 <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                                   {new Date(comm.created_at).toLocaleDateString('vi-VN')}
                                 </div>

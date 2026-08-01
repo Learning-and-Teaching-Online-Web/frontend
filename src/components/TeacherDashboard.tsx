@@ -29,6 +29,7 @@ import { WalletTab } from './teacher/tabs/WalletTab';
 import { ProfileTab } from './teacher/tabs/ProfileTab';
 import { VerificationBanner } from './teacher/VerificationBanner';
 import { LessonManagementModal } from './teacher/LessonManagementModal';
+import { DocumentManagementModal } from './teacher/DocumentManagementModal';
 
 const TeacherDashboard: React.FC = () => {
   const {
@@ -60,6 +61,19 @@ const TeacherDashboard: React.FC = () => {
     openLessonsModal,
     handleAddLessonSubmit,
     handleDeleteLesson,
+    // Document Management Actions
+    isDocumentModalOpen, setIsDocumentModalOpen,
+    courseDocuments,
+    newDocTitle, setNewDocTitle,
+    newDocUrl, setNewDocUrl,
+    newDocType, setNewDocType,
+    newDocDesc, setNewDocDesc,
+    editingDocument,
+    openDocumentsModal,
+    handleEditDocument,
+    cancelEditDocument,
+    handleAddDocumentSubmit,
+    handleDeleteDocument,
     // Profile & Certificate Actions
     handleUpdateProfileSubmit,
     isCertModalOpen, setIsCertModalOpen,
@@ -318,6 +332,7 @@ const TeacherDashboard: React.FC = () => {
               openCreateCourseModal={openCreateCourseModal}
               openEditCourseModal={openEditCourseModal}
               openLessonsModal={openLessonsModal}
+              openDocumentsModal={openDocumentsModal}
               handleDeleteCourse={handleDeleteCourse}
             />
           )}
@@ -904,7 +919,7 @@ const TeacherDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL 5: LESSON MANAGEMENT */}
+      {/* MODAL 5: LESSON MANAGEMENT (OFFLINE) */}
       <LessonManagementModal
         isOpen={isLessonModalOpen}
         onClose={() => {
@@ -924,6 +939,30 @@ const TeacherDashboard: React.FC = () => {
         onCancelEdit={cancelEditLesson}
         handleAddLessonSubmit={handleAddLessonSubmit}
         handleDeleteLesson={handleDeleteLesson}
+      />
+
+      {/* MODAL 6: DOCUMENT MANAGEMENT (ONLINE) */}
+      <DocumentManagementModal
+        isOpen={isDocumentModalOpen}
+        onClose={() => {
+          cancelEditDocument();
+          setIsDocumentModalOpen(false);
+        }}
+        selectedCourse={selectedCourseForLessons}
+        documents={courseDocuments}
+        newDocTitle={newDocTitle}
+        setNewDocTitle={setNewDocTitle}
+        newDocUrl={newDocUrl}
+        setNewDocUrl={setNewDocUrl}
+        newDocType={newDocType}
+        setNewDocType={setNewDocType}
+        newDocDesc={newDocDesc}
+        setNewDocDesc={setNewDocDesc}
+        editingDocument={editingDocument}
+        onEditDocument={handleEditDocument}
+        onCancelEdit={cancelEditDocument}
+        handleAddDocumentSubmit={handleAddDocumentSubmit}
+        handleDeleteDocument={handleDeleteDocument}
       />
 
     </div>
