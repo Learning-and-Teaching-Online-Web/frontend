@@ -1,24 +1,19 @@
 import React from 'react';
-import { Plus } from 'lucide-react';
+
 
 interface SchedulesTabProps {
-  allSchedules: any[];
+  classSessions?: any[];
   formatDateString: (s: string) => string;
-  openAddScheduleModal: () => void;
 }
 
 export const SchedulesTab: React.FC<SchedulesTabProps> = ({
-  allSchedules,
-  formatDateString,
-  openAddScheduleModal
+  classSessions = [],
+  formatDateString
 }) => {
   return (
     <div className="section-card">
       <div className="section-header">
-        <h2>Quản lý lịch dạy của gia sư</h2>
-        <button className="btn-primary-db" onClick={openAddScheduleModal}>
-          <Plus size={16} /> Thêm khung giờ dạy
-        </button>
+        <h2>Lịch Học Thực Tế (Class Sessions)</h2>
       </div>
 
       <div className="table-responsive">
@@ -26,38 +21,38 @@ export const SchedulesTab: React.FC<SchedulesTabProps> = ({
           <thead>
             <tr>
               <th>Khóa học</th>
+              <th>Buổi học</th>
               <th>Bắt đầu</th>
               <th>Kết thúc</th>
               <th>Trạng thái</th>
-              <th>Học sinh đăng ký</th>
+              <th>Học viên</th>
+              <th>Phòng học</th>
             </tr>
           </thead>
           <tbody>
-            {allSchedules.map((sch: any) => (
-              <tr key={sch.schedule_id}>
-                <td style={{ fontWeight: 600 }}>{sch.course_title}</td>
-                <td>{formatDateString(sch.start_time)}</td>
-                <td>{formatDateString(sch.end_time)}</td>
+            {classSessions.map((session: any) => (
+              <tr key={session.session_id}>
+                <td style={{ fontWeight: 600 }}>{session.course_title}</td>
+                <td>{session.title}</td>
+                <td>{formatDateString(session.scheduled_start)}</td>
+                <td>{formatDateString(session.scheduled_end)}</td>
                 <td>
-                  <span className={`badge ${sch.is_booked ? 'badge-confirmed' : 'badge-draft'}`}>
-                    {sch.is_booked ? 'Đã được đặt' : 'Đang trống'}
+                  <span className={`badge ${session.status === 'scheduled' ? 'badge-confirmed' : 'badge-draft'}`}>
+                    {session.status}
                   </span>
                 </td>
                 <td>
-                  {sch.is_booked ? (
-                    <div className="user-cell">
-                      <span style={{ fontWeight: 500 }}>{sch.student_name || 'Học sinh'}</span>
-                    </div>
-                  ) : (
-                    <span style={{ color: 'var(--text-light)', fontStyle: 'italic' }}>Chưa có</span>
-                  )}
+                  <div className="user-cell">
+                    <span style={{ fontWeight: 500 }}>{session.student_name}</span>
+                  </div>
                 </td>
+                <td>{session.room_id || '-'}</td>
               </tr>
             ))}
-            {allSchedules.length === 0 && (
+            {classSessions.length === 0 && (
               <tr>
-                <td colSpan={5} style={{ textAlign: 'center', padding: '30px', color: 'var(--text-light)' }}>
-                  Chưa cấu hình lịch dạy nào. Bấm vào nút "Thêm khung giờ dạy" để tạo khung giờ rảnh.
+                <td colSpan={7} style={{ textAlign: 'center', padding: '30px', color: 'var(--text-light)' }}>
+                  Chưa có lịch học thực tế nào được sinh ra từ các đăng ký học.
                 </td>
               </tr>
             )}

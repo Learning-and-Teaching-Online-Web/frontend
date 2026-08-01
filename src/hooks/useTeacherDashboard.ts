@@ -37,6 +37,7 @@ export const useTeacherDashboard = () => {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [articles, setArticles] = useState<any[]>([]);
+  const [classSessions, setClassSessions] = useState<any[]>([]);
 
   // Tutor Profile
   const [teacherName, setTeacherName] = useState('Gia sư NovaLearn');
@@ -44,7 +45,7 @@ export const useTeacherDashboard = () => {
   // Modal Open States
   const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<any | null>(null);
-  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [isArticleModalOpen, setIsArticleModalOpen] = useState(false);
   const [editingArticle, setEditingArticle] = useState<any | null>(null);
@@ -87,11 +88,6 @@ export const useTeacherDashboard = () => {
   const [newCourseStartTime, setNewCourseStartTime] = useState<string>('19:30');
   const [newCourseEndTime, setNewCourseEndTime] = useState<string>('21:00');
 
-  // Form States - Schedule
-  const [scheduleCourseId, setScheduleCourseId] = useState('');
-  const [scheduleDate, setScheduleDate] = useState('2026-07-20');
-  const [scheduleStart, setScheduleStart] = useState('09:00');
-  const [scheduleEnd, setScheduleEnd] = useState('10:30');
 
   // Form States - Withdrawal
   const [withdrawAmount, setWithdrawAmount] = useState(500000);
@@ -137,7 +133,13 @@ export const useTeacherDashboard = () => {
         setTransactions(walletRes.data.transactions || []);
       }
 
-      // 6. Fetch Articles
+      // 6. Fetch Class Sessions
+      const sessionsRes = await tutorApi.getClassSessions();
+      if (sessionsRes.success) {
+        setClassSessions(sessionsRes.data || []);
+      }
+
+      // 7. Fetch Articles
       const articlesRes = await blogApi.getAll();
       if (articlesRes && articlesRes.success && Array.isArray(articlesRes.data)) {
         const currentTeacherName = authStorage.getUserName() || teacherName;
@@ -184,11 +186,26 @@ export const useTeacherDashboard = () => {
     loadDashboardData();
   }, [navigate]);
 
+
+
+  // Auto-calculate live sessions for online courses based on dates and selected days
   useEffect(() => {
-    if (courses.length > 0 && !scheduleCourseId) {
-      setScheduleCourseId(courses[0].course_id);
+    if (newCourseType === 'online' && newCourseStartDate && newCourseEndDate && newCourseScheduleDays.length > 0) {
+      const start = new Date(newCourseStartDate + 'T12:00:00Z');
+      const end = new Date(newCourseEndDate + 'T12:00:00Z');
+      if (end >= start) {
+        let count = 0;
+        let curr = new Date(start);
+        while (curr <= end) {
+          if (newCourseScheduleDays.includes(curr.getDay())) {
+            count++;
+          }
+          curr.setDate(curr.getDate() + 1);
+        }
+        setNewCourseSessions(count);
+      }
     }
-  }, [courses, scheduleCourseId]);
+  }, [newCourseType, newCourseStartDate, newCourseEndDate, newCourseScheduleDays]);
 
   // Helpers
   const formatVND = (num: number) => {
@@ -271,9 +288,22 @@ export const useTeacherDashboard = () => {
     setNewCourseThumbnail(course.thumbnail_url || '');
     setNewCourseMaxStudents(course.max_students || 1);
     setNewCourseStatus(course.status || 'published');
-    setNewCourseScheduleDays([1, 3, 5]);
-    setNewCourseStartTime('19:30');
-    setNewCourseEndTime('21:00');
+    
+    if (course.schedules && course.schedules.length > 0) {
+      const days = [...new Set(course.schedules.map((s: any) => s.day_of_week))];
+      setNewCourseScheduleDays(days as number[]);
+      
+      const firstSchedule = course.schedules[0];
+      const startD = new Date(firstSchedule.start_time);
+      const endD = new Date(firstSchedule.end_time);
+      setNewCourseStartTime(`${startD.getHours().toString().padStart(2, '0')}:${startD.getMinutes().toString().padStart(2, '0')}`);
+      setNewCourseEndTime(`${endD.getHours().toString().padStart(2, '0')}:${endD.getMinutes().toString().padStart(2, '0')}`);
+    } else {
+      setNewCourseScheduleDays([1, 3, 5]);
+      setNewCourseStartTime('19:30');
+      setNewCourseEndTime('21:00');
+    }
+    
     setIsCourseModalOpen(true);
   };
 
@@ -304,63 +334,82 @@ export const useTeacherDashboard = () => {
       };
 
       if (newCourseType === 'online') {
+        if (!newCourseStartDate || !newCourseEndDate) {
+          toast.error('Vui lòng chọn ngày khai giảng và bế giảng!');
+          return;
+        }
+        if (new Date(newCourseEndDate) <= new Date(newCourseStartDate)) {
+          toast.error('Ngày bế giảng phải sau ngày khai giảng!');
+          return;
+        }
+        if (newCourseScheduleDays.length === 0 || !newCourseStartTime || !newCourseEndTime) {
+          toast.error('Vui lòng chọn khung giờ học và các ngày dạy trong tuần!');
+          return;
+        }
         payload.start_date = newCourseStartDate || undefined;
         payload.end_date = newCourseEndDate || undefined;
         payload.duration_months = Number(newCourseDurationMonths) || undefined;
       }
 
-      if (editingCourse) {
-        await tutorApi.updateCourse(editingCourse.course_id, payload);
-        toast.success('Cập nhật khóa học thành công!');
-      } else {
-        const createRes = await tutorApi.createCourse(payload);
-        const createdCourseId = createRes?.data?.course_id || createRes?.data?.id;
-
-        // Auto generate weekly schedules for Online course if dates and time are set
-        if (newCourseType === 'online' && createdCourseId && newCourseStartDate && newCourseEndDate && newCourseScheduleDays.length > 0 && newCourseStartTime && newCourseEndTime) {
+      const generateAndAddSchedules = async (courseId: string) => {
+        if (newCourseType === 'online' && courseId && newCourseStartDate && newCourseEndDate && newCourseScheduleDays.length > 0 && newCourseStartTime && newCourseEndTime) {
           const startD = new Date(newCourseStartDate);
-          const endD = new Date(newCourseEndDate);
           const autoSlots: any[] = [];
 
-          let curr = new Date(startD);
-          while (curr <= endD) {
-            const dayOfWeek = curr.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-            if (newCourseScheduleDays.includes(dayOfWeek)) {
-              const yyyy = curr.getFullYear();
-              const mm = String(curr.getMonth() + 1).padStart(2, '0');
-              const dd = String(curr.getDate()).padStart(2, '0');
-              const dateStr = `${yyyy}-${mm}-${dd}`;
+          const yyyy = startD.getFullYear();
+          const mm = String(startD.getMonth() + 1).padStart(2, '0');
+          const dd = String(startD.getDate()).padStart(2, '0');
+          const dateStr = `${yyyy}-${mm}-${dd}`;
 
-              const startISO = `${dateStr}T${newCourseStartTime}:00+07:00`;
-              const endISO = `${dateStr}T${newCourseEndTime}:00+07:00`;
+          const startISO = `${dateStr}T${newCourseStartTime}:00+07:00`;
+          const endISO = `${dateStr}T${newCourseEndTime}:00+07:00`;
 
-              autoSlots.push({
-                start_time: startISO,
-                end_time: endISO,
-                is_recurring: true,
-                day_of_week: dayOfWeek,
-                recurrence_end: newCourseEndDate,
-                max_slot: Number(newCourseMaxStudents) || 1
-              });
-            }
-            curr.setDate(curr.getDate() + 1);
+          for (const dayOfWeek of newCourseScheduleDays) {
+            autoSlots.push({
+              start_time: startISO,
+              end_time: endISO,
+              is_recurring: true,
+              day_of_week: dayOfWeek,
+              recurrence_end: newCourseEndDate,
+              max_slot: Number(newCourseMaxStudents) || 1
+            });
           }
 
           if (autoSlots.length > 0) {
             let createdCount = 0;
             for (const slot of autoSlots) {
               try {
-                await tutorApi.addSchedule(createdCourseId, slot);
+                await tutorApi.addSchedule(courseId, slot);
                 createdCount++;
-              } catch (e) {
-                // Ignore schedule conflict warnings
+              } catch (e: any) {
+                toast.warning(`Không thể xếp lịch thứ ${slot.day_of_week === 0 ? 'Chủ Nhật' : slot.day_of_week + 1}: ${e.response?.data?.error || 'Trùng lịch'}`);
               }
             }
             if (createdCount > 0) {
-              toast.success(`Đã tự động tạo ${createdCount} buổi học theo thời gian biểu!`);
+              toast.success(`Đã lưu ${createdCount} cấu hình lịch tuần hoàn!`);
             }
           }
         }
+      };
+
+      if (editingCourse) {
+        await tutorApi.updateCourse(editingCourse.course_id, payload);
+        
+        if (newCourseType === 'online' && editingCourse.status !== 'published') {
+          try {
+            await tutorApi.deleteCourseSchedules(editingCourse.course_id);
+            await generateAndAddSchedules(editingCourse.course_id);
+          } catch (e) {
+            console.error('Lỗi cập nhật lịch dạy:', e);
+          }
+        }
+        
+        toast.success('Cập nhật khóa học thành công!');
+      } else {
+        const createRes = await tutorApi.createCourse(payload);
+        const createdCourseId = createRes?.data?.course_id || createRes?.data?.id;
+
+        await generateAndAddSchedules(createdCourseId);
 
         toast.success('Tạo khóa học mới thành công!');
       }
@@ -388,43 +437,6 @@ export const useTeacherDashboard = () => {
     }
   };
 
-  const openAddScheduleModal = () => {
-    if (!isApprovedTutor) {
-      toast.error('Hồ sơ gia sư của bạn chưa được duyệt bởi Quản trị viên. Không thể thêm khung giờ dạy!');
-      return;
-    }
-    setIsScheduleModalOpen(true);
-  };
-
-  const handleAddScheduleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isApprovedTutor) {
-      toast.error('Hồ sơ gia sư của bạn chưa được duyệt bởi Quản trị viên. Không thể thêm khung giờ dạy!');
-      return;
-    }
-    if (!scheduleCourseId) {
-      toast.error('Vui lòng chọn khóa học');
-      return;
-    }
-
-    const startISO = `${scheduleDate}T${scheduleStart}:00+07:00`;
-    const endISO = `${scheduleDate}T${scheduleEnd}:00+07:00`;
-
-    try {
-      await tutorApi.addSchedule(scheduleCourseId, {
-        start_time: startISO,
-        end_time: endISO,
-        is_recurring: false,
-        max_slot: 1
-      });
-
-      toast.success('Đã thêm khung giờ dạy mới!');
-      setIsScheduleModalOpen(false);
-      loadDashboardData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || 'Không thể thêm khung giờ dạy.');
-    }
-  };
 
   const handleWithdrawSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -794,6 +806,52 @@ export const useTeacherDashboard = () => {
     return [...acc, ...courseSchedules];
   }, []);
 
+  const handleStartDateChange = (val: string) => {
+    setNewCourseStartDate(val);
+    if (val && newCourseEndDate) {
+      const start = new Date(val);
+      const end = new Date(newCourseEndDate);
+      if (end <= start) {
+        toast.warning('Ngày bế giảng phải sau ngày khai giảng!');
+      } else {
+        const diffTime = Math.abs(end.getTime() - start.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const months = Math.round((diffDays / 30) * 10) / 10;
+        setNewCourseDurationMonths(months > 0 ? months : 1);
+      }
+    }
+  };
+
+  const handleEndDateChange = (val: string) => {
+    setNewCourseEndDate(val);
+    if (newCourseStartDate && val) {
+      const start = new Date(newCourseStartDate);
+      const end = new Date(val);
+      if (end <= start) {
+        toast.warning('Ngày bế giảng phải sau ngày khai giảng!');
+      } else {
+        const diffTime = Math.abs(end.getTime() - start.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const months = Math.round((diffDays / 30) * 10) / 10;
+        setNewCourseDurationMonths(months > 0 ? months : 1);
+      }
+    }
+  };
+
+  const handleDurationMonthsChange = (val: number) => {
+    setNewCourseDurationMonths(val);
+    if (newCourseStartDate && val > 0) {
+      const start = new Date(newCourseStartDate);
+      start.setMonth(start.getMonth() + Math.floor(val));
+      const additionalDays = Math.round((val - Math.floor(val)) * 30);
+      start.setDate(start.getDate() + additionalDays);
+      const yyyy = start.getFullYear();
+      const mm = String(start.getMonth() + 1).padStart(2, '0');
+      const dd = String(start.getDate()).padStart(2, '0');
+      setNewCourseEndDate(`${yyyy}-${mm}-${dd}`);
+    }
+  };
+
   return {
     activeTab,
     setActiveTab,
@@ -802,6 +860,9 @@ export const useTeacherDashboard = () => {
     stats,
     tutorProfile,
     isApprovedTutor,
+    handleStartDateChange,
+    handleEndDateChange,
+    handleDurationMonthsChange,
     courses,
     bookings,
     reviews,
@@ -809,6 +870,7 @@ export const useTeacherDashboard = () => {
     walletBalance,
     articles,
     allSchedules,
+    classSessions,
     formatVND,
     formatDateString,
     // Lesson Management
@@ -844,7 +906,7 @@ export const useTeacherDashboard = () => {
     openEditCourseModal,
     handleCourseSubmit,
     handleDeleteCourse,
-    isScheduleModalOpen, setIsScheduleModalOpen, openAddScheduleModal,
+
     isWithdrawModalOpen, setIsWithdrawModalOpen,
     isArticleModalOpen, setIsArticleModalOpen,
     editingArticle,
@@ -866,12 +928,7 @@ export const useTeacherDashboard = () => {
     newCourseScheduleDays, setNewCourseScheduleDays,
     newCourseStartTime, setNewCourseStartTime,
     newCourseEndTime, setNewCourseEndTime,
-    // Schedule form
-    scheduleCourseId, setScheduleCourseId,
-    scheduleDate, setScheduleDate,
-    scheduleStart, setScheduleStart,
-    scheduleEnd, setScheduleEnd,
-    handleAddScheduleSubmit,
+
     // Withdraw form
     withdrawAmount, setWithdrawAmount,
     withdrawBank, setWithdrawBank,

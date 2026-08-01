@@ -109,9 +109,21 @@ export const tutorApi = {
     return res.data;
   },
 
+  // Delete Course Schedules
+  deleteCourseSchedules: async (courseId: string) => {
+    const res = await axiosClient.delete(`/courses/${courseId}/schedules`);
+    return res.data;
+  },
+
   // Bookings
   getBookings: async () => {
     const res = await axiosClient.get('/tutors/bookings');
+    return res.data;
+  },
+
+  // Class Sessions
+  getClassSessions: async () => {
+    const res = await axiosClient.get('/tutors/class-sessions');
     return res.data;
   },
 

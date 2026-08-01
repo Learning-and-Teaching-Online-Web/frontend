@@ -7,7 +7,6 @@ import {
   FileText,
   Star,
   CreditCard,
-  Plus,
   X,
   DollarSign,
   Users,
@@ -45,7 +44,7 @@ const TeacherDashboard: React.FC = () => {
     transactions,
     walletBalance,
     articles,
-    allSchedules,
+
     formatVND,
     formatDateString,
     // Lesson Management Actions
@@ -81,7 +80,6 @@ const TeacherDashboard: React.FC = () => {
     openEditCourseModal,
     handleCourseSubmit,
     handleDeleteCourse,
-    isScheduleModalOpen, setIsScheduleModalOpen, openAddScheduleModal,
     isWithdrawModalOpen, setIsWithdrawModalOpen,
     isArticleModalOpen, setIsArticleModalOpen,
     editingArticle,
@@ -90,9 +88,10 @@ const TeacherDashboard: React.FC = () => {
     newCourseSubject, setNewCourseSubject,
     newCoursePrice, setNewCoursePrice,
     newCourseType, setNewCourseType,
-    newCourseStartDate, setNewCourseStartDate,
-    newCourseEndDate, setNewCourseEndDate,
-    newCourseDurationMonths, setNewCourseDurationMonths,
+    newCourseStartDate,
+    newCourseEndDate,
+    handleStartDateChange,
+    handleEndDateChange,
     newCourseLevel, setNewCourseLevel,
     newCourseSessions, setNewCourseSessions,
     newCourseDuration, setNewCourseDuration,
@@ -104,12 +103,7 @@ const TeacherDashboard: React.FC = () => {
     newCourseStartTime, setNewCourseStartTime,
     newCourseEndTime, setNewCourseEndTime,
 
-    // Schedule Form
-    scheduleCourseId, setScheduleCourseId,
-    scheduleDate, setScheduleDate,
-    scheduleStart, setScheduleStart,
-    scheduleEnd, setScheduleEnd,
-    handleAddScheduleSubmit,
+
     // Withdraw Form
     withdrawAmount, setWithdrawAmount,
     withdrawBank, setWithdrawBank,
@@ -128,7 +122,8 @@ const TeacherDashboard: React.FC = () => {
     handleDeleteArticle,
     // Booking Actions
     handleConfirmBooking,
-    handleCancelBooking
+    handleCancelBooking,
+    classSessions
   } = useTeacherDashboard();
 
   if (isLoading && courses.length === 0 && bookings.length === 0) {
@@ -329,9 +324,8 @@ const TeacherDashboard: React.FC = () => {
 
           {activeTab === 'schedules' && (
             <SchedulesTab
-              allSchedules={allSchedules}
+              classSessions={classSessions}
               formatDateString={formatDateString}
-              openAddScheduleModal={openAddScheduleModal}
             />
           )}
 
@@ -403,13 +397,14 @@ const TeacherDashboard: React.FC = () => {
                 <label style={{ fontWeight: 700, fontSize: '14px', marginBottom: '8px' }}>Hình thức giảng dạy *</label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div
-                    onClick={() => setNewCourseType('online')}
+                    onClick={() => { if (!editingCourse) setNewCourseType('online'); }}
                     style={{
                       border: newCourseType === 'online' ? '2px solid #6366f1' : '1px solid #cbd5e1',
                       background: newCourseType === 'online' ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(79, 70, 229, 0.1))' : '#fff',
                       borderRadius: '12px',
                       padding: '14px',
-                      cursor: 'pointer',
+                      cursor: editingCourse ? 'not-allowed' : 'pointer',
+                      opacity: editingCourse && newCourseType !== 'online' ? 0.5 : 1,
                       transition: 'all 0.2s ease',
                       position: 'relative'
                     }}
@@ -424,13 +419,14 @@ const TeacherDashboard: React.FC = () => {
                   </div>
 
                   <div
-                    onClick={() => setNewCourseType('offline')}
+                    onClick={() => { if (!editingCourse) setNewCourseType('offline'); }}
                     style={{
                       border: newCourseType === 'offline' ? '2px solid #d97706' : '1px solid #cbd5e1',
                       background: newCourseType === 'offline' ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(217, 119, 6, 0.1))' : '#fff',
                       borderRadius: '12px',
                       padding: '14px',
-                      cursor: 'pointer',
+                      cursor: editingCourse ? 'not-allowed' : 'pointer',
+                      opacity: editingCourse && newCourseType !== 'offline' ? 0.5 : 1,
                       transition: 'all 0.2s ease',
                       position: 'relative'
                     }}
@@ -450,7 +446,7 @@ const TeacherDashboard: React.FC = () => {
               {newCourseType === 'online' ? (
                 <div style={{ padding: '10px 14px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#1e40af' }}>
                   <Info size={16} style={{ flexShrink: 0 }} />
-                  <span><strong>Lớp Online Live:</strong> Cần thiết lập ngày Khai giảng / Bế giảng. Bạn có thể tạo các khung giờ dạy live ở mục <em>Lịch dạy của tôi</em>.</span>
+                  <span><strong>Lớp Online Live:</strong> Cần thiết lập ngày Khai giảng / Bế giảng và lịch học tuần hoàn ngay bên dưới.</span>
                 </div>
               ) : (
                 <div style={{ padding: '10px 14px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#92400e' }}>
@@ -503,32 +499,32 @@ const TeacherDashboard: React.FC = () => {
                     <span>Thiết lập Lịch Học Live & Ngày Khai Giảng Tự Động</span>
                   </div>
 
+                  {editingCourse && editingCourse.status === 'published' && (
+                    <div style={{ padding: '8px 12px', background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: '6px', color: '#991b1b', fontSize: '12px' }}>
+                      ⚠️ Khóa học đã xuất bản nên không thể chỉnh sửa lịch dạy. Để thay đổi lịch, vui lòng xóa khóa này và tạo khóa học mới.
+                    </div>
+                  )}
+
                   <div className="form-row-db">
                     <div className="form-group-db">
-                      <label>Ngày Khai Giảng (Bắt đầu) *</label>
+                      <label>Ngày Khai Giảng (Bắt đầu) <span style={{color: 'red'}}>*</span></label>
                       <input
                         type="date"
                         value={newCourseStartDate}
-                        onChange={(e) => setNewCourseStartDate(e.target.value)}
+                        required={newCourseType === 'online'}
+                        disabled={editingCourse && editingCourse.status === 'published'}
+                        onChange={(e) => handleStartDateChange(e.target.value)}
                       />
                     </div>
 
                     <div className="form-group-db">
-                      <label>Ngày Bế Giảng (Kết thúc) *</label>
+                      <label>Ngày Bế Giảng (Kết thúc) <span style={{color: 'red'}}>*</span></label>
                       <input
                         type="date"
                         value={newCourseEndDate}
-                        onChange={(e) => setNewCourseEndDate(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="form-group-db">
-                      <label>Thời gian đào tạo (Số tháng)</label>
-                      <input
-                        type="number"
-                        min={1}
-                        value={newCourseDurationMonths}
-                        onChange={(e) => setNewCourseDurationMonths(Number(e.target.value))}
+                        required={newCourseType === 'online'}
+                        disabled={editingCourse && editingCourse.status === 'published'}
+                        onChange={(e) => handleEndDateChange(e.target.value)}
                       />
                     </div>
                   </div>
@@ -554,6 +550,7 @@ const TeacherDashboard: React.FC = () => {
                             key={day.val}
                             type="button"
                             onClick={() => {
+                              if (editingCourse && editingCourse.status === 'published') return;
                               if (isSelected) {
                                 setNewCourseScheduleDays(newCourseScheduleDays.filter(d => d !== day.val));
                               } else {
@@ -586,6 +583,7 @@ const TeacherDashboard: React.FC = () => {
                       <input
                         type="time"
                         value={newCourseStartTime}
+                        disabled={editingCourse && editingCourse.status === 'published'}
                         onChange={(e) => setNewCourseStartTime(e.target.value)}
                       />
                     </div>
@@ -595,6 +593,7 @@ const TeacherDashboard: React.FC = () => {
                       <input
                         type="time"
                         value={newCourseEndTime}
+                        disabled={editingCourse && editingCourse.status === 'published'}
                         onChange={(e) => setNewCourseEndTime(e.target.value)}
                       />
                     </div>
@@ -642,19 +641,32 @@ const TeacherDashboard: React.FC = () => {
                     type="number"
                     min={1}
                     value={newCourseSessions}
-                    onChange={(e) => setNewCourseSessions(Number(e.target.value))}
+                    readOnly={newCourseType === 'online'}
+                    style={newCourseType === 'online' ? { backgroundColor: '#f1f5f9', color: '#64748b', cursor: 'not-allowed' } : {}}
+                    onChange={(e) => {
+                      if (newCourseType !== 'online') {
+                        setNewCourseSessions(Number(e.target.value));
+                      }
+                    }}
                   />
+                  {newCourseType === 'online' && (
+                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '6px' }}>
+                      * Tự động tính toán dựa trên ngày và khung giờ học.
+                    </div>
+                  )}
                 </div>
 
-                <div className="form-group-db">
-                  <label>{newCourseType === 'online' ? 'Thời lượng mỗi buổi (phút)' : 'Thời lượng trung bình mỗi bài (phút)'}</label>
-                  <input
-                    type="number"
-                    min={15}
-                    value={newCourseDuration}
-                    onChange={(e) => setNewCourseDuration(Number(e.target.value))}
-                  />
-                </div>
+                {newCourseType !== 'online' && (
+                  <div className="form-group-db">
+                    <label>Thời lượng trung bình mỗi bài (phút)</label>
+                    <input
+                      type="number"
+                      min={15}
+                      value={newCourseDuration}
+                      onChange={(e) => setNewCourseDuration(Number(e.target.value))}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Detailed Description */}
@@ -730,64 +742,7 @@ const TeacherDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL 2: ADD SCHEDULE */}
-      {isScheduleModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-card">
-            <div className="modal-header">
-              <h3>Thêm khung giờ dạy rảnh</h3>
-              <button onClick={() => setIsScheduleModalOpen(false)} className="btn-close"><X size={20} /></button>
-            </div>
-            <form onSubmit={handleAddScheduleSubmit}>
-              <div className="form-group-db">
-                <label>Chọn khóa học áp dụng *</label>
-                <select value={scheduleCourseId} onChange={(e) => setScheduleCourseId(e.target.value)}>
-                  {courses.map(c => (
-                    <option key={c.course_id} value={c.course_id}>{c.title}</option>
-                  ))}
-                </select>
-              </div>
 
-              <div className="form-group-db">
-                <label>Ngày dạy *</label>
-                <input
-                  type="date"
-                  required
-                  value={scheduleDate}
-                  onChange={(e) => setScheduleDate(e.target.value)}
-                />
-              </div>
-
-              <div className="form-row-db">
-                <div className="form-group-db">
-                  <label>Giờ bắt đầu *</label>
-                  <input
-                    type="time"
-                    required
-                    value={scheduleStart}
-                    onChange={(e) => setScheduleStart(e.target.value)}
-                  />
-                </div>
-
-                <div className="form-group-db">
-                  <label>Giờ kết thúc *</label>
-                  <input
-                    type="time"
-                    required
-                    value={scheduleEnd}
-                    onChange={(e) => setScheduleEnd(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="modal-actions">
-                <button type="button" className="btn-secondary-db" onClick={() => setIsScheduleModalOpen(false)}>Hủy</button>
-                <button type="submit" className="btn-primary-db"><Plus size={16} /> Thêm khung giờ</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* MODAL 3: WITHDRAW MONEY */}
       {isWithdrawModalOpen && (
