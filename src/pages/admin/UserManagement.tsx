@@ -14,7 +14,7 @@ interface UserItem {
   status: 'active' | 'suspended' | 'deleted';
   created_at: string;
   last_login?: string | null;
-  user_profile?: any;
+  admin_profile?: any;
   student_profile?: {
     grade_level?: string | null;
     learning_goals?: string | null;
@@ -215,10 +215,10 @@ const UserManagement: React.FC = () => {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                           <img
                             src={user.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'}
-                            alt={user.user_profile?.full_name || user.full_name || 'Avatar'}
+                            alt={user.full_name || 'Avatar'}
                             style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }}
                           />
-                          <span>{user.user_profile?.full_name || user.full_name || user.email?.split('@')[0] || 'Người dùng'}</span>
+                          <span>{user.full_name || user.email?.split('@')[0] || 'Người dùng'}</span>
                         </div>
                       </td>
                       <td>{user.email}</td>
@@ -346,11 +346,11 @@ const UserManagement: React.FC = () => {
             <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #f1f5f9' }}>
               <img
                 src={selectedUser.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'}
-                alt={selectedUser.user_profile?.full_name || selectedUser.full_name || 'Avatar'}
+                alt={selectedUser.full_name || 'Avatar'}
                 style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #6366f1' }}
               />
               <div>
-                <h4 style={{ margin: '0 0 4px 0', fontSize: '18px', color: '#0f172a' }}>{selectedUser.user_profile?.full_name || selectedUser.full_name || selectedUser.email?.split('@')[0] || 'Người dùng'}</h4>
+                <h4 style={{ margin: '0 0 4px 0', fontSize: '18px', color: '#0f172a' }}>{selectedUser.full_name || selectedUser.email?.split('@')[0] || 'Người dùng'}</h4>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <span className="admin-badge primary" style={{ textTransform: 'capitalize' }}>
                     {selectedUser.role === 'tutor' ? 'Giảng viên' : selectedUser.role === 'admin' ? 'Quản trị viên' : 'Học viên'}

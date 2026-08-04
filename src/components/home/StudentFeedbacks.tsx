@@ -13,7 +13,7 @@ const StudentFeedbacks: React.FC = () => {
         if (res && res.success && Array.isArray(res.data)) {
           const mapped = res.data.map((r: any) => ({
             text: r.comment || 'Khóa học tuyệt vời!',
-            author: r.student?.user?.user_profile?.full_name || r.student?.user?.full_name || r.student?.user?.email?.split('@')[0] || 'Học viên ẩn danh',
+            author: r.student?.full_name || r.student?.user?.full_name || r.student?.user?.email?.split('@')[0] || 'Học viên ẩn danh',
             role: 'Học viên'
           }));
           setFeedbacksList(mapped);

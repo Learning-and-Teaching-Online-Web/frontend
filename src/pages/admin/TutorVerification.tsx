@@ -16,7 +16,6 @@ interface TutorItem {
     email: string;
     avatar_url: string | null;
     phone: string | null;
-    user_profile?: any;
   };
 }
 
@@ -245,7 +244,7 @@ const TutorVerification: React.FC = () => {
                   {tutors && tutors.length > 0 ? (
                     tutors.map((t) => (
                       <tr key={t.tutor_id} className={selectedTutor?.tutor_id === t.tutor_id ? 'active-row' : ''} style={{ backgroundColor: selectedTutor?.tutor_id === t.tutor_id ? 'rgba(99, 102, 241, 0.05)' : '' }}>
-                        <td style={{ fontWeight: 600 }}>{t.user?.user_profile?.full_name || t.user?.full_name || t.user?.email?.split('@')[0] || 'Giảng viên'}</td>
+                        <td style={{ fontWeight: 600 }}>{t.user?.full_name || t.user?.email?.split('@')[0] || 'Giảng viên'}</td>
                         <td>{t.user?.email}</td>
                         <td>
                           <span className={`admin-badge ${t.verified_status === 'approved' ? 'success' : t.verified_status === 'rejected' ? 'danger' : 'warning'}`}>
@@ -301,7 +300,7 @@ const TutorVerification: React.FC = () => {
                 style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--admin-border)' }}
               />
               <div>
-                <h3 style={{ fontSize: '16px', fontWeight: 600, margin: '0 0 4px 0' }}>{selectedTutor.user?.user_profile?.full_name || selectedTutor.user?.full_name || selectedTutor.user?.email?.split('@')[0] || 'Giảng viên'}</h3>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, margin: '0 0 4px 0' }}>{selectedTutor.user?.full_name || selectedTutor.user?.email?.split('@')[0] || 'Giảng viên'}</h3>
                 <span style={{ fontSize: '13px', color: 'var(--admin-text-muted)', display: 'block' }}>Email: {selectedTutor.user?.email}</span>
                 <span style={{ fontSize: '13px', color: 'var(--admin-text-muted)', display: 'block' }}>SĐT: {selectedTutor.user?.phone || 'Chưa cung cấp'}</span>
               </div>
@@ -485,7 +484,7 @@ const TutorVerification: React.FC = () => {
                   <FileText size={20} />
                   <span>{previewCert.title}</span>
                 </h3>
-                <span style={{ fontSize: '12px', color: '#9ca3af' }}>Giảng viên: {selectedTutor?.user?.user_profile?.full_name || selectedTutor?.user?.full_name || selectedTutor?.user?.email?.split('@')[0] || 'Giảng viên'}</span>
+                <span style={{ fontSize: '12px', color: '#9ca3af' }}>Giảng viên: {selectedTutor?.user?.full_name || selectedTutor?.user?.email?.split('@')[0] || 'Giảng viên'}</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span className={`admin-badge ${previewCert.status === 'approved' ? 'success' : previewCert.status === 'rejected' ? 'danger' : 'warning'}`}>
