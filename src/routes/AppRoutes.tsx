@@ -23,12 +23,19 @@ import TutorVerification from '../pages/admin/TutorVerification';
 import CourseModeration from '../pages/admin/CourseModeration';
 import TransactionHistory from '../pages/admin/TransactionHistory';
 import ArticleManagement from '../pages/admin/ArticleManagement';
+import RequestTutorPage from '../pages/RequestTutorPage';
+import OpenClassesPage from '../pages/OpenClassesPage';
+import ClassDetailPage from '../pages/ClassDetailPage';
+import AdminClassRequests from '../pages/admin/AdminClassRequests';
 
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
       {/* Public routes */}
       <Route path="/" element={<HomePage />} />
+      <Route path="/tim-gia-su" element={<RequestTutorPage />} />
+      <Route path="/lop-hoc-moi" element={<OpenClassesPage />} />
+      <Route path="/lop-hoc-moi/:id" element={<ClassDetailPage />} />
       <Route path="/courses" element={<CourseList />} />
       <Route path="/courses/:courseId" element={<CourseDetail />} />
       <Route path="/blog" element={<BlogList />} />
@@ -58,7 +65,9 @@ const AppRoutes: React.FC = () => {
         <Route path="/admin/courses" element={<CourseModeration />} />
         <Route path="/admin/articles" element={<ArticleManagement />} />
         <Route path="/admin/payouts" element={<TransactionHistory />} />
+        <Route path="/admin/class-requests" element={<AdminClassRequests />} />
       </Route>
+
 
       {/* Catch-all 404 Route */}
       <Route path="*" element={<NotFoundPage />} />
