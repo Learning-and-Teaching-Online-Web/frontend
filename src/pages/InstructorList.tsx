@@ -105,8 +105,8 @@ const InstructorList: React.FC = () => {
         ) : (
           <div className="instructor-grid">
             {tutors.map((tutor) => {
-              const name = tutor.user?.user_profile?.full_name || tutor.user?.full_name || tutor.user?.email?.split('@')[0] || 'Giảng viên';
-              const avatar = tutor.user?.avatar_url;
+              const name = tutor.full_name || tutor.user?.full_name || tutor.user?.email?.split('@')[0] || 'Giảng viên';
+              const avatar = tutor.avatar_url || tutor.user?.avatar_url;
               const initials = name.charAt(0).toUpperCase();
               const isFav = favoriteTutorIds.includes(tutor.tutor_id);
 

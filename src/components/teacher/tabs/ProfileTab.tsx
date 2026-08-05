@@ -87,7 +87,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
             <div style={{ position: 'relative', flexShrink: 0 }}>
               <img
                 src={avatarBase64 || tutorProfile?.user?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'}
-                alt={tutorProfile?.user?.user_profile?.full_name || tutorProfile?.user?.full_name || tutorProfile?.user?.email?.split('@')[0] || 'Giảng viên'}
+                alt={tutorProfile?.full_name || tutorProfile?.user?.full_name || tutorProfile?.user?.email?.split('@')[0] || 'Giảng viên'}
                 style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #4f46e5' }}
               />
             </div>
