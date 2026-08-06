@@ -186,7 +186,7 @@ const OpenClassesPage: React.FC = () => {
                     {/* Content Body */}
                     <div style={{ padding: '14px 16px', fontSize: '0.92rem', lineHeight: '1.6', color: '#334155' }}>
                       <p style={{ margin: '0 0 6px 0' }}>
-                        <strong>Lớp dạy:</strong> {cls.grade_level}.
+                        <strong>Lớp dạy:</strong> {cls.grade_level || 'Tất cả các lớp'}.
                       </p>
                       <p style={{ margin: '0 0 6px 0' }}>
                         <strong>Môn dạy:</strong> {cls.subject_name}.
@@ -207,7 +207,7 @@ const OpenClassesPage: React.FC = () => {
                         <strong>Yêu cầu:</strong> {cls.tutor_requirement || 'Sinh viên / Giáo viên'}
                       </p>
                       <p style={{ margin: '0 0 12px 0', color: '#475569' }}>
-                        <strong>Liên hệ:</strong> {cls.phone || '0974.502.420 - 0938.708.488'}
+                        <strong>Liên hệ trung tâm:</strong> 0974.502.420 - 0938.708.488
                       </p>
 
                       {/* Footer Actions */}

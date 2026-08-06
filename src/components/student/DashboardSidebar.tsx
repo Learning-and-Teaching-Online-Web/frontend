@@ -5,6 +5,7 @@ import {
   Calendar, 
   Award, 
   Heart, 
+  ClipboardList,
   Settings, 
   LogOut 
 } from 'lucide-react';
@@ -18,6 +19,7 @@ interface DashboardSidebarProps {
   onLogout: (e: React.MouseEvent) => void;
   quizCount: number;
   favoriteCount: number;
+  classRequestCount?: number;
 }
 
 export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
@@ -26,7 +28,8 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   onTabChange,
   onLogout,
   quizCount,
-  favoriteCount
+  favoriteCount,
+  classRequestCount = 0
 }) => {
   return (
     <aside className="dashboard-sidebar">
@@ -69,6 +72,15 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           >
             <Calendar size={18} />
             Lịch học trực tuyến
+          </button>
+        </li>
+        <li>
+          <button 
+            className={`menu-item-btn ${activeTab === 'class-requests' ? 'active' : ''}`}
+            onClick={() => onTabChange('class-requests')}
+          >
+            <ClipboardList size={18} />
+            Lớp gia sư đã yêu cầu {classRequestCount > 0 ? `(${classRequestCount})` : ''}
           </button>
         </li>
         <li>

@@ -5,6 +5,7 @@ import {
   Users, 
   UserCheck, 
   BookOpen, 
+  ClipboardList,
   FileText,
   CreditCard, 
   LogOut
@@ -22,6 +23,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onLogout }) => {
     { path: '/admin/students', label: 'Học viên', icon: <Users size={20} /> },
     { path: '/admin/tutors', label: 'Giảng viên', icon: <UserCheck size={20} /> },
     { path: '/admin/courses', label: 'Khóa học', icon: <BookOpen size={20} /> },
+    { path: '/admin/class-requests', label: 'Lớp học Offline', icon: <ClipboardList size={20} /> },
     { path: '/admin/articles', label: 'Bài viết Blog', icon: <FileText size={20} /> },
     { path: '/admin/payouts', label: 'Giao dịch & Rút tiền', icon: <CreditCard size={20} /> },
   ];

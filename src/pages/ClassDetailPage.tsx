@@ -149,7 +149,7 @@ const ClassDetailPage: React.FC = () => {
               <strong>Mã lớp:</strong> <span style={{ color: '#b45309', fontWeight: '700' }}>{classDetail.code}</span>
             </p>
             <p style={{ margin: '0 0 8px 0' }}>
-              <strong>Lớp dạy:</strong> {classDetail.grade_level}
+              <strong>Lớp dạy:</strong> {classDetail.grade_level || 'Tất cả các lớp'}
             </p>
             <p style={{ margin: '0 0 8px 0' }}>
               <strong>Môn dạy:</strong> {classDetail.subject_name}
@@ -176,7 +176,7 @@ const ClassDetailPage: React.FC = () => {
               <strong>Thông tin người học:</strong> {classDetail.academic_level || 'Học sinh căn bản'}
             </p>
             <p style={{ margin: '0 0 8px 0', color: '#475569' }}>
-              <strong>Liên hệ trung tâm:</strong> {classDetail.phone || '0974.502.420 - 0938.708.488'}
+              <strong>Liên hệ trung tâm:</strong> 0974.502.420 - 0938.708.488
             </p>
           </div>
 

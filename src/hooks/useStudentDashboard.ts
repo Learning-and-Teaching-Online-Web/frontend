@@ -16,6 +16,8 @@ import { bookingApi } from '../services/bookingApi';
 import { favoriteApi } from '../services/favoriteApi';
 import authStorage from '../utils/authStorage';
 import { quizApi } from '../services/quizApi';
+import axiosClient from '../services/axiosClient';
+import type { StudentClassRequest } from '../components/student/tabs/ClassRequestsTab';
 
 export const useStudentDashboard = () => {
   const navigate = useNavigate();
@@ -28,6 +30,7 @@ export const useStudentDashboard = () => {
   const [classSessions, setClassSessions] = useState<ClassSession[]>([]);
   const [quizAttempts, setQuizAttempts] = useState<QuizAttempt[]>([]);
   const [favoriteTutors, setFavoriteTutors] = useState<FavoriteTutor[]>([]);
+  const [myClassRequests, setMyClassRequests] = useState<StudentClassRequest[]>([]);
 
   // Form states for profile edit
   const [formName, setFormName] = useState('');
@@ -185,6 +188,16 @@ export const useStudentDashboard = () => {
         } else {
           setFavoriteTutors([]);
         }
+
+        // 5. My Offline Class Requests
+        try {
+          const reqRes = await axiosClient.get('/class-requests/my-requests');
+          if (reqRes && reqRes.data && Array.isArray(reqRes.data.data)) {
+            setMyClassRequests(reqRes.data.data);
+          }
+        } catch {
+          setMyClassRequests([]);
+        }
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
         toast.error('Có lỗi xảy ra khi tải thông tin bảng điều khiển.');
@@ -193,6 +206,17 @@ export const useStudentDashboard = () => {
 
     fetchDashboardData();
   }, [navigate]);
+
+  const fetchMyClassRequests = async () => {
+    try {
+      const res = await axiosClient.get('/class-requests/my-requests');
+      if (res && res.data && Array.isArray(res.data.data)) {
+        setMyClassRequests(res.data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching my class requests:', err);
+    }
+  };
 
   const handleAvatarFileChange = (file: File) => {
     if (!file) return;
@@ -355,6 +379,8 @@ export const useStudentDashboard = () => {
     classSessions,
     quizAttempts,
     favoriteTutors,
+    myClassRequests,
+    fetchMyClassRequests,
     formState: {
       formName,
       formPhone,

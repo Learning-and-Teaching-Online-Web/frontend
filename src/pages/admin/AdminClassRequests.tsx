@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import axiosClient from '../../services/axiosClient';
 import { toast } from 'react-toastify';
 import AdminLayout from '../../components/admin/AdminLayout';
-
-
+import { CheckCircle2, UserCheck, Eye, X, ClipboardList, Filter } from 'lucide-react';
 
 interface Application {
   application_id: string;
   applicant_phone: string;
   available_date?: string;
+  available_from?: string;
   notes?: string;
   status: string;
   created_at: string;
@@ -27,7 +27,7 @@ interface ClassRequest {
   address_detail: string;
   district?: string;
   province?: string;
-  grade_level: string;
+  grade_level?: string;
   subject_name: string;
   sessions_per_week: number;
   study_time?: string;
@@ -50,7 +50,6 @@ const AdminClassRequests: React.FC = () => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const commissionRate = 35;
-
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -114,36 +113,55 @@ const AdminClassRequests: React.FC = () => {
     }
   };
 
-
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('vi-VN').format(val) + ' đ';
   };
 
+  const renderStatusBadge = (status: string) => {
+    switch (status) {
+      case 'OPEN':
+        return <span className="admin-badge success">LỚP CHƯA GIAO</span>;
+      case 'ASSIGNED':
+        return <span className="admin-badge primary">ĐÃ GIAO</span>;
+      case 'WAITING_TUTOR_CONFIRM':
+        return <span className="admin-badge warning">CHỜ GS CHỌN</span>;
+      case 'PENDING_ADMIN':
+      default:
+        return <span className="admin-badge danger">CHỜ DUYỆT</span>;
+    }
+  };
+
   return (
     <AdminLayout title="Quản lý Lớp Offline & Duyệt Gia Sư">
-      <div style={{ padding: '20px' }}>
+      <div className="admin-card">
         
-        {/* Header Tabs */}
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+        {/* Status Filter Tabs */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--admin-text-muted)', fontSize: '14px', marginRight: '4px' }}>
+            <Filter size={16} />
+            <span>Lọc trạng thái:</span>
+          </div>
           {[
             { key: 'all', label: 'Tất cả lớp' },
             { key: 'PENDING_ADMIN', label: 'Chờ Admin duyệt mở' },
-            { key: 'WAITING_TUTOR_CONFIRM', label: 'Chờ liên hệ Gia sư chọn' },
+            { key: 'WAITING_TUTOR_CONFIRM', label: 'Chờ Gia sư chọn' },
             { key: 'OPEN', label: 'Lớp chưa giao (OPEN)' },
             { key: 'ASSIGNED', label: 'Đã giao (ASSIGNED)' },
           ].map((tab) => (
             <button
               key={tab.key}
+              type="button"
               onClick={() => setStatusFilter(tab.key)}
               style={{
-                padding: '8px 16px',
-                borderRadius: '6px',
-                border: '1px solid #cbd5e1',
-                background: statusFilter === tab.key ? '#2563eb' : '#ffffff',
-                color: statusFilter === tab.key ? '#ffffff' : '#334155',
-                fontWeight: '600',
-                fontSize: '0.9rem',
+                padding: '7px 14px',
+                borderRadius: '8px',
+                border: statusFilter === tab.key ? '1px solid #6366f1' : '1px solid var(--admin-border)',
+                background: statusFilter === tab.key ? 'rgba(99, 102, 241, 0.2)' : 'rgba(255, 255, 255, 0.03)',
+                color: statusFilter === tab.key ? '#818cf8' : 'var(--admin-text-muted)',
+                fontWeight: statusFilter === tab.key ? '700' : '500',
+                fontSize: '13px',
                 cursor: 'pointer',
+                transition: 'all 0.15s ease',
               }}
             >
               {tab.label}
@@ -152,145 +170,196 @@ const AdminClassRequests: React.FC = () => {
         </div>
 
         {/* Table List */}
-        <div style={{ background: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 2px 10px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
-          {loading ? (
-            <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>Đang tải danh sách...</div>
-          ) : requests.length === 0 ? (
-            <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>Không có lớp học nào.</div>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
-                <thead>
-                  <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', color: '#475569' }}>
-                    <th style={{ padding: '12px 14px' }}>Mã Lớp</th>
-                    <th style={{ padding: '12px 14px' }}>Học viên / SĐT</th>
-                    <th style={{ padding: '12px 14px' }}>Môn & Lớp</th>
-                    <th style={{ padding: '12px 14px' }}>Địa chỉ</th>
-                    <th style={{ padding: '12px 14px' }}>Mức lương</th>
-                    <th style={{ padding: '12px 14px' }}>Phí %</th>
-                    <th style={{ padding: '12px 14px' }}>Trạng thái</th>
-                    <th style={{ padding: '12px 14px' }}>Đơn ứng tuyển</th>
-                    <th style={{ padding: '12px 14px', textAlign: 'center' }}>Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {requests.map((cls) => (
-                    <tr key={cls.request_id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                      <td style={{ padding: '12px 14px', fontWeight: '700', color: '#b45309' }}>MS: {cls.code}</td>
-                      <td style={{ padding: '12px 14px' }}>
-                        <div style={{ fontWeight: '600' }}>{cls.student_name}</div>
-                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{cls.phone}</div>
-                      </td>
-                      <td style={{ padding: '12px 14px' }}>
-                        <div><strong>{cls.subject_name}</strong> - {cls.grade_level}</div>
-                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{cls.sessions_per_week} buổi/tuần</div>
-                      </td>
-                      <td style={{ padding: '12px 14px', maxWidth: '200px' }}>
-                        {cls.address_detail} - {cls.district}
-                      </td>
-                      <td style={{ padding: '12px 14px', fontWeight: '700', color: '#16a34a' }}>
-                        {formatCurrency(Number(cls.desired_price))}
-                      </td>
-                      <td style={{ padding: '12px 14px', fontWeight: '600', color: '#dc2626' }}>
-                        {cls.commission_rate}%
-                      </td>
-                      <td style={{ padding: '12px 14px' }}>
-                        <span
-                          style={{
-                            padding: '4px 10px',
-                            borderRadius: '12px',
-                            fontSize: '0.8rem',
-                            fontWeight: '700',
-                            background: cls.status === 'OPEN' ? '#dcfce7' : cls.status === 'ASSIGNED' ? '#dbeafe' : '#fef3c7',
-                            color: cls.status === 'OPEN' ? '#15803d' : cls.status === 'ASSIGNED' ? '#1d4ed8' : '#b45309',
-                          }}
-                        >
-                          {cls.status === 'OPEN' ? 'LỚP CHƯA GIAO' : cls.status === 'ASSIGNED' ? 'ĐÃ GIAO' : cls.status === 'WAITING_TUTOR_CONFIRM' ? 'CHỜ GS CHỌN' : 'CHỜ DUYỆT'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '12px 14px', textAlign: 'center', fontWeight: '700', color: '#2563eb' }}>
-                        {cls._count?.applications || 0} đơn
-                      </td>
-                      <td style={{ padding: '12px 14px', textAlign: 'center' }}>
-                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                          {cls.status === 'PENDING_ADMIN' && (
-                            <button
-                              onClick={() => handleApproveOpen(cls.request_id)}
-                              style={{ background: '#16a34a', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: '600', fontSize: '0.8rem' }}
-                            >
-                              Duyệt Mở Lớp
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleOpenApplicationsModal(cls)}
-                            style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: '600', fontSize: '0.8rem' }}
-                          >
-                            Xem & Duyệt GS
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Modal Xem Danh Sách Gia Sư Ứng Tuyển */}
-        {modalOpen && selectedClass && (
-          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-            <div style={{ background: '#ffffff', borderRadius: '12px', width: '90%', maxWidth: '700px', padding: '24px', maxHeight: '85vh', overflowY: 'auto' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '16px', color: '#0f172a' }}>
-                Danh sách Gia sư Ứng tuyển Lớp MS: {selectedClass.code} ({selectedClass.subject_name} - {selectedClass.grade_level})
-              </h3>
-
-              {applications.length === 0 ? (
-                <div style={{ padding: '30px', textAlign: 'center', color: '#64748b' }}>Chưa có gia sư nào đăng ký nhận lớp này.</div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {applications.map((app) => (
-                    <div key={app.application_id} style={{ border: '1px solid #cbd5e1', borderRadius: '8px', padding: '14px', background: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <div style={{ fontWeight: '700', fontSize: '0.95rem', color: '#1e293b' }}>
-                          Gia sư: {app.tutor?.full_name || 'Đăng ký nhanh'} - SĐT: {app.applicant_phone}
-                        </div>
-                        <div style={{ fontSize: '0.85rem', color: '#475569', marginTop: '4px' }}>
-                          Thời gian nhận: {app.available_date || 'N/A'}
-                        </div>
-                        {app.notes && <div style={{ fontSize: '0.85rem', color: '#64748b', fontStyle: 'italic', marginTop: '4px' }}>Ghi chú: {app.notes}</div>}
+        {loading ? (
+          <div style={{ padding: '30px', textAlign: 'center', color: 'var(--admin-text-muted)' }}>
+            Đang tải danh sách lớp học...
+          </div>
+        ) : requests.length === 0 ? (
+          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--admin-text-muted)' }}>
+            Không tìm thấy lớp học nào phù hợp.
+          </div>
+        ) : (
+          <div className="admin-table-container">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Mã Lớp</th>
+                  <th>Học viên / SĐT</th>
+                  <th>Môn & Lớp</th>
+                  <th>Địa chỉ</th>
+                  <th>Mức lương</th>
+                  <th>Phí %</th>
+                  <th>Trạng thái</th>
+                  <th>Ứng tuyển</th>
+                  <th style={{ textAlign: 'center' }}>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {requests.map((cls) => (
+                  <tr key={cls.request_id}>
+                    <td>
+                      <span style={{ color: '#f97316', fontWeight: 700, fontSize: '14px' }}>
+                        MS: {cls.code}
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ fontWeight: 600, color: 'var(--admin-text-main)' }}>{cls.student_name}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--admin-text-muted)' }}>{cls.phone}</div>
+                    </td>
+                    <td>
+                      <div style={{ fontWeight: 600, color: 'var(--admin-text-main)' }}>{cls.subject_name}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--admin-text-muted)' }}>
+                        {cls.grade_level ? `${cls.grade_level} • ` : ''}{cls.sessions_per_week} buổi/tuần
                       </div>
-
-                      <div>
-                        {app.status === 'APPROVED' ? (
-                          <span style={{ color: '#16a34a', fontWeight: '700', fontSize: '0.9rem' }}>Đã Duyệt Cho Lớp</span>
-                        ) : (
+                    </td>
+                    <td style={{ maxWidth: '220px' }}>
+                      <div style={{ fontSize: '13px', color: 'var(--admin-text-main)', lineHeight: '1.4' }}>
+                        {cls.address_detail}
+                        {cls.district ? `, ${cls.district}` : ''}
+                        {cls.province ? `, ${cls.province}` : ''}
+                      </div>
+                    </td>
+                    <td>
+                      <span style={{ fontWeight: 700, color: '#34d399', fontSize: '14px' }}>
+                        {formatCurrency(Number(cls.desired_price))}
+                      </span>
+                    </td>
+                    <td>
+                      <span style={{ fontWeight: 600, color: '#f87171' }}>
+                        {cls.commission_rate}%
+                      </span>
+                    </td>
+                    <td>
+                      {renderStatusBadge(cls.status)}
+                    </td>
+                    <td>
+                      <span style={{ fontWeight: 700, color: '#38bdf8', fontSize: '13px' }}>
+                        {cls._count?.applications || 0} đơn
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                        {cls.status === 'PENDING_ADMIN' && (
                           <button
-                            onClick={() => handleAssignTutor(selectedClass.request_id, app.tutor?.tutor_id, app.application_id)}
-                            style={{ background: '#dc2626', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem' }}
+                            type="button"
+                            onClick={() => handleApproveOpen(cls.request_id)}
+                            className="admin-btn sm success"
+                            title="Duyệt mở lớp công khai"
                           >
-                            Duyệt Gia Sư này
+                            <CheckCircle2 size={14} />
+                            <span>Duyệt Lớp</span>
                           </button>
                         )}
+                        <button
+                          type="button"
+                          onClick={() => handleOpenApplicationsModal(cls)}
+                          className="admin-btn sm primary"
+                          title="Xem danh sách ứng tuyển & Duyệt Gia sư"
+                        >
+                          <Eye size={14} />
+                          <span>Xem & Duyệt</span>
+                        </button>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div style={{ marginTop: '20px', textAlign: 'right' }}>
-                <button
-                  onClick={() => setModalOpen(false)}
-                  style={{ background: '#64748b', color: '#fff', border: 'none', padding: '8px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
-                >
-                  Đóng
-                </button>
-              </div>
-            </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
-
       </div>
+
+      {/* Modal Xem Danh Sách Gia Sư Ứng Tuyển */}
+      {modalOpen && selectedClass && (
+        <div className="modal-overlay">
+          <div className="modal-card" style={{ maxWidth: '680px', width: '90%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--admin-border)', paddingBottom: '12px' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--admin-text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ClipboardList size={20} color="#818cf8" />
+                <span>Gia sư ứng tuyển Lớp MS: {selectedClass.code}</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setModalOpen(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--admin-text-muted)' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ fontSize: '13px', color: 'var(--admin-text-muted)', marginBottom: '16px' }}>
+              Môn dạy: <strong style={{ color: 'var(--admin-text-main)' }}>{selectedClass.subject_name}</strong> | Lớp: <strong style={{ color: 'var(--admin-text-main)' }}>{selectedClass.grade_level || 'N/A'}</strong> | Học phí: <strong style={{ color: '#34d399' }}>{formatCurrency(Number(selectedClass.desired_price))}</strong>
+            </div>
+
+            {applications.length === 0 ? (
+              <div style={{ padding: '30px', textAlign: 'center', color: 'var(--admin-text-muted)', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px dashed var(--admin-border)' }}>
+                Chưa có gia sư nào gửi đơn đăng ký nhận lớp này.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '50vh', overflowY: 'auto' }}>
+                {applications.map((app) => (
+                  <div
+                    key={app.application_id}
+                    style={{
+                      border: '1px solid var(--admin-border)',
+                      borderRadius: '8px',
+                      padding: '14px',
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: '12px',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--admin-text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <UserCheck size={16} color="#34d399" />
+                        <span>Gia sư: {app.tutor?.full_name || 'Đăng ký nhanh'}</span>
+                        <span style={{ fontSize: '12px', color: 'var(--admin-text-muted)', fontWeight: 500 }}>(SĐT: {app.applicant_phone})</span>
+                      </div>
+                      <div style={{ fontSize: '13px', color: 'var(--admin-text-muted)', marginTop: '4px' }}>
+                        Thời gian có thể bắt đầu: <strong>{app.available_from ? new Date(app.available_from).toLocaleDateString('vi-VN') : (app.available_date || 'Ngay khi duyệt')}</strong>
+                      </div>
+                      {app.notes && (
+                        <div style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic', marginTop: '4px' }}>
+                          Ghi chú: {app.notes}
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      {app.status === 'APPROVED' ? (
+                        <span className="admin-badge success" style={{ padding: '6px 12px' }}>
+                          ✓ Đã Duyệt Cho Lớp
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleAssignTutor(selectedClass.request_id, app.tutor?.tutor_id, app.application_id)}
+                          className="admin-btn sm success"
+                          style={{ fontWeight: 700 }}
+                        >
+                          Duyệt Gia Sư này
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div style={{ marginTop: '20px', textAlign: 'right' }}>
+              <button
+                type="button"
+                onClick={() => setModalOpen(false)}
+                className="admin-btn sm secondary"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 };

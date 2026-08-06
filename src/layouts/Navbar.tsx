@@ -62,7 +62,7 @@ const Navbar: React.FC = () => {
               to="/lop-hoc-moi"
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             >
-              Lớp Mới Chưa Giao
+              Lớp Offline
             </NavLink>
           </li>
           <li>
