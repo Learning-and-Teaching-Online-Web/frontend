@@ -4,6 +4,7 @@ import axiosClient from '../services/axiosClient';
 import authStorage from '../utils/authStorage';
 import { toast } from 'react-toastify';
 import { Send, DollarSign, MapPin, Phone, Mail, User, ShieldAlert, LogIn, BookOpen } from 'lucide-react';
+import { formatInputNumber, parseInputNumber } from '../utils/formatters';
 
 const DAYS_LIST = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
 
@@ -184,9 +185,7 @@ const RequestTutorPage: React.FC = () => {
     try {
       const payload = {
         ...formData,
-        desired_price: typeof formData.desired_price === 'number'
-          ? formData.desired_price
-          : Number(String(formData.desired_price || 0).replace(/[^0-9.]/g, '')) || 0,
+        desired_price: parseInputNumber(formData.desired_price),
         num_students: Number(formData.num_students) || 1,
         sessions_per_week: Number(formData.sessions_per_week) || 2,
       };
@@ -657,11 +656,14 @@ const RequestTutorPage: React.FC = () => {
                 </label>
                 <div style={{ position: 'relative' }}>
                   <input
-                    type="number"
+                    type="text"
                     name="desired_price"
                     value={formData.desired_price}
-                    onChange={handleChange}
-                    placeholder="Ví dụ: 2000000..."
+                    onChange={(e) => {
+                      const formatted = formatInputNumber(e.target.value);
+                      setFormData((prev) => ({ ...prev, desired_price: formatted }));
+                    }}
+                    placeholder="Ví dụ: 2.000.000..."
                     required
                     style={{ width: '100%', padding: '10px 12px 10px 38px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.95rem', outline: 'none', fontWeight: '600', color: '#059669' }}
                   />

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axiosClient from '../../services/axiosClient';
 import { toast } from 'react-toastify';
 import AdminLayout from '../../components/admin/AdminLayout';
-import { CheckCircle2, UserCheck, Eye, X, ClipboardList, Filter } from 'lucide-react';
+import { CheckCircle2, UserCheck, Eye, X, ClipboardList, Filter, Search } from 'lucide-react';
 
 interface Application {
   application_id: string;
@@ -45,6 +45,7 @@ const AdminClassRequests: React.FC = () => {
   const [requests, setRequests] = useState<ClassRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [selectedClass, setSelectedClass] = useState<ClassRequest | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
@@ -55,7 +56,7 @@ const AdminClassRequests: React.FC = () => {
     setLoading(true);
     try {
       const res = await axiosClient.get('/admin/class-requests', {
-        params: { status: statusFilter },
+        params: { status: statusFilter, search: searchQuery },
       });
       if (res.data && res.data.data) {
         setRequests(res.data.data);
@@ -69,8 +70,11 @@ const AdminClassRequests: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchRequests();
-  }, [statusFilter]);
+    const timer = setTimeout(() => {
+      fetchRequests();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [statusFilter, searchQuery]);
 
   const handleApproveOpen = async (requestId: string) => {
     try {
@@ -125,6 +129,10 @@ const AdminClassRequests: React.FC = () => {
         return <span className="admin-badge primary">ĐÃ GIAO</span>;
       case 'WAITING_TUTOR_CONFIRM':
         return <span className="admin-badge warning">CHỜ GS CHỌN</span>;
+      case 'CANCELLED':
+        return <span className="admin-badge muted" style={{ background: 'rgba(148, 163, 184, 0.2)', color: '#94a3b8', border: '1px solid #475569' }}>ĐÃ HỦY</span>;
+      case 'REJECTED':
+        return <span className="admin-badge danger" style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171' }}>BỊ TỪ CHỐI</span>;
       case 'PENDING_ADMIN':
       default:
         return <span className="admin-badge danger">CHỜ DUYỆT</span>;
@@ -135,38 +143,76 @@ const AdminClassRequests: React.FC = () => {
     <AdminLayout title="Quản lý Lớp Offline & Duyệt Gia Sư">
       <div className="admin-card">
         
-        {/* Status Filter Tabs */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--admin-text-muted)', fontSize: '14px', marginRight: '4px' }}>
-            <Filter size={16} />
-            <span>Lọc trạng thái:</span>
-          </div>
-          {[
-            { key: 'all', label: 'Tất cả lớp' },
-            { key: 'PENDING_ADMIN', label: 'Chờ Admin duyệt mở' },
-            { key: 'WAITING_TUTOR_CONFIRM', label: 'Chờ Gia sư chọn' },
-            { key: 'OPEN', label: 'Lớp chưa giao (OPEN)' },
-            { key: 'ASSIGNED', label: 'Đã giao (ASSIGNED)' },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => setStatusFilter(tab.key)}
+        {/* Header Controls: Search Bar & Status Filter Tabs */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' }}>
+          {/* Search Box */}
+          <div style={{ position: 'relative', maxWidth: '420px', width: '100%' }}>
+            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--admin-text-muted)' }} />
+            <input
+              type="text"
+              placeholder="Tìm kiếm theo Mã lớp (VD: 90414), Họ tên, SĐT, Môn học..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               style={{
-                padding: '7px 14px',
-                borderRadius: '8px',
-                border: statusFilter === tab.key ? '1px solid #6366f1' : '1px solid var(--admin-border)',
-                background: statusFilter === tab.key ? 'rgba(99, 102, 241, 0.2)' : 'rgba(255, 255, 255, 0.03)',
-                color: statusFilter === tab.key ? '#818cf8' : 'var(--admin-text-muted)',
-                fontWeight: statusFilter === tab.key ? '700' : '500',
-                fontSize: '13px',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
+                width: '100%',
+                padding: '10px 14px 10px 38px',
+                borderRadius: '10px',
+                border: '1px solid var(--admin-border)',
+                background: 'rgba(255, 255, 255, 0.04)',
+                color: 'var(--admin-text-main)',
+                fontSize: '14px',
+                outline: 'none',
+                boxSizing: 'border-box',
+                transition: 'all 0.2s ease',
               }}
-            >
-              {tab.label}
-            </button>
-          ))}
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                title="Xóa tìm kiếm"
+                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--admin-text-muted)', cursor: 'pointer' }}
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+
+          {/* Status Filter Tabs */}
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--admin-text-muted)', fontSize: '14px', marginRight: '4px' }}>
+              <Filter size={16} />
+              <span>Lọc trạng thái:</span>
+            </div>
+            {[
+              { key: 'all', label: 'Tất cả lớp' },
+              { key: 'PENDING_ADMIN', label: 'Chờ Admin duyệt mở' },
+              { key: 'WAITING_TUTOR_CONFIRM', label: 'Chờ Gia sư chọn' },
+              { key: 'OPEN', label: 'Lớp chưa giao (OPEN)' },
+              { key: 'ASSIGNED', label: 'Đã giao (ASSIGNED)' },
+              { key: 'CANCELLED', label: 'Đã hủy' },
+              { key: 'REJECTED', label: 'Bị từ chối' },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setStatusFilter(tab.key)}
+                style={{
+                  padding: '7px 14px',
+                  borderRadius: '8px',
+                  border: statusFilter === tab.key ? '1px solid #6366f1' : '1px solid var(--admin-border)',
+                  background: statusFilter === tab.key ? 'rgba(99, 102, 241, 0.2)' : 'rgba(255, 255, 255, 0.03)',
+                  color: statusFilter === tab.key ? '#818cf8' : 'var(--admin-text-muted)',
+                  fontWeight: statusFilter === tab.key ? '700' : '500',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Table List */}
@@ -239,26 +285,38 @@ const AdminClassRequests: React.FC = () => {
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                        {cls.status === 'PENDING_ADMIN' && (
-                          <button
-                            type="button"
-                            onClick={() => handleApproveOpen(cls.request_id)}
-                            className="admin-btn sm success"
-                            title="Duyệt mở lớp công khai"
-                          >
-                            <CheckCircle2 size={14} />
-                            <span>Duyệt Lớp</span>
-                          </button>
+                        {cls.status === 'CANCELLED' ? (
+                          <span style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic' }}>
+                            Đã hủy (Không thể thao tác)
+                          </span>
+                        ) : cls.status === 'REJECTED' ? (
+                          <span style={{ fontSize: '12px', color: '#f87171', fontStyle: 'italic' }}>
+                            Đã từ chối
+                          </span>
+                        ) : (
+                          <>
+                            {cls.status === 'PENDING_ADMIN' && (
+                              <button
+                                type="button"
+                                onClick={() => handleApproveOpen(cls.request_id)}
+                                className="admin-btn sm success"
+                                title="Duyệt mở lớp công khai"
+                              >
+                                <CheckCircle2 size={14} />
+                                <span>Duyệt Lớp</span>
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleOpenApplicationsModal(cls)}
+                              className="admin-btn sm primary"
+                              title="Xem danh sách ứng tuyển & Duyệt Gia sư"
+                            >
+                              <Eye size={14} />
+                              <span>Xem & Duyệt</span>
+                            </button>
+                          </>
                         )}
-                        <button
-                          type="button"
-                          onClick={() => handleOpenApplicationsModal(cls)}
-                          className="admin-btn sm primary"
-                          title="Xem danh sách ứng tuyển & Duyệt Gia sư"
-                        >
-                          <Eye size={14} />
-                          <span>Xem & Duyệt</span>
-                        </button>
                       </div>
                     </td>
                   </tr>

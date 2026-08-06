@@ -15,7 +15,7 @@ export interface DashboardStats {
   activeSchedules: number;
 }
 
-export type TeacherTab = 'overview' | 'courses' | 'schedules' | 'bookings' | 'articles' | 'reviews' | 'wallet' | 'profile';
+export type TeacherTab = 'overview' | 'courses' | 'schedules' | 'bookings' | 'articles' | 'reviews' | 'wallet' | 'profile' | 'offline_classes';
 
 export const useTeacherDashboard = () => {
   const navigate = useNavigate();

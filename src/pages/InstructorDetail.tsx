@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import { tutorApi } from '../services/tutorApi';
 import { favoriteApi } from '../services/favoriteApi';
 import authStorage from '../utils/authStorage';
+import { formatMoneyString } from '../utils/formatters';
 import '../styles/InstructorDetail.css';
 
 const InstructorDetail: React.FC = () => {
@@ -294,7 +295,7 @@ const InstructorDetail: React.FC = () => {
               <div className="tutor-field-row">
                 <span className="field-title">Yêu cầu lương tối thiểu:</span>
                 <span className="field-value font-bold text-dark">
-                  {tutor.min_salary_requirement || 'Thỏa thuận'}
+                  {formatMoneyString(tutor.min_salary_requirement)}
                 </span>
               </div>
 
@@ -440,7 +441,7 @@ const InstructorDetail: React.FC = () => {
                         <div className="other-tutor-row">Trường: {other.university || 'Đại học'}</div>
                         <div className="other-tutor-row">Chuyên ngành: {other.major || 'Sư phạm'}</div>
                         <div className="other-tutor-row">
-                          Yêu cầu lương: <span className="price-tag">{other.min_salary_requirement || '250,000 VNĐ'}</span>
+                          Yêu cầu lương: <span className="price-tag">{formatMoneyString(other.min_salary_requirement, '250.000 VNĐ')}</span>
                         </div>
                         <Link to={`/instructors/${other.tutor_id}`} className="btn-view-other-profile">
                           Xem hồ sơ chi tiết

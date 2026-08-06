@@ -35,11 +35,13 @@ export const useStudentDashboard = () => {
   // Form states for profile edit
   const [formName, setFormName] = useState('');
   const [formPhone, setFormPhone] = useState('');
-  const [formGrade, setFormGrade] = useState('');
-  const [formGoals, setFormGoals] = useState('');
-  const [formSubjects, setFormSubjects] = useState<string[]>([]);
-  const [formMode, setFormMode] = useState<'online' | 'offline' | 'both'>('both');
-  const [formBudgetMax, setFormBudgetMax] = useState<number>(1000000);
+  const [formGender, setFormGender] = useState('male');
+  const [formDateOfBirth, setFormDateOfBirth] = useState('');
+  const [formGrade, setFormGrade] = useState('Lớp 11');
+  const [formAcademicLevel, setFormAcademicLevel] = useState('Khá');
+  const [formProvince, setFormProvince] = useState('');
+  const [formDistrict, setFormDistrict] = useState('');
+  const [formAddressDetail, setFormAddressDetail] = useState('');
   const [avatarBase64, setAvatarBase64] = useState<string | null>(null);
 
   // Authentication check
@@ -68,26 +70,29 @@ export const useStudentDashboard = () => {
           const dbUser = profileRes.data;
           const mappedProfile: StudentProfile = {
             student_id: dbUser.user_id,
-            fullName: dbUser.full_name,
-            email: dbUser.email,
+            fullName: dbUser.full_name || '',
+            email: dbUser.email || '',
             phone: dbUser.phone || '',
             avatar: dbUser.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+            gender: dbUser.gender || 'male',
+            date_of_birth: dbUser.date_of_birth ? dbUser.date_of_birth.split('T')[0] : '',
             grade_level: dbUser.metadata?.grade_level || 'Lớp 11',
-            learning_goals: dbUser.metadata?.learning_goals || 'Chưa thiết lập mục tiêu.',
-            preferred_subjects: dbUser.metadata?.preferred_subjects || [],
-            preferred_mode: dbUser.metadata?.preferred_mode || 'both',
-            budget_min: Number(dbUser.metadata?.budget_min) || 0,
-            budget_max: Number(dbUser.metadata?.budget_max) || 1000000,
+            academic_level: dbUser.metadata?.academic_level || 'Khá',
+            province: dbUser.metadata?.province || '',
+            district: dbUser.metadata?.district || '',
+            address_detail: dbUser.metadata?.address_detail || '',
             joinedAt: dbUser.created_at
           };
           setProfile(mappedProfile);
           setFormName(mappedProfile.fullName);
           setFormPhone(mappedProfile.phone);
+          setFormGender(mappedProfile.gender);
+          setFormDateOfBirth(mappedProfile.date_of_birth);
           setFormGrade(mappedProfile.grade_level);
-          setFormGoals(mappedProfile.learning_goals);
-          setFormSubjects(mappedProfile.preferred_subjects);
-          setFormMode(mappedProfile.preferred_mode);
-          setFormBudgetMax(mappedProfile.budget_max);
+          setFormAcademicLevel(mappedProfile.academic_level);
+          setFormProvince(mappedProfile.province);
+          setFormDistrict(mappedProfile.district);
+          setFormAddressDetail(mappedProfile.address_detail);
         }
 
         // Helper mapper functions for bookings
@@ -241,12 +246,14 @@ export const useStudentDashboard = () => {
       const payload: any = {
         fullName: formName,
         phone: formPhone,
+        gender: formGender,
+        dateOfBirth: formDateOfBirth,
         metadata: {
           grade_level: formGrade,
-          learning_goals: formGoals,
-          preferred_subjects: formSubjects,
-          preferred_mode: formMode,
-          budget_max: formBudgetMax
+          academic_level: formAcademicLevel,
+          province: formProvince,
+          district: formDistrict,
+          address_detail: formAddressDetail
         }
       };
 
@@ -262,16 +269,18 @@ export const useStudentDashboard = () => {
           ...profile,
           fullName: formName,
           phone: formPhone,
+          gender: formGender,
+          date_of_birth: formDateOfBirth,
           avatar: newAvatar,
           grade_level: formGrade,
-          learning_goals: formGoals,
-          preferred_subjects: formSubjects,
-          preferred_mode: formMode,
-          budget_max: formBudgetMax
+          academic_level: formAcademicLevel,
+          province: formProvince,
+          district: formDistrict,
+          address_detail: formAddressDetail
         };
 
         setProfile(updatedProfile);
-        authStorage.setAuthSession(undefined, undefined, formName);
+        authStorage.updateUserName(formName);
         window.dispatchEvent(new Event('authChange'));
         toast.success('Cập nhật hồ sơ thành công!');
       } else {
@@ -280,15 +289,6 @@ export const useStudentDashboard = () => {
     } catch (err: any) {
       console.error('Error updating profile:', err);
       toast.error(err?.response?.data?.error || 'Có lỗi xảy ra khi cập nhật hồ sơ.');
-    }
-  };
-
-  // Toggle Subject checkbox
-  const handleSubjectCheckbox = (subject: string) => {
-    if (formSubjects.includes(subject)) {
-      setFormSubjects(formSubjects.filter(s => s !== subject));
-    } else {
-      setFormSubjects([...formSubjects, subject]);
     }
   };
 
@@ -384,24 +384,27 @@ export const useStudentDashboard = () => {
     formState: {
       formName,
       formPhone,
+      formGender,
+      formDateOfBirth,
       formGrade,
-      formGoals,
-      formSubjects,
-      formMode,
-      formBudgetMax
+      formAcademicLevel,
+      formProvince,
+      formDistrict,
+      formAddressDetail
     },
     formSetters: {
       setFormName,
       setFormPhone,
+      setFormGender,
+      setFormDateOfBirth,
       setFormGrade,
-      setFormGoals,
-      setFormSubjects,
-      setFormMode,
-      setFormBudgetMax
+      setFormAcademicLevel,
+      setFormProvince,
+      setFormDistrict,
+      setFormAddressDetail
     },
     handlers: {
       handleProfileSubmit,
-      handleSubjectCheckbox,
       handleRemoveFavorite,
       handleSimulateQuiz,
       handleLogout,

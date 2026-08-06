@@ -15,7 +15,8 @@ import {
   PlayCircle,
   Sparkles,
   Info,
-  Camera
+  Camera,
+  ClipboardList
 } from 'lucide-react';
 
 import '../styles/TeacherDashboard.css';
@@ -28,6 +29,7 @@ import { ArticlesTab } from './teacher/tabs/ArticlesTab';
 import { ReviewsTab } from './teacher/tabs/ReviewsTab';
 import { WalletTab } from './teacher/tabs/WalletTab';
 import { ProfileTab } from './teacher/tabs/ProfileTab';
+import { OfflineClassesTab } from './teacher/tabs/OfflineClassesTab';
 import { VerificationBanner } from './teacher/VerificationBanner';
 import { LessonManagementModal } from './teacher/LessonManagementModal';
 import { DocumentManagementModal } from './teacher/DocumentManagementModal';
@@ -245,6 +247,15 @@ const TeacherDashboard: React.FC = () => {
             </li>
             <li>
               <button
+                className={`menu-item-btn ${activeTab === 'offline_classes' ? 'active' : ''}`}
+                onClick={() => setActiveTab('offline_classes')}
+              >
+                <ClipboardList size={18} />
+                Lớp offline cần dạy
+              </button>
+            </li>
+            <li>
+              <button
                 className={`menu-item-btn ${activeTab === 'articles' ? 'active' : ''}`}
                 onClick={() => setActiveTab('articles')}
               >
@@ -417,6 +428,10 @@ const TeacherDashboard: React.FC = () => {
               formatVND={formatVND}
               setIsWithdrawModalOpen={setIsWithdrawModalOpen}
             />
+          )}
+
+          {activeTab === 'offline_classes' && (
+            <OfflineClassesTab />
           )}
         </main>
 

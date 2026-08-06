@@ -45,6 +45,10 @@ export const authStorage = {
     sessionStorage.setItem(TOKEN_KEY, token);
   },
 
+  updateUserName: (name: string) => {
+    sessionStorage.setItem(NAME_KEY, name);
+  },
+
   clearAuthSession: () => {
     sessionStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(REFRESH_TOKEN_KEY);

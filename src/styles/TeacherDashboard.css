@@ -61,7 +61,7 @@
   border-bottom: 1px solid var(--border-light);
 }
 
-.sidebar-avatar {
+.sidebar-profile .sidebar-avatar {
   width: 80px;
   height: 80px;
   border-radius: 50%;

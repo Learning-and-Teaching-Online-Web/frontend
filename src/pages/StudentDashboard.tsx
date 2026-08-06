@@ -63,6 +63,7 @@ const StudentDashboard: React.FC = () => {
           quizCount={quizAttempts.length}
           favoriteCount={favoriteTutors.length}
           classRequestCount={myClassRequests.length}
+          handleAvatarFileChange={handlers.handleAvatarFileChange}
         />
 
         {/* Right Content Area */}

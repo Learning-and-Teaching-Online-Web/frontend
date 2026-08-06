@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axiosClient from '../services/axiosClient';
-import { Search, MapPin, Phone, Mail, Eye } from 'lucide-react';
+import { Search, MapPin, Phone, Mail, Eye, BookOpen, Sparkles } from 'lucide-react';
 import ReferencePriceTable from '../components/ReferencePriceTable';
+import '../styles/OpenClassesPage.css';
 
 interface ClassRequest {
   request_id: string;
@@ -49,7 +50,6 @@ const OpenClassesPage: React.FC = () => {
     }
   };
 
-
   useEffect(() => {
     fetchClasses();
   }, [province]);
@@ -64,26 +64,16 @@ const OpenClassesPage: React.FC = () => {
   };
 
   return (
-    <div style={{ background: '#f8fafc', minHeight: '100vh', padding: '30px 16px' }}>
-      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+    <div className="open-classes-wrapper">
+      <div className="open-classes-container">
         
         {/* Top Banner Button: Xem bảng giá gia sư */}
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <button
             onClick={() => setShowPriceTable(!showPriceTable)}
-            style={{
-              background: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
-              color: '#ffffff',
-              border: 'none',
-              padding: '12px 32px',
-              fontSize: '1rem',
-              fontWeight: '700',
-              borderRadius: '25px',
-              cursor: 'pointer',
-              boxShadow: '0 4px 14px rgba(219, 39, 119, 0.35)',
-              transition: 'transform 0.2s ease',
-            }}
+            className="banner-toggle-btn"
           >
+            <Sparkles size={18} />
             {showPriceTable ? 'ẨN BẢNG GIÁ GIA SƯ' : 'XEM BẢNG GIÁ GIA SƯ TẠI ĐÂY'}
           </button>
         </div>
@@ -92,35 +82,35 @@ const OpenClassesPage: React.FC = () => {
         {showPriceTable && <ReferencePriceTable />}
 
         {/* Main Box Container */}
-        <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+        <div className="classes-main-box">
           
           {/* Header Bar */}
-          <div style={{ background: '#dc2626', color: '#ffffff', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: '800', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              LỚP DẠY KÈM MỚI
+          <div className="classes-header-bar">
+            <h2 className="classes-header-title">
+              <BookOpen size={24} /> LỚP DẠY KÈM MỚI
             </h2>
-            <span style={{ fontSize: '0.95rem', fontStyle: 'italic', fontWeight: '500' }}>
+            <span className="classes-header-subtitle">
               Uy Tín - Tận Tâm - Nhiệt Tình
             </span>
           </div>
 
           {/* Filter Search Bar */}
-          <form onSubmit={handleSearchSubmit} style={{ padding: '20px 24px', background: '#f1f5f9', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ flex: '1 1 300px', position: 'relative' }}>
+          <form onSubmit={handleSearchSubmit} className="classes-filter-form">
+            <div className="search-input-wrapper">
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Nhập mã lớp hoặc từ khóa (môn học, lớp, địa chỉ)..."
-                style={{ width: '100%', padding: '10px 14px 10px 38px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.95rem', outline: 'none' }}
+                className="search-input-field"
               />
-              <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+              <Search size={18} className="search-icon-inside" />
             </div>
 
             <select
               value={province}
               onChange={(e) => setProvince(e.target.value)}
-              style={{ width: '220px', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.95rem', background: '#ffffff', outline: 'none' }}
+              className="filter-select-field"
             >
               <option value="--Tất cả Tỉnh/Thành--">--Tất cả Tỉnh/Thành--</option>
               <option value="Hồ Chí Minh">Hồ Chí Minh</option>
@@ -131,106 +121,86 @@ const OpenClassesPage: React.FC = () => {
               <option value="Đồng Nai">Đồng Nai</option>
             </select>
 
-            <button
-              type="submit"
-              style={{
-                background: '#2563eb',
-                color: '#ffffff',
-                border: 'none',
-                padding: '10px 28px',
-                borderRadius: '6px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                fontSize: '0.95rem',
-              }}
-            >
-              Tìm
+            <button type="submit" className="filter-submit-btn">
+              <Search size={16} /> Tìm kiếm
             </button>
           </form>
 
           {/* Cards Grid */}
-          <div style={{ padding: '24px' }}>
+          <div className="classes-grid-padding">
             {loading ? (
-              <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>Đang tải danh sách lớp học...</div>
+              <div style={{ textAlign: 'center', padding: '40px', color: '#64748b', fontWeight: 500 }}>
+                Đang tải danh sách lớp học mới...
+              </div>
             ) : classes.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+              <div style={{ textAlign: 'center', padding: '40px', color: '#64748b', fontWeight: 500 }}>
                 Hiện tại không có lớp nào phù hợp với tìm kiếm của bạn.
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(480px, 1fr))', gap: '20px' }}>
+              <div className="classes-grid-container">
                 {classes.map((cls) => (
-                  <div
-                    key={cls.request_id}
-                    style={{
-                      border: '1px solid #cbd5e1',
-                      borderRadius: '8px',
-                      overflow: 'hidden',
-                      background: '#ffffff',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                    }}
-                  >
+                  <div key={cls.request_id} className="class-item-card">
+                    
                     {/* Header line of card */}
-                    <div style={{ background: '#fef3c7', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #fde68a' }}>
-                      <span style={{ fontWeight: '800', color: '#b45309', fontSize: '0.9rem' }}>
+                    <div className="class-card-header">
+                      <span className="class-code-badge">
                         MS: {cls.code || '89513'}
                       </span>
-                      <span style={{ fontWeight: '800', color: '#15803d', fontSize: '0.85rem', textTransform: 'uppercase' }}>
+                      <span className="class-status-badge">
                         LỚP ĐANG CẦN GIA SƯ
                       </span>
-                      <span style={{ fontWeight: '800', color: '#dc2626', fontSize: '0.9rem' }}>
-                        {cls.commission_rate || 35}%
+                      <span className="class-commission-badge">
+                        Phí: {cls.commission_rate || 35}%
                       </span>
                     </div>
 
                     {/* Content Body */}
-                    <div style={{ padding: '14px 16px', fontSize: '0.92rem', lineHeight: '1.6', color: '#334155' }}>
-                      <p style={{ margin: '0 0 6px 0' }}>
-                        <strong>Lớp dạy:</strong> {cls.grade_level || 'Tất cả các lớp'}.
+                    <div className="class-card-body">
+                      <p className="class-info-row">
+                        <strong>Lớp dạy:</strong> <span>{cls.grade_level || 'Tất cả các lớp'}.</span>
                       </p>
-                      <p style={{ margin: '0 0 6px 0' }}>
-                        <strong>Môn dạy:</strong> {cls.subject_name}.
+                      <p className="class-info-row">
+                        <strong>Môn dạy:</strong> <span style={{ fontWeight: 600, color: '#0f172a' }}>{cls.subject_name}.</span>
                       </p>
-                      <p style={{ margin: '0 0 6px 0', color: '#0369a1' }}>
-                        <strong>Địa chỉ:</strong> {cls.address_detail} - {cls.district || ''} - {cls.province || ''} <MapPin size={15} style={{ verticalAlign: 'middle', color: '#ef4444' }} />
+                      <p className="class-info-row">
+                        <strong>Địa chỉ:</strong> 
+                        <span className="class-location-text">
+                          {cls.address_detail} - {cls.district || ''} - {cls.province || ''}{' '}
+                          <MapPin size={15} style={{ verticalAlign: 'middle', color: '#ea580c' }} />
+                        </span>
                       </p>
-                      <p style={{ margin: '0 0 6px 0', color: '#16a34a' }}>
-                        <strong>Mức lương:</strong> <span style={{ fontWeight: '700', fontSize: '1.05rem' }}>{formatCurrency(Number(cls.desired_price))}</span>
+                      <p className="class-info-row">
+                        <strong>Mức lương:</strong> 
+                        <span className="class-salary-highlight">
+                          {formatCurrency(Number(cls.desired_price))}
+                        </span>
                       </p>
-                      <p style={{ margin: '0 0 6px 0' }}>
-                        <strong>Số buổi:</strong> {cls.sessions_per_week} buổi /tuần
+                      <p className="class-info-row">
+                        <strong>Số buổi:</strong> <span>{cls.sessions_per_week} buổi /tuần</span>
                       </p>
-                      <p style={{ margin: '0 0 6px 0' }}>
-                        <strong>Thời gian:</strong> {cls.study_time || 'Dạy 120 phút/buổi, thời gian linh hoạt'}
+                      <p className="class-info-row">
+                        <strong>Thời gian:</strong> <span>{cls.study_time || 'Dạy 120 phút/buổi, thời gian linh hoạt'}</span>
                       </p>
-                      <p style={{ margin: '0 0 6px 0' }}>
-                        <strong>Yêu cầu:</strong> {cls.tutor_requirement || 'Sinh viên / Giáo viên'}
+                      <p className="class-info-row">
+                        <strong>Yêu cầu:</strong> <span>{cls.tutor_requirement || 'Sinh viên / Giáo viên'}</span>
                       </p>
-                      <p style={{ margin: '0 0 12px 0', color: '#475569' }}>
+                      <p className="class-contact-text">
                         <strong>Liên hệ trung tâm:</strong> 0974.502.420 - 0938.708.488
                       </p>
 
                       {/* Footer Actions */}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '10px', borderTop: '1px dashed #e2e8f0' }}>
-                        <div style={{ display: 'flex', gap: '8px', opacity: 0.7 }}>
-                          <Mail size={18} style={{ cursor: 'pointer' }} />
-                          <Phone size={18} style={{ cursor: 'pointer' }} />
+                      <div className="class-card-footer">
+                        <div className="quick-contact-icons">
+                          <button className="contact-icon-btn" title="Gửi mail liên hệ">
+                            <Mail size={16} />
+                          </button>
+                          <button className="contact-icon-btn" title="Gọi hotline">
+                            <Phone size={16} />
+                          </button>
                         </div>
                         <Link
                           to={`/lop-hoc-moi/${cls.code || cls.request_id}`}
-                          style={{
-                            background: '#dc2626',
-                            color: '#ffffff',
-                            padding: '8px 20px',
-                            borderRadius: '4px',
-                            fontWeight: '700',
-                            textDecoration: 'none',
-                            fontSize: '0.9rem',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            boxShadow: '0 2px 6px rgba(220, 38, 38, 0.3)',
-                          }}
+                          className="apply-class-btn"
                         >
                           <Eye size={16} /> ĐĂNG KÝ DẠY
                         </Link>

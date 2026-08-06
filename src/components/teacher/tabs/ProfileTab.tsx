@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, Award, Plus, Trash2, ExternalLink, Save, CheckCircle, Clock, XCircle, Camera } from 'lucide-react';
+import { formatInputNumber, formatMoneyString } from '../../../utils/formatters';
 
 interface ProfileTabProps {
   tutorProfile: any | null;
@@ -30,6 +31,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
   const [minSalaryRequirement, setMinSalaryRequirement] = useState('');
   const [teachingMode, setTeachingMode] = useState<'online' | 'offline' | 'both'>('both');
   const [avatarBase64, setAvatarBase64] = useState<string | null>(null);
+  const [idCardFrontBase64, setIdCardFrontBase64] = useState<string | null>(null);
 
   useEffect(() => {
     if (tutorProfile) {
@@ -52,8 +54,9 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
       setHometown(tutorProfile.hometown || '');
       setCurrentAddress(tutorProfile.current_address || '');
       setExperienceYears(tutorProfile.experience_years || 0);
-      setMinSalaryRequirement(tutorProfile.min_salary_requirement || '');
+      setMinSalaryRequirement(tutorProfile.min_salary_requirement ? formatMoneyString(tutorProfile.min_salary_requirement, '') : '');
       setTeachingMode(tutorProfile.teaching_mode || 'both');
+      setIdCardFrontBase64(tutorProfile.id_card_front_url || null);
     }
   }, [tutorProfile]);
 
@@ -80,6 +83,10 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
       payload.avatarUrl = avatarBase64;
     }
 
+    if (idCardFrontBase64) {
+      payload.id_card_front_url = idCardFrontBase64;
+    }
+
     handleUpdateProfileSubmit(payload);
   };
 
@@ -95,47 +102,100 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
         </div>
 
         <form onSubmit={onSaveProfile} className="db-form">
-          {/* AVATAR UPLOAD SECTION */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px', padding: '16px 20px', background: 'var(--bg-dashboard)', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
-            <div style={{ position: 'relative', flexShrink: 0 }}>
-              <img
-                src={avatarBase64 || tutorProfile?.avatar_url || tutorProfile?.user?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'}
-                alt={fullName || 'Giảng viên'}
-                style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #4f46e5' }}
-              />
-            </div>
-            <div>
-              <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: 'var(--text-dark)' }}>Ảnh đại diện Gia sư</h3>
-              <p style={{ margin: '0 0 10px 0', fontSize: '13px', color: 'var(--text-light)' }}>Chọn tệp hình ảnh (PNG, JPG, WEBP) từ máy tính của bạn</p>
-              <label style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '6px 14px',
-                background: '#4f46e5',
-                color: '#fff',
-                borderRadius: '6px',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer'
-              }}>
-                <Camera size={15} /> Đổi ảnh từ máy tính
-                <input
-                  type="file"
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                  onChange={(e) => {
-                    const file = e.target.files ? e.target.files[0] : null;
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onload = () => {
-                        setAvatarBase64(reader.result as string);
-                      };
-                      reader.readAsDataURL(file);
-                    }
-                  }}
+          {/* AVATAR & CCCD UPLOAD SECTION */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+            {/* Avatar Box */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px', background: 'var(--bg-dashboard)', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
+              <div style={{ position: 'relative', flexShrink: 0 }}>
+                <img
+                  src={avatarBase64 || tutorProfile?.avatar_url || tutorProfile?.user?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'}
+                  alt={fullName || 'Giảng viên'}
+                  style={{ width: '75px', height: '75px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #4f46e5' }}
                 />
-              </label>
+              </div>
+              <div>
+                <h3 style={{ margin: '0 0 4px 0', fontSize: '15px', color: 'var(--text-dark)', fontWeight: 600 }}>Ảnh đại diện Gia sư</h3>
+                <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: 'var(--text-light)' }}>Định dạng PNG, JPG, WEBP</p>
+                <label style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '5px 12px',
+                  background: '#4f46e5',
+                  color: '#fff',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}>
+                  <Camera size={14} /> Tải ảnh chân dung
+                  <input
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      const file = e.target.files ? e.target.files[0] : null;
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          setAvatarBase64(reader.result as string);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                </label>
+              </div>
+            </div>
+
+            {/* CCCD Front Photo Box */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px', background: 'var(--bg-dashboard)', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
+              <div style={{ flexShrink: 0, width: '100px', height: '65px', borderRadius: '8px', border: '2px dashed #cbd5e1', overflow: 'hidden', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {idCardFrontBase64 ? (
+                  <img
+                    src={idCardFrontBase64}
+                    alt="CCCD mặt trước"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <div style={{ fontSize: '10px', color: '#94a3b8', textAlign: 'center', padding: '4px', fontWeight: 600 }}>
+                    Chưa có ảnh CCCD
+                  </div>
+                )}
+              </div>
+              <div>
+                <h3 style={{ margin: '0 0 4px 0', fontSize: '15px', color: 'var(--text-dark)', fontWeight: 600 }}>Ảnh CCCD mặt trước</h3>
+                <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: 'var(--text-light)' }}>Xác thực thông tin định danh với Admin</p>
+                <label style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '5px 12px',
+                  background: '#0284c7',
+                  color: '#fff',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}>
+                  <Camera size={14} /> Tải ảnh CCCD mặt trước
+                  <input
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      const file = e.target.files ? e.target.files[0] : null;
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          setIdCardFrontBase64(reader.result as string);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                </label>
+              </div>
             </div>
           </div>
 
@@ -270,9 +330,13 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
               <input
                 type="text"
                 required
-                placeholder="VD: 230,000 VNĐ hoặc 150,000 VNĐ/giờ"
+                placeholder="VD: 230.000 VNĐ hoặc 150.000 VNĐ/giờ"
                 value={minSalaryRequirement}
-                onChange={(e) => setMinSalaryRequirement(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const formatted = formatInputNumber(val);
+                  setMinSalaryRequirement(formatted ? `${formatted} VNĐ` : val);
+                }}
               />
             </div>
           </div>
