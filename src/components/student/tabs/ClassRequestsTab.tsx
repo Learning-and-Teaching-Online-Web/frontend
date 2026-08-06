@@ -35,8 +35,8 @@ export interface StudentClassRequest {
   commission_rate?: number;
   status: string;
   created_at: string;
-  selected_tutor?: { full_name: string } | null;
-  assigned_tutor?: { full_name: string } | null;
+  selected_tutor?: { full_name: string; phone?: string | null; avatar_url?: string | null } | null;
+  assigned_tutor?: { full_name: string; phone?: string | null; avatar_url?: string | null } | null;
   _count?: { applications: number };
 }
 
@@ -306,10 +306,20 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
                   {item.assigned_tutor ? (
                     <span style={{ color: '#15803d', fontWeight: 600 }}>
                       ✓ Gia sư chính thức: {item.assigned_tutor.full_name}
+                      {item.assigned_tutor.phone ? (
+                        <span style={{ marginLeft: '6px', color: '#166534', fontWeight: 700 }}>
+                          • SĐT liên hệ: {item.assigned_tutor.phone}
+                        </span>
+                      ) : (
+                        <span style={{ marginLeft: '6px', color: '#854d0e', fontStyle: 'italic', fontWeight: 'normal' }}>
+                          (Đang chờ cập nhật SĐT)
+                        </span>
+                      )}
                     </span>
                   ) : item.selected_tutor ? (
                     <span style={{ color: '#0369a1', fontWeight: 600 }}>
                        Gia sư đã chọn: {item.selected_tutor.full_name}
+                      {item.selected_tutor.phone && ` • SĐT: ${item.selected_tutor.phone}`}
                     </span>
                   ) : (
                     <span style={{ color: '#475569' }}>

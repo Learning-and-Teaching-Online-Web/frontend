@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axiosClient from '../services/axiosClient';
+import authStorage from '../utils/authStorage';
+import tutorApi from '../services/tutorApi';
 import { toast } from 'react-toastify';
-import { MapPin, UserCheck, Send, ArrowLeft } from 'lucide-react';
-
-
+import { MapPin, UserCheck, Send, ArrowLeft, ShieldAlert, LogIn, CheckCircle } from 'lucide-react';
 
 interface Application {
   application_id: string;
@@ -14,6 +14,7 @@ interface Application {
   status: string;
   created_at: string;
   tutor?: {
+    tutor_id?: string;
     full_name: string;
     avatar_url?: string;
   };
@@ -46,10 +47,13 @@ interface ClassRequestDetail {
 const ClassDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [classDetail, setClassDetail] = useState<ClassRequestDetail | null>(null);
+  const [tutorProfile, setTutorProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  const [applicantPhone, setApplicantPhone] = useState('');
+  const isAuthenticated = authStorage.isAuthenticated();
+  const userRole = authStorage.getUserRole();
+
   const [timeOption, setTimeOption] = useState('Ngay lập tức');
   const [availableDate, setAvailableDate] = useState('');
   const [notes, setNotes] = useState('');
@@ -74,28 +78,42 @@ const ClassDetailPage: React.FC = () => {
     }
   }, [id]);
 
+  useEffect(() => {
+    if (isAuthenticated && userRole === 'tutor') {
+      tutorApi.getMyProfile()
+        .then((res: any) => {
+          if (res) {
+            setTutorProfile(res.data || res);
+          }
+        })
+        .catch((err: any) => console.error('Error fetching tutor profile:', err));
+    }
+  }, [isAuthenticated, userRole]);
+
+  const profileData = tutorProfile?.data || tutorProfile;
+  const tutorName = profileData?.full_name || profileData?.user?.full_name || authStorage.getUserName() || 'Gia sư';
+  const tutorPhone = profileData?.phone || profileData?.user?.phone || '';
+  const tutorAvatar = profileData?.avatar_url || profileData?.user?.avatar_url || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80';
+
+  const myApplication = classDetail?.applications?.find((app: any) =>
+    (profileData?.tutor_id && app.tutor?.tutor_id === profileData.tutor_id) ||
+    (tutorPhone && app.applicant_phone === tutorPhone)
+  );
+
   const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!applicantPhone) {
-      toast.error('Vui lòng nhập số điện thoại của bạn!');
-      return;
-    }
 
     setSubmitting(true);
     try {
       const payload = {
-        applicant_phone: applicantPhone,
+        applicant_phone: tutorPhone || authStorage.getUserName() || 'Chưa cập nhật SĐT',
         available_date: `${timeOption} - ${availableDate || 'Linh hoạt'}`,
         notes,
       };
 
       const res = await axiosClient.post(`/class-requests/${id}/apply`, payload);
-      toast.success(res.data.message || 'Đăng ký nhận lớp thành công!');
+      toast.success(res.data.message || 'Xác nhận đăng ký nhận lớp thành công!');
 
-      
-      // Clear form & refresh detail
-      setApplicantPhone('');
       setAvailableDate('');
       setNotes('');
       fetchDetail();
@@ -185,88 +203,182 @@ const ClassDetailPage: React.FC = () => {
             <h3 style={{ fontSize: '1.15rem', fontWeight: '800', color: '#0e7490', margin: '0 0 14px 0', textAlign: 'center', textTransform: 'uppercase' }}>
               ĐĂNG KÝ NHANH
             </h3>
-            
-            <form onSubmit={handleApply}>
-              <div style={{ marginBottom: '12px' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#155e75', marginBottom: '4px' }}>
-                  Nhập số điện thoại của bạn (*)
-                </label>
-                <input
-                  type="tel"
-                  value={applicantPhone}
-                  onChange={(e) => setApplicantPhone(e.target.value)}
-                  placeholder="Nhập số điện thoại..."
-                  required
-                  style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #67e8f9', fontSize: '0.9rem', outline: 'none' }}
-                />
-              </div>
 
-              <div style={{ marginBottom: '12px' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#155e75', marginBottom: '4px' }}>
-                  Thời gian có thể nhận lớp
-                </label>
-                <select
-                  value={timeOption}
-                  onChange={(e) => setTimeOption(e.target.value)}
-                  style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #67e8f9', fontSize: '0.9rem', background: '#fff', outline: 'none' }}
+            {!isAuthenticated ? (
+              <div style={{ textAlign: 'center', padding: '16px 8px' }}>
+                <LogIn size={36} style={{ color: '#0891b2', marginBottom: '10px' }} />
+                <p style={{ fontSize: '0.88rem', color: '#155e75', marginBottom: '16px', lineHeight: 1.5 }}>
+                  Vui lòng đăng nhập tài khoản <strong>Gia sư</strong> để ứng tuyển nhận lớp học này.
+                </p>
+                <Link
+                  to="/auth"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    width: '100%',
+                    padding: '10px',
+                    background: 'linear-gradient(135deg, #0891b2 0%, #0e7490 100%)',
+                    color: '#ffffff',
+                    borderRadius: '6px',
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    textDecoration: 'none'
+                  }}
                 >
-                  <option value="Ngay lập tức">Ngay lập tức</option>
-                  <option value="Trong 1-2 ngày">Trong 1-2 ngày</option>
-                  <option value="Trong tuần này">Trong tuần này</option>
-                  <option value="Thỏa thuận sau">Thỏa thuận sau</option>
-                </select>
+                  <LogIn size={16} /> Đăng nhập Gia sư
+                </Link>
               </div>
-
-              <div style={{ marginBottom: '12px' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#155e75', marginBottom: '4px' }}>
-                  Thời gian nhận lớp cụ thể
-                </label>
-                <input
-                  type="text"
-                  value={availableDate}
-                  onChange={(e) => setAvailableDate(e.target.value)}
-                  placeholder="VD: Chiều T2 hoặc Ngày 05/08..."
-                  style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #67e8f9', fontSize: '0.9rem', outline: 'none' }}
-                />
+            ) : userRole !== 'tutor' ? (
+              <div style={{ textAlign: 'center', padding: '16px 8px' }}>
+                <ShieldAlert size={36} style={{ color: '#0891b2', marginBottom: '10px' }} />
+                <p style={{ fontSize: '0.88rem', color: '#155e75', marginBottom: '16px', lineHeight: 1.5 }}>
+                  Chỉ tài khoản <strong>Gia sư</strong> mới có thể đăng ký nhận lớp dạy này.
+                </p>
+                <p style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '16px' }}>
+                  Nếu bạn là Phụ huynh / Học viên, bạn có thể tạo yêu cầu tìm gia sư mới.
+                </p>
+                <Link
+                  to="/tim-gia-su"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    width: '100%',
+                    padding: '10px',
+                    background: '#2563eb',
+                    color: '#ffffff',
+                    borderRadius: '6px',
+                    fontWeight: 700,
+                    fontSize: '0.88rem',
+                    textDecoration: 'none'
+                  }}
+                >
+                  + Đăng bài tìm gia sư
+                </Link>
               </div>
+            ) : myApplication ? (
+              <div style={{ textAlign: 'center', padding: '12px 6px' }}>
+                <CheckCircle size={44} style={{ color: '#16a34a', marginBottom: '10px' }} />
+                <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#15803d', margin: '0 0 6px 0' }}>
+                  ✓ ĐÃ ĐĂNG KÝ NHẬN LỚP
+                </h4>
+                <p style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '14px', lineHeight: 1.5 }}>
+                  Đơn ứng tuyển của bạn đã được gửi thành công và đang ở trạng thái <strong>CHỜ ADMIN DUYỆT</strong>.
+                </p>
 
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#155e75', marginBottom: '4px' }}>
-                  Yêu cầu thêm (nếu có)
-                </label>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={2}
-                  placeholder="Ghi chú kinh nghiệm / trình độ..."
-                  style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #67e8f9', fontSize: '0.9rem', outline: 'none', resize: 'none' }}
-                />
+                <div style={{ background: '#ffffff', borderRadius: '8px', padding: '12px', textAlign: 'left', fontSize: '0.84rem', border: '1px solid #bbf7d0', marginBottom: '16px' }}>
+                  <div style={{ marginBottom: '6px' }}><strong>SĐT ứng tuyển:</strong> {myApplication.applicant_phone}</div>
+                  <div style={{ marginBottom: '6px' }}><strong>Thời gian nhận lớp:</strong> {myApplication.available_date || 'Linh hoạt'}</div>
+                  <div><strong>Trạng thái đơn:</strong> <span style={{ background: '#fef3c7', color: '#b45309', padding: '2px 8px', borderRadius: '10px', fontWeight: 700, fontSize: '0.78rem' }}>CHỜ ADMIN DUYỆT</span></div>
+                </div>
+
+                <button
+                  disabled
+                  style={{
+                    width: '100%',
+                    background: '#94a3b8',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '10px',
+                    borderRadius: '6px',
+                    fontWeight: 700,
+                    fontSize: '0.88rem',
+                    cursor: 'not-allowed',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <CheckCircle size={16} /> Đã gửi đơn ứng tuyển
+                </button>
               </div>
+            ) : (
+              <form onSubmit={handleApply}>
+                {/* Thông tin Gia sư tự động */}
+                <div style={{ background: '#ffffff', border: '1px solid #bae6fd', borderRadius: '8px', padding: '12px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <img
+                    src={tutorAvatar}
+                    alt={tutorName}
+                    style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #cbd5e1' }}
+                  />
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0f172a' }}>{tutorName}</div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>SĐT liên hệ: <strong>{tutorPhone || 'Chưa cập nhật'}</strong></div>
+                    <span style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600 }}>✓ Hồ sơ đã xác minh</span>
+                  </div>
+                </div>
 
-              <button
-                type="submit"
-                disabled={submitting}
-                style={{
-                  width: '100%',
-                  background: 'linear-gradient(135deg, #0891b2 0%, #0e7490 100%)',
-                  color: '#ffffff',
-                  border: 'none',
-                  padding: '12px',
-                  borderRadius: '6px',
-                  fontWeight: '700',
-                  fontSize: '0.95rem',
-                  cursor: submitting ? 'not-allowed' : 'pointer',
-                  boxShadow: '0 2px 8px rgba(8, 145, 178, 0.3)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                }}
-              >
-                <Send size={16} />
-                {submitting ? 'Đang gửi...' : 'Ứng tuyển nhận lớp'}
-              </button>
-            </form>
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#155e75', marginBottom: '4px' }}>
+                    Thời gian có thể nhận lớp <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <select
+                    value={timeOption}
+                    onChange={(e) => setTimeOption(e.target.value)}
+                    style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #67e8f9', fontSize: '0.9rem', background: '#fff', outline: 'none' }}
+                  >
+                    <option value="Ngay lập tức">Ngay lập tức</option>
+                    <option value="Trong 1-2 ngày">Trong 1-2 ngày tới</option>
+                    <option value="Trong tuần này">Trong tuần này</option>
+                    <option value="Thỏa thuận sau">Thỏa thuận sau</option>
+                  </select>
+                </div>
+
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#155e75', marginBottom: '4px' }}>
+                    Thời gian dạy cụ thể (Tùy chọn)
+                  </label>
+                  <input
+                    type="text"
+                    value={availableDate}
+                    onChange={(e) => setAvailableDate(e.target.value)}
+                    placeholder="VD: Chiều T2 hoặc Ngày 10/08..."
+                    style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #67e8f9', fontSize: '0.9rem', outline: 'none' }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#155e75', marginBottom: '4px' }}>
+                    Ghi chú cho Admin (Tùy chọn)
+                  </label>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    rows={2}
+                    placeholder="Ghi chú thêm về lịch dạy / kinh nghiệm..."
+                    style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #67e8f9', fontSize: '0.9rem', outline: 'none', resize: 'none' }}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  style={{
+                    width: '100%',
+                    background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '12px',
+                    borderRadius: '6px',
+                    fontWeight: '700',
+                    fontSize: '0.95rem',
+                    cursor: submitting ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 2px 8px rgba(22, 163, 74, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <Send size={16} />
+                  {submitting ? 'Đang gửi thông tin...' : 'XÁC NHẬN ĐĂNG KÝ NHẬN LỚP'}
+                </button>
+              </form>
+            )}
           </div>
         </div>
 
@@ -287,7 +399,7 @@ const ClassDetailPage: React.FC = () => {
                 <thead>
                   <tr style={{ background: '#f1f5f9', color: '#475569' }}>
                     <th style={{ padding: '10px', borderBottom: '2px solid #cbd5e1' }}>STT</th>
-                    <th style={{ padding: '10px', borderBottom: '2px solid #cbd5e1' }}>Gia sư / SĐT</th>
+                    <th style={{ padding: '10px', borderBottom: '2px solid #cbd5e1' }}>Gia sư ứng tuyển</th>
                     <th style={{ padding: '10px', borderBottom: '2px solid #cbd5e1' }}>Thời gian nhận lớp</th>
                     <th style={{ padding: '10px', borderBottom: '2px solid #cbd5e1' }}>Ghi chú</th>
                     <th style={{ padding: '10px', borderBottom: '2px solid #cbd5e1' }}>Trạng thái</th>
@@ -298,7 +410,12 @@ const ClassDetailPage: React.FC = () => {
                     <tr key={app.application_id} style={{ borderBottom: '1px solid #e2e8f0' }}>
                       <td style={{ padding: '10px', fontWeight: '600' }}>{idx + 1}</td>
                       <td style={{ padding: '10px', color: '#0f172a', fontWeight: '600' }}>
-                        {app.tutor?.full_name || 'Gia sư'} ({app.applicant_phone})
+                        {app.tutor?.full_name || 'Gia sư'}
+                        {app.applicant_phone && (
+                          <span style={{ fontSize: '0.82rem', color: '#2563eb', fontWeight: 'normal', marginLeft: '6px' }}>
+                            (SĐT: {app.applicant_phone})
+                          </span>
+                        )}
                       </td>
                       <td style={{ padding: '10px', color: '#334155' }}>{app.available_date || 'N/A'}</td>
                       <td style={{ padding: '10px', color: '#64748b' }}>{app.notes || 'Không có'}</td>
