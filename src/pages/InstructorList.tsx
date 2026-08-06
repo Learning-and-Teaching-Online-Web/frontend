@@ -143,7 +143,7 @@ const InstructorList: React.FC = () => {
                     </button>
 
                     {/* Avatar */}
-                    <div className="instructor-avatar-wrapper">
+                    <Link to={`/instructors/${tutor.tutor_id}`} className="instructor-avatar-wrapper" style={{ textDecoration: 'none' }}>
                       {avatar ? (
                         <img
                           src={avatar}
@@ -155,13 +155,18 @@ const InstructorList: React.FC = () => {
                           {initials}
                         </div>
                       )}
-                    </div>
+                    </Link>
                   </div>
 
                   <div className="instructor-card-body">
-                    <h3 className="instructor-name">{name}</h3>
-                    {tutor.specialization && (
-                      <p className="instructor-spec">{tutor.specialization}</p>
+                    <Link to={`/instructors/${tutor.tutor_id}`} style={{ textDecoration: 'none' }}>
+                      <h3 className="instructor-name">{name}</h3>
+                    </Link>
+                    {tutor.current_role && (
+                      <p className="instructor-spec">{tutor.current_role}</p>
+                    )}
+                    {tutor.university && !tutor.current_role && (
+                      <p className="instructor-spec">{tutor.university}</p>
                     )}
                     {tutor.bio && (
                       <p className="instructor-bio">{tutor.bio}</p>
@@ -183,13 +188,34 @@ const InstructorList: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Link to courses of this tutor */}
-                    <Link
-                      to={`/courses?tutor_id=${tutor.tutor_id}`}
-                      className="instructor-view-courses"
-                    >
-                      Xem khóa học
-                    </Link>
+                    {/* Link to detail profile of this tutor */}
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                      <Link
+                        to={`/instructors/${tutor.tutor_id}`}
+                        className="instructor-view-courses"
+                        style={{ flex: 1, margin: 0 }}
+                      >
+                        Xem hồ sơ gia sư
+                      </Link>
+                      {tutor.total_courses > 0 && (
+                        <Link
+                          to={`/courses?tutor_id=${tutor.tutor_id}`}
+                          className="instructor-view-courses"
+                          style={{
+                            flex: '0 0 auto',
+                            margin: 0,
+                            background: '#f1f5f9',
+                            borderColor: '#cbd5e1',
+                            color: '#475569',
+                            fontSize: '12px',
+                            padding: '10px 12px'
+                          }}
+                          title="Xem danh sách khóa học của gia sư"
+                        >
+                          Khóa học ({tutor.total_courses})
+                        </Link>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

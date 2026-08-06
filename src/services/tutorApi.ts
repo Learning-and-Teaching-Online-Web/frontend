@@ -25,6 +25,9 @@ export const tutorApi = {
   },
 
   updateMyProfile: async (data: {
+    avatarUrl?: string;
+    fullName?: string;
+    phone?: string;
     bio?: string;
     education?: string;
     experience_years?: number;
@@ -33,6 +36,7 @@ export const tutorApi = {
     teaching_mode?: 'online' | 'offline' | 'both';
     province?: string;
     district?: string;
+    [key: string]: any;
   }) => {
     const res = await axiosClient.put('/tutors/my-profile', data);
     return res.data;

@@ -48,11 +48,11 @@ export const FavoritesTab: React.FC<FavoritesTabProps> = ({
 
                 <div className="tutor-footer" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   <Link
-                    to={`/courses?tutor_id=${tutor.tutor_id}`}
+                    to={`/instructors/${tutor.tutor_id}`}
                     className="btn-tutor-message"
                     style={{ background: 'var(--primary)', color: '#fff', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
                   >
-                    <BookOpen size={14} /> Xem khóa học
+                    <BookOpen size={14} /> Xem hồ sơ gia sư
                   </Link>
                   <button 
                     className="btn-tutor-message"

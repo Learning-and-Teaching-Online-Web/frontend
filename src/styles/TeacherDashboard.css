@@ -74,6 +74,28 @@
   font-weight: 700;
   margin-bottom: 12px;
   box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.sidebar-avatar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: 50%;
+}
+
+.sidebar-avatar:hover .sidebar-avatar-overlay {
+  opacity: 1;
 }
 
 .sidebar-name {

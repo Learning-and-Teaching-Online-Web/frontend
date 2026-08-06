@@ -10,6 +10,7 @@ import FaqPage from '../pages/FaqPage';
 import ContactPage from '../pages/ContactPage';
 import StudentDashboard from '../pages/StudentDashboard';
 import InstructorList from '../pages/InstructorList';
+import InstructorDetail from '../pages/InstructorDetail';
 import TeacherDashboard from '../components/TeacherDashboard';
 import NotFoundPage from '../pages/NotFoundPage';
 import ProtectedRoute from '../components/ProtectedRoute';
@@ -44,6 +45,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/faq" element={<FaqPage />} />
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/instructors" element={<InstructorList />} />
+      <Route path="/instructors/:tutorId" element={<InstructorDetail />} />
       <Route path="/admin/login" element={<AdminLogin />} />
 
       {/* Protected Student routes */}

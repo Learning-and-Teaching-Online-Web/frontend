@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   LayoutDashboard,
   BookOpen,
@@ -14,7 +14,8 @@ import {
   Globe,
   PlayCircle,
   Sparkles,
-  Info
+  Info,
+  Camera
 } from 'lucide-react';
 
 import '../styles/TeacherDashboard.css';
@@ -32,11 +33,14 @@ import { LessonManagementModal } from './teacher/LessonManagementModal';
 import { DocumentManagementModal } from './teacher/DocumentManagementModal';
 
 const TeacherDashboard: React.FC = () => {
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
   const {
     activeTab,
     setActiveTab,
     isLoading,
     teacherName,
+    handleAvatarUpload,
     stats,
     tutorProfile,
     courses,
@@ -151,6 +155,10 @@ const TeacherDashboard: React.FC = () => {
     );
   }
 
+  const rawDisplayName = tutorProfile?.full_name || tutorProfile?.user?.full_name || teacherName || 'Gia sư';
+  const displayName = rawDisplayName.replace(/^Học viên\s+/i, '');
+  const avatarUrl = tutorProfile?.avatar_url || tutorProfile?.user?.avatar_url;
+
   return (
     <div className="dashboard-wrapper">
       <div className="dashboard-container">
@@ -158,18 +166,43 @@ const TeacherDashboard: React.FC = () => {
         {/* SIDEBAR NAVIGATION */}
         <aside className="dashboard-sidebar">
           <div className="sidebar-profile">
-            <div className="sidebar-avatar" style={{ overflow: 'hidden', padding: 0 }}>
-              {tutorProfile?.user?.avatar_url ? (
+            {/* Hidden Avatar File Input */}
+            <input
+              type="file"
+              ref={avatarInputRef}
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleAvatarUpload(file);
+              }}
+            />
+
+            <div
+              className="sidebar-avatar avatar-clickable"
+              onClick={() => avatarInputRef.current?.click()}
+              title="Nhấp vào đây để thay đổi ảnh đại diện gia sư"
+              style={{
+                position: 'relative',
+                cursor: 'pointer',
+                overflow: 'hidden',
+                padding: 0
+              }}
+            >
+              {avatarUrl ? (
                 <img
-                  src={tutorProfile.user.avatar_url}
-                  alt={teacherName}
+                  src={avatarUrl}
+                  alt={displayName}
                   style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
                 />
               ) : (
-                teacherName.charAt(0).toUpperCase()
+                displayName.charAt(0).toUpperCase()
               )}
+              <div className="sidebar-avatar-overlay">
+                <Camera size={18} color="#ffffff" />
+              </div>
             </div>
-            <h3 className="sidebar-name">{teacherName}</h3>
+            <h3 className="sidebar-name">{displayName}</h3>
             <span className="sidebar-role">Gia Sư Đối Tác</span>
           </div>
 

@@ -1,0 +1,512 @@
+/* =============================================
+   INSTRUCTOR DETAIL PAGE STYLES (MATCHING SCREENSHOT)
+   ============================================= */
+
+.tutor-detail-page {
+  background: #f1f5f9;
+  min-height: 100vh;
+  padding-bottom: 60px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #111827;
+}
+
+.tutor-detail-top-nav {
+  background: #1e293b;
+  padding: 12px 0;
+  border-bottom: 2px solid #3b82f6;
+}
+
+.tutor-nav-back {
+  background: transparent;
+  color: #f8fafc;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.tutor-nav-back:hover {
+  color: #60a5fa;
+}
+
+.tutor-detail-content-wrapper {
+  max-width: 1000px;
+  margin: 24px auto;
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+/* --- Profile Box --- */
+.tutor-profile-box {
+  position: relative;
+  border-bottom: 2px dashed #e2e8f0;
+  padding-bottom: 24px;
+  margin-bottom: 24px;
+}
+
+/* Action Buttons Top Right */
+.tutor-top-action-bar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 2;
+}
+
+.btn-tutor-status {
+  background: #0284c7;
+  color: #ffffff;
+  border: none;
+  padding: 6px 18px;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: default;
+}
+
+.btn-tutor-select {
+  background: linear-gradient(185deg, #a3e635 0%, #84cc16 100%);
+  color: #ffffff;
+  border: 1px solid #65a30d;
+  padding: 6px 24px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(132, 204, 22, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-tutor-select:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(132, 204, 22, 0.5);
+}
+
+.tutor-profile-header {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.tutor-profile-avatar-wrapper {
+  width: 140px;
+  height: 170px;
+  flex-shrink: 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.tutor-profile-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tutor-profile-avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #475569, #334155);
+  color: #fff;
+  font-size: 48px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tutor-profile-info-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1f2937;
+}
+
+.tutor-field-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.field-title {
+  font-weight: 700;
+  color: #000000;
+  white-space: nowrap;
+}
+
+.field-value {
+  color: #1f2937;
+}
+
+.highlight-code {
+  color: #000000;
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.text-dark {
+  color: #000000;
+}
+
+/* --- Section Container & Titles --- */
+.tutor-section-container {
+  margin-top: 32px;
+}
+
+.tutor-section-title {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 800;
+  text-decoration: underline;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tutor-section-title.green-title {
+  color: #008000;
+}
+
+.tutor-section-title.blue-title {
+  color: #1d4ed8;
+}
+
+/* --- Table DANH SÁCH CÁC LỚP ĐĂNG KÝ DẠY (Offline) --- */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.offline-classes-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+}
+
+.offline-classes-table th {
+  background: #ffffff;
+  color: #000000;
+  font-weight: 700;
+  border: 1px solid #cbd5e1;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.offline-classes-table td {
+  border: 1px solid #cbd5e1;
+  padding: 12px;
+  vertical-align: middle;
+  background: #ffffff;
+}
+
+.offline-classes-table tr:hover td {
+  background: #f8fafc;
+}
+
+.class-name {
+  color: #000000;
+  font-weight: 600;
+}
+
+.class-schedule {
+  color: #008000;
+  font-style: italic;
+  font-weight: 500;
+}
+
+.location-text {
+  color: #008000;
+  font-weight: 600;
+}
+
+.map-icon {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.map-icon:hover {
+  transform: scale(1.2);
+}
+
+.no-image-placeholder {
+  background: #e2e8f0;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 12px 6px;
+  text-align: center;
+  border-radius: 4px;
+  line-height: 1.2;
+}
+
+.student-small-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.text-center {
+  text-align: center !important;
+}
+
+/* --- Section DANH SÁCH KHÓA HỌC (Online & Video) --- */
+.online-courses-empty {
+  text-align: center;
+  padding: 30px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.online-courses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.online-course-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 18px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.course-type-badge {
+  display: inline-block;
+  align-self: flex-start;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.online-course-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+.online-course-info {
+  font-size: 13px;
+  color: #64748b;
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.online-course-price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.online-course-price {
+  font-size: 16px;
+  font-weight: 800;
+  color: #15803d;
+}
+
+.btn-view-course {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #2563eb;
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.btn-view-course:hover {
+  background: #1d4ed8;
+}
+
+/* --- Section GIA SƯ KHÁC --- */
+.other-tutors-header-banner {
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 16px;
+  padding: 10px 20px;
+  border-radius: 4px 4px 0 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 20px;
+}
+
+.other-tutors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.other-tutor-card {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.other-tutor-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.other-tutor-card-inner {
+  padding: 14px;
+  display: flex;
+  gap: 12px;
+}
+
+.other-tutor-avatar-box {
+  width: 70px;
+  height: 90px;
+  flex-shrink: 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.other-tutor-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.other-tutor-placeholder {
+  width: 100%;
+  height: 100%;
+  background: #0284c7;
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.other-tutor-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #334155;
+  overflow: hidden;
+}
+
+.other-tutor-code {
+  color: #0284c7;
+}
+
+.other-tutor-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.other-tutor-row {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.price-tag {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.btn-view-other-profile {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0284c7;
+  text-decoration: none;
+}
+
+.btn-view-other-profile:hover {
+  text-decoration: underline;
+}
+
+/* Loading state */
+.tutor-detail-loading,
+.tutor-detail-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  gap: 16px;
+}
+
+.tutor-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #cbd5e1;
+  border-top-color: #0284c7;
+  border-radius: 50%;
+  animation: tutorSpin 0.8s linear infinite;
+}
+
+@keyframes tutorSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .tutor-profile-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .tutor-field-row {
+    justify-content: center;
+  }
+
+  .tutor-top-action-bar {
+    position: static;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+}
