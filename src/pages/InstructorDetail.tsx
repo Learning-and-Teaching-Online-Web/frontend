@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
-  ChevronLeft, MapPin, Heart, BookOpen, Star, Users, Check, ExternalLink
+  ChevronLeft, MapPin, Heart, ExternalLink
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { tutorApi } from '../services/tutorApi';
@@ -19,6 +19,8 @@ const InstructorDetail: React.FC = () => {
   const [isFavorite, setIsFavorite] = useState(false);
 
   const isAuthenticated = authStorage.isAuthenticated();
+  const userRole = authStorage.getUserRole();
+  const isTutorOrAdmin = userRole === 'tutor' || userRole === 'admin';
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -54,7 +56,7 @@ const InstructorDetail: React.FC = () => {
     };
 
     const checkFavorite = async () => {
-      if (!isAuthenticated || !tutorId) return;
+      if (!isAuthenticated || isTutorOrAdmin || !tutorId) return;
       try {
         const res = await favoriteApi.getMyFavorites();
         if (res && res.success && Array.isArray(res.data)) {
@@ -69,11 +71,15 @@ const InstructorDetail: React.FC = () => {
     fetchTutorDetail();
     fetchOtherTutors();
     checkFavorite();
-  }, [tutorId, isAuthenticated]);
+  }, [tutorId, isAuthenticated, isTutorOrAdmin]);
 
   const handleToggleFavorite = async () => {
     if (!isAuthenticated) {
       toast.warning('Bạn cần đăng nhập với tài khoản Học viên để lưu gia sư yêu thích.');
+      return;
+    }
+    if (isTutorOrAdmin) {
+      toast.error('Chỉ tài khoản Học viên mới có thể lưu gia sư yêu thích.');
       return;
     }
     if (!tutor) return;
@@ -186,6 +192,30 @@ const InstructorDetail: React.FC = () => {
           {/* Action Buttons Top Right */}
           <div className="tutor-top-action-bar">
             <button className="btn-tutor-status">Kết thúc</button>
+            {!isTutorOrAdmin && (
+              <button
+                className="btn-tutor-favorite"
+                onClick={handleToggleFavorite}
+                title={isFavorite ? "Bỏ yêu thích gia sư" : "Yêu thích gia sư"}
+                style={{
+                  background: isFavorite ? '#fef2f2' : '#ffffff',
+                  color: isFavorite ? '#ef4444' : '#64748b',
+                  border: '1px solid ' + (isFavorite ? '#fca5a5' : '#cbd5e1'),
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <Heart size={16} fill={isFavorite ? '#ef4444' : 'none'} color={isFavorite ? '#ef4444' : '#64748b'} />
+                {isFavorite ? 'Đã yêu thích' : 'Yêu thích'}
+              </button>
+            )}
             <button className="btn-tutor-select" onClick={handleSelectTutor}>Chọn</button>
           </div>
 

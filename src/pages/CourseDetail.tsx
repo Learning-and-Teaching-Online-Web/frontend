@@ -124,7 +124,7 @@ const CourseDetail: React.FC = () => {
           const mapped = mapBackendCourseToFrontend(res.data);
           setCourse(mapped);
           
-          if (mapped.tutor_id && isAuthenticated) {
+          if (mapped.tutor_id && isAuthenticated && authStorage.getUserRole() !== 'tutor' && authStorage.getUserRole() !== 'admin') {
             try {
               const favRes = await favoriteApi.getMyFavorites();
               if (favRes && favRes.success && Array.isArray(favRes.data)) {
@@ -160,6 +160,11 @@ const CourseDetail: React.FC = () => {
   const handleToggleFavoriteTutor = async () => {
     if (!isAuthenticated) {
       toast.warning('Bạn cần đăng nhập tài khoản Học viên để yêu thích giảng viên.');
+      return;
+    }
+    const currentRole = authStorage.getUserRole();
+    if (currentRole === 'tutor' || currentRole === 'admin') {
+      toast.error('Chỉ tài khoản Học viên mới có quyền yêu thích giảng viên.');
       return;
     }
     if (!course || !course.tutor_id) return;
@@ -639,26 +644,28 @@ const CourseDetail: React.FC = () => {
                     <p style={{ color: 'var(--text-muted)', fontSize: '14px', lineHeight: '1.6' }}>
                       {course.instructorBio || `Giáo viên chuyên nghiệp có nhiều năm kinh nghiệm giảng dạy lĩnh vực ${course.subject}.`}
                     </p>
-                    <button
-                      onClick={handleToggleFavoriteTutor}
-                      style={{
-                        marginTop: '12px',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        padding: '6px 14px',
-                        borderRadius: '6px',
-                        border: '1px solid var(--border)',
-                        background: isFavoriteTutor ? '#fef2f2' : '#fff',
-                        color: isFavoriteTutor ? '#ef4444' : 'var(--text-main)',
-                        fontWeight: 600,
-                        fontSize: '13px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <Heart size={16} fill={isFavoriteTutor ? '#ef4444' : 'none'} color={isFavoriteTutor ? '#ef4444' : '#64748b'} />
-                      {isFavoriteTutor ? 'Đã yêu thích giảng viên' : 'Yêu thích giảng viên'}
-                    </button>
+                    {authStorage.getUserRole() !== 'tutor' && authStorage.getUserRole() !== 'admin' && (
+                      <button
+                        onClick={handleToggleFavoriteTutor}
+                        style={{
+                          marginTop: '12px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '6px 14px',
+                          borderRadius: '6px',
+                          border: '1px solid var(--border)',
+                          background: isFavoriteTutor ? '#fef2f2' : '#fff',
+                          color: isFavoriteTutor ? '#ef4444' : 'var(--text-main)',
+                          fontWeight: 600,
+                          fontSize: '13px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <Heart size={16} fill={isFavoriteTutor ? '#ef4444' : 'none'} color={isFavoriteTutor ? '#ef4444' : '#64748b'} />
+                        {isFavoriteTutor ? 'Đã yêu thích giảng viên' : 'Yêu thích giảng viên'}
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
