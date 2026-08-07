@@ -33,9 +33,37 @@ interface ClassRequestItem {
   status: string;
   created_at: string;
   is_directed_to_me?: boolean;
+  is_assigned_to_me?: boolean;
+  payment_deadline?: string;
+  fee_amount?: number;
+  assigned_tutor_id?: string;
   my_application_status?: string | null;
   _count?: { applications: number };
 }
+
+const CountdownTimer: React.FC<{ deadline: string }> = ({ deadline }) => {
+  const [timeLeft, setTimeLeft] = useState<string>('');
+
+  useEffect(() => {
+    const updateTimer = () => {
+      const diff = new Date(deadline).getTime() - new Date().getTime();
+      if (diff <= 0) {
+        setTimeLeft('Đã hết hạn');
+        return;
+      }
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      setTimeLeft(`${hours} giờ ${minutes} phút ${seconds} giây`);
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [deadline]);
+
+  return <span style={{ fontWeight: 700, color: '#dc2626' }}>{timeLeft}</span>;
+};
 
 export const OfflineClassesTab: React.FC = () => {
   const [subTab, setSubTab] = useState<'all' | 'directed'>('all');
@@ -46,6 +74,20 @@ export const OfflineClassesTab: React.FC = () => {
   const [search, setSearch] = useState<string>('');
   const [province, setProvince] = useState<string>('--Tất cả Tỉnh/Thành--');
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [pendingPaymentClass, setPendingPaymentClass] = useState<ClassRequestItem | null>(null);
+
+  // Fetch wallet balance
+  const fetchWalletBalance = async () => {
+    try {
+      const res = await axiosClient.get('/tutors/wallet');
+      if (res.data && res.data.success && res.data.data) {
+        setWalletBalance(res.data.data.balance || 0);
+      }
+    } catch (err) {
+      console.error('Error fetching wallet balance:', err);
+    }
+  };
 
   // Fetch tutor specific classes (directed to tutor via tutor_code or tutor_id)
   const fetchMyClasses = async () => {
@@ -65,7 +107,37 @@ export const OfflineClassesTab: React.FC = () => {
 
   useEffect(() => {
     fetchMyClasses();
+    fetchWalletBalance();
   }, []);
+
+  const handlePayCommission = async (requestId: string, feeAmount: number) => {
+    if (walletBalance < feeAmount) {
+      toast.error('Số dư ví không đủ! Vui lòng nạp thêm tiền vào ví.');
+      const walletTabBtn = document.getElementById('tab-btn-wallet');
+      if (walletTabBtn) {
+        walletTabBtn.click();
+        setTimeout(() => {
+          const depSec = document.getElementById('wallet-deposit-section');
+          if (depSec) depSec.scrollIntoView({ behavior: 'smooth' });
+        }, 200);
+      }
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const res = await axiosClient.post(`/class-requests/${requestId}/pay-commission`);
+      toast.success(res.data.message || 'Thanh toán phí nhận lớp thành công!');
+      fetchMyClasses();
+      fetchWalletBalance();
+      setPendingPaymentClass(null); // Close confirm modal
+    } catch (err: any) {
+      console.error('Error paying commission:', err);
+      toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi thanh toán.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   // Tutor accepts or declines a class directed to them
   const handleRespondClass = async (requestId: string, action: 'ACCEPT' | 'DECLINE') => {
@@ -88,7 +160,7 @@ export const OfflineClassesTab: React.FC = () => {
   };
 
   const formatVND = (val: number) => {
-    return new Intl.NumberFormat('vi-VN').format(val) + ' VNĐ/tháng';
+    return new Intl.NumberFormat('vi-VN').format(val) + ' VNĐ';
   };
 
   // Filter lists
@@ -244,6 +316,7 @@ export const OfflineClassesTab: React.FC = () => {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px' }}>
           {displayedList.map((cls) => {
             const isDirected = cls.is_directed_to_me;
+            const isWaitingFee = cls.status === 'WAITING_TUTOR_CONFIRM' && cls.is_assigned_to_me;
 
             return (
               <div
@@ -251,14 +324,21 @@ export const OfflineClassesTab: React.FC = () => {
                 style={{
                   background: '#ffffff',
                   borderRadius: '16px',
-                  border: isDirected 
-                    ? (cls.status === 'ASSIGNED' ? '2px solid #22c55e' : '2px solid #6366f1')
-                    : '1px solid #e2e8f0',
-                  boxShadow: isDirected ? '0 4px 14px rgba(99,102,241,0.08)' : '0 4px 12px rgba(0,0,0,0.03)',
+                  border: isWaitingFee
+                    ? '2px solid #eab308'
+                    : cls.status === 'EXPIRED'
+                      ? '2px solid #ef4444'
+                      : isDirected 
+                        ? (cls.status === 'ASSIGNED' ? '2px solid #22c55e' : '2px solid #6366f1')
+                        : '1px solid #e2e8f0',
+                  boxShadow: isWaitingFee
+                    ? '0 4px 14px rgba(234,179,8,0.1)'
+                    : isDirected ? '0 4px 14px rgba(99,102,241,0.08)' : '0 4px 12px rgba(0,0,0,0.03)',
                   padding: '20px',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
+                  transition: 'all 0.3s ease'
                 }}
               >
                 <div>
@@ -268,7 +348,17 @@ export const OfflineClassesTab: React.FC = () => {
                       MS: {cls.code}
                     </span>
 
-                    {isDirected ? (
+                    {isWaitingFee ? (
+                      <span style={{ background: '#fef9c3', color: '#854d0e', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Clock size={14} />
+                        CHỜ ĐÓNG PHÍ
+                      </span>
+                    ) : cls.status === 'EXPIRED' ? (
+                      <span style={{ background: '#fee2e2', color: '#991b1b', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <XCircle size={14} />
+                        HẾT HẠN ĐÓNG PHÍ
+                      </span>
+                    ) : isDirected ? (
                       cls.status === 'ASSIGNED' ? (
                         <span style={{ background: '#dcfce7', color: '#15803d', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <CheckCircle2 size={14} />
@@ -310,13 +400,34 @@ export const OfflineClassesTab: React.FC = () => {
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <DollarSign size={16} color="#16a34a" style={{ flexShrink: 0 }} />
-                      <span><strong>Mức lương:</strong> <span style={{ color: '#059669', fontWeight: 800, fontSize: '1rem' }}>{formatVND(Number(cls.desired_price))}</span></span>
+                      <span><strong>Mức lương:</strong> <span style={{ color: '#059669', fontWeight: 800, fontSize: '1rem' }}>{formatVND(Number(cls.desired_price))}/tháng</span></span>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <Clock size={16} color="#d97706" style={{ flexShrink: 0 }} />
                       <span><strong>Số buổi:</strong> {cls.sessions_per_week} buổi/tuần {cls.study_time ? `• ${cls.study_time}` : ''}</span>
                     </div>
+
+                    {/* Phí nhận lớp cảnh báo & countdown */}
+                    {isWaitingFee && cls.fee_amount && (
+                      <div style={{
+                        marginTop: '12px',
+                        padding: '12px',
+                        background: '#fffbeb',
+                        border: '1px solid #fde68a',
+                        borderRadius: '10px',
+                        fontSize: '0.85rem'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#b45309', fontWeight: 700, marginBottom: '6px' }}>
+                          <span>⚠️ Phí nhận lớp ({cls.commission_rate}%): {formatVND(Number(cls.fee_amount))}</span>
+                        </div>
+                        <div style={{ color: '#451a03', fontSize: '0.82rem' }}>
+                          <strong>Hạn đóng phí:</strong> {cls.payment_deadline ? new Date(cls.payment_deadline).toLocaleString('vi-VN') : 'Không giới hạn'}
+                          <br />
+                          <strong>Còn lại:</strong> {cls.payment_deadline && <CountdownTimer deadline={cls.payment_deadline} />}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -324,7 +435,75 @@ export const OfflineClassesTab: React.FC = () => {
                 <div style={{ marginTop: '18px', paddingTop: '14px', borderTop: '1px solid #f1f5f9' }}>
                   {cls.status === 'ASSIGNED' ? (
                     <div style={{ color: '#166534', background: '#f0fdf4', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, textAlign: 'center' }}>
-                      ✓ Bạn đã chấp nhận lớp dạy này. Trung tâm sẽ liên hệ xếp lịch với Học viên!
+                      ✓ Bạn đã nhận lớp dạy thành công (Phí đã thanh toán)!
+                    </div>
+                  ) : cls.status === 'EXPIRED' ? (
+                    <div style={{ color: '#991b1b', background: '#fee2e2', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, textAlign: 'center' }}>
+                      ✕ Đã quá hạn đóng phí. Lớp học đã được chuyển trả lại hệ thống.
+                    </div>
+                  ) : isWaitingFee ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <button
+                        type="button"
+                        disabled={submitting}
+                        onClick={() => {
+                          if (walletBalance >= Number(cls.fee_amount || 0)) {
+                            setPendingPaymentClass(cls);
+                          } else {
+                            toast.error(`Số dư ví không đủ! Cần ${formatVND(Number(cls.fee_amount))} để đóng phí.`);
+                          }
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          background: walletBalance >= Number(cls.fee_amount || 0) ? '#eab308' : '#cbd5e1',
+                          color: walletBalance >= Number(cls.fee_amount || 0) ? '#ffffff' : '#64748b',
+                          border: 'none',
+                          borderRadius: '8px',
+                          fontWeight: 700,
+                          fontSize: '0.85rem',
+                          cursor: walletBalance >= Number(cls.fee_amount || 0) ? 'pointer' : 'not-allowed',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          boxShadow: walletBalance >= Number(cls.fee_amount || 0) ? '0 2px 6px rgba(234, 179, 8, 0.25)' : 'none'
+                        }}
+                      >
+                        {submitting ? 'Đang xử lý...' : (walletBalance >= Number(cls.fee_amount || 0) ? 'Thanh toán phí & Nhận lớp' : 'Số dư ví không đủ')}
+                      </button>
+
+                      {walletBalance < Number(cls.fee_amount || 0) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const walletTabBtn = document.getElementById('tab-btn-wallet');
+                            if (walletTabBtn) {
+                              walletTabBtn.click();
+                              setTimeout(() => {
+                                const depSec = document.getElementById('wallet-deposit-section');
+                                if (depSec) depSec.scrollIntoView({ behavior: 'smooth' });
+                              }, 200);
+                            } else {
+                              toast.info('Vui lòng chuyển sang tab Ví tiền để nạp tiền.');
+                            }
+                          }}
+                          style={{
+                            width: '100%',
+                            padding: '8px',
+                            background: '#f8fafc',
+                            color: '#2563eb',
+                            border: '1px dashed #2563eb',
+                            borderRadius: '8px',
+                            fontWeight: 600,
+                            fontSize: '0.8rem',
+                            cursor: 'pointer',
+                            textAlign: 'center'
+                          }}
+                        >
+                          Nạp tiền ngay →
+                        </button>
+                      )}
                     </div>
                   ) : isDirected ? (
                     <div style={{ display: 'flex', gap: '10px' }}>
@@ -387,6 +566,81 @@ export const OfflineClassesTab: React.FC = () => {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Custom Payment Confirmation Modal */}
+      {pendingPaymentClass && (
+        <div className="modal-overlay" style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.6)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000
+        }}>
+          <div className="modal-card" style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            padding: '24px',
+            maxWidth: '440px',
+            width: '90%',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+            textAlign: 'center'
+          }}>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '1.2rem', fontWeight: 800, color: '#1e1b4b' }}>
+              Xác Nhận Thanh Toán Phí
+            </h3>
+            <p style={{ fontSize: '0.9rem', color: '#475569', lineHeight: '1.5', margin: '0 0 20px 0' }}>
+              Bạn có chắc chắn muốn thanh toán phí nhận lớp cho lớp 
+              <strong style={{ color: '#f97316' }}> MS: {pendingPaymentClass.code}</strong> không?
+              <br />
+              Số tiền phí cần đóng: <strong style={{ color: '#059669', fontSize: '1.05rem' }}>{formatVND(Number(pendingPaymentClass.fee_amount))}</strong>
+            </p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button
+                type="button"
+                onClick={() => setPendingPaymentClass(null)}
+                style={{
+                  padding: '10px 20px',
+                  background: '#f1f5f9',
+                  color: '#475569',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontWeight: 600,
+                  fontSize: '0.88rem',
+                  cursor: 'pointer'
+                }}
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => handlePayCommission(pendingPaymentClass.request_id, Number(pendingPaymentClass.fee_amount))}
+                style={{
+                  padding: '10px 20px',
+                  background: '#eab308',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontWeight: 700,
+                  fontSize: '0.88rem',
+                  cursor: submitting ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px'
+                }}
+              >
+                {submitting ? 'Đang xử lý...' : 'Xác nhận thanh toán'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

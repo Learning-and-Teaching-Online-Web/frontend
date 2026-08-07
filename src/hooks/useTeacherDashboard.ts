@@ -1092,6 +1092,7 @@ export const useTeacherDashboard = () => {
     handleDeleteArticle,
     // Booking actions
     handleConfirmBooking,
-    handleCancelBooking
+    handleCancelBooking,
+    loadDashboardData
   };
 };

@@ -38,6 +38,8 @@ interface ClassRequest {
   created_at: string;
   selected_tutor?: { full_name: string; phone?: string };
   assigned_tutor?: { full_name: string; phone?: string };
+  payment_deadline?: string;
+  fee_amount?: number;
   _count?: { applications: number };
 }
 
@@ -126,9 +128,11 @@ const AdminClassRequests: React.FC = () => {
       case 'OPEN':
         return <span className="admin-badge success">LỚP CHƯA GIAO</span>;
       case 'ASSIGNED':
-        return <span className="admin-badge primary">ĐÃ GIAO</span>;
+        return <span className="admin-badge primary" style={{ background: '#10b981', color: '#ffffff' }}>ĐÃ GIAO</span>;
       case 'WAITING_TUTOR_CONFIRM':
-        return <span className="admin-badge warning">CHỜ GS CHỌN</span>;
+        return <span className="admin-badge warning" style={{ background: '#f59e0b', color: '#ffffff' }}>CHỜ ĐÓNG PHÍ</span>;
+      case 'EXPIRED':
+        return <span className="admin-badge danger" style={{ background: '#ef4444', color: '#ffffff' }}>HẾT HẠN ĐÓNG PHÍ</span>;
       case 'CANCELLED':
         return <span className="admin-badge muted" style={{ background: 'rgba(148, 163, 184, 0.2)', color: '#94a3b8', border: '1px solid #475569' }}>ĐÃ HỦY</span>;
       case 'REJECTED':
@@ -187,11 +191,12 @@ const AdminClassRequests: React.FC = () => {
             {[
               { key: 'all', label: 'Tất cả lớp' },
               { key: 'PENDING_ADMIN', label: 'Chờ Admin duyệt mở' },
-              { key: 'WAITING_TUTOR_CONFIRM', label: 'Chờ Gia sư chọn' },
+              { key: 'WAITING_TUTOR_CONFIRM', label: 'Chờ đóng phí' },
               { key: 'OPEN', label: 'Lớp chưa giao (OPEN)' },
               { key: 'ASSIGNED', label: 'Đã giao (ASSIGNED)' },
               { key: 'CANCELLED', label: 'Đã hủy' },
               { key: 'REJECTED', label: 'Bị từ chối' },
+              { key: 'EXPIRED', label: 'Hết hạn đóng phí' },
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -330,7 +335,7 @@ const AdminClassRequests: React.FC = () => {
       {/* Modal Xem Danh Sách Gia Sư Ứng Tuyển */}
       {modalOpen && selectedClass && (
         <div className="modal-overlay">
-          <div className="modal-card" style={{ maxWidth: '680px', width: '90%' }}>
+          <div className="modal-card" style={{ maxWidth: '680px', width: '90%', background: '#111827', border: '1px solid var(--admin-border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--admin-border)', paddingBottom: '12px' }}>
               <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--admin-text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <ClipboardList size={20} color="#818cf8" />
@@ -348,6 +353,43 @@ const AdminClassRequests: React.FC = () => {
             <div style={{ fontSize: '13px', color: 'var(--admin-text-muted)', marginBottom: '16px' }}>
               Môn dạy: <strong style={{ color: 'var(--admin-text-main)' }}>{selectedClass.subject_name}</strong> | Lớp: <strong style={{ color: 'var(--admin-text-main)' }}>{selectedClass.grade_level || 'N/A'}</strong> | Học phí: <strong style={{ color: '#34d399' }}>{formatCurrency(Number(selectedClass.desired_price))}</strong>
             </div>
+
+            {/* Show assignment status details if assigned, waiting for fee, or expired */}
+            {(selectedClass.status === 'WAITING_TUTOR_CONFIRM' || selectedClass.status === 'ASSIGNED' || selectedClass.status === 'EXPIRED') && (
+              <div style={{
+                background: selectedClass.status === 'ASSIGNED' ? 'rgba(16, 185, 129, 0.1)' : selectedClass.status === 'EXPIRED' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                border: `1px solid ${selectedClass.status === 'ASSIGNED' ? '#10b981' : selectedClass.status === 'EXPIRED' ? '#ef4444' : '#f59e0b'}`,
+                borderRadius: '8px',
+                padding: '12px 16px',
+                marginBottom: '16px',
+                fontSize: '13px',
+                color: 'var(--admin-text-main)'
+              }}>
+                <div style={{ fontWeight: 700, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>📢 Trạng thái bàn giao lớp:</span>
+                  <span style={{
+                    color: selectedClass.status === 'ASSIGNED' ? '#10b981' : selectedClass.status === 'EXPIRED' ? '#f87171' : '#f59e0b',
+                    fontWeight: 800
+                  }}>
+                    {selectedClass.status === 'ASSIGNED' ? 'ĐÃ BÀN GIAO THÀNH CÔNG' : selectedClass.status === 'EXPIRED' ? 'QUÁ HẠN ĐÓNG PHÍ' : 'ĐANG CHỜ GIA SƯ ĐÓNG PHÍ'}
+                  </span>
+                </div>
+                <div>
+                  Gia sư được giao: <strong>{selectedClass.assigned_tutor?.full_name || 'Hệ thống'}</strong>
+                  {selectedClass.assigned_tutor?.phone && ` (SĐT: ${selectedClass.assigned_tutor.phone})`}
+                </div>
+                {selectedClass.fee_amount && (
+                  <div style={{ marginTop: '4px' }}>
+                    Phí nhận lớp ({selectedClass.commission_rate}%): <strong>{formatCurrency(Number(selectedClass.fee_amount))}</strong>
+                  </div>
+                )}
+                {selectedClass.status === 'WAITING_TUTOR_CONFIRM' && selectedClass.payment_deadline && (
+                  <div style={{ marginTop: '4px', color: '#f59e0b' }}>
+                    Hạn thanh toán: <strong>{new Date(selectedClass.payment_deadline).toLocaleString('vi-VN')}</strong>
+                  </div>
+                )}
+              </div>
+            )}
 
             {applications.length === 0 ? (
               <div style={{ padding: '30px', textAlign: 'center', color: 'var(--admin-text-muted)', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px dashed var(--admin-border)' }}>

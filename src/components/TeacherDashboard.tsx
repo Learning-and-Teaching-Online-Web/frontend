@@ -51,6 +51,7 @@ const TeacherDashboard: React.FC = () => {
     transactions,
     walletBalance,
     articles,
+    loadDashboardData,
 
     formatVND,
     formatDateString,
@@ -283,6 +284,7 @@ const TeacherDashboard: React.FC = () => {
             </li>
             <li>
               <button
+                id="tab-btn-wallet"
                 className={`menu-item-btn ${activeTab === 'wallet' ? 'active' : ''}`}
                 onClick={() => setActiveTab('wallet')}
               >
@@ -427,6 +429,7 @@ const TeacherDashboard: React.FC = () => {
               transactions={transactions}
               formatVND={formatVND}
               setIsWithdrawModalOpen={setIsWithdrawModalOpen}
+              loadDashboardData={loadDashboardData}
             />
           )}
 
