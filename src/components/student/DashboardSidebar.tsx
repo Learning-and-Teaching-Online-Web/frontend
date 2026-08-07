@@ -8,7 +8,8 @@ import {
   ClipboardList,
   Settings, 
   LogOut,
-  Camera
+  Camera,
+  Wallet
 } from 'lucide-react';
 import type { StudentProfile } from '../../data/mockStudentData';
 import { authApi } from '../../services/authApi';
@@ -160,6 +161,15 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           >
             <Heart size={18} />
             Giảng viên yêu thích ({favoriteCount})
+          </button>
+        </li>
+        <li>
+          <button 
+            className={`menu-item-btn ${activeTab === 'wallet' ? 'active' : ''}`}
+            onClick={() => onTabChange('wallet')}
+          >
+            <Wallet size={18} />
+            Ví cá nhân (Nạp/Thanh toán)
           </button>
         </li>
         <li>

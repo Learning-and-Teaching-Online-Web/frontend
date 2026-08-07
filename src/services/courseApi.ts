@@ -5,7 +5,7 @@ export const mapBackendCourseToFrontend = (beCourse: any) => {
   return {
     course_id: beCourse.course_id,
     title: beCourse.title,
-    subject: beCourse.subject,
+    subject: beCourse.subject_relation?.name || beCourse.subject || 'Môn học',
     description: beCourse.description || '',
     price: Number(beCourse.price),
     oldPrice: beCourse.oldPrice || undefined,

@@ -31,6 +31,8 @@ export const useStudentDashboard = () => {
   const [quizAttempts, setQuizAttempts] = useState<QuizAttempt[]>([]);
   const [favoriteTutors, setFavoriteTutors] = useState<FavoriteTutor[]>([]);
   const [myClassRequests, setMyClassRequests] = useState<StudentClassRequest[]>([]);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [walletTransactions, setWalletTransactions] = useState<any[]>([]);
 
   // Form states for profile edit
   const [formName, setFormName] = useState('');
@@ -43,6 +45,59 @@ export const useStudentDashboard = () => {
   const [formDistrict, setFormDistrict] = useState('');
   const [formAddressDetail, setFormAddressDetail] = useState('');
   const [avatarBase64, setAvatarBase64] = useState<string | null>(null);
+
+  // Helper mapper functions for bookings
+  const mapBookingToEnrolledCourse = (b: any): EnrolledCourse => {
+    const hasReview = Array.isArray(b.reviews) ? b.reviews.length > 0 : !!b.reviews;
+    return {
+      course_id: b.course?.course_id || '',
+      booking_id: b.booking_id,
+      type: b.course?.type || 'online',
+      title: b.course?.title || 'Khóa học',
+      subject: b.course?.subject || 'Môn học',
+      instructor: b.course?.tutor?.user?.full_name || 'Giảng viên',
+      thumbnail: b.course?.thumbnail_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500&auto=format&fit=crop&q=60',
+      progress: b.status === 'completed' ? 100 : 50,
+      completedLessons: b.status === 'completed' ? (b.course?.total_sessions || 1) : 0,
+      totalLessons: b.course?.total_sessions || 1,
+      nextSessionTime: b.schedule?.start_time || undefined,
+      bookingStatus: b.status,
+      paymentStatus: b.payment_status,
+      isReviewed: hasReview
+    };
+  };
+
+  const mapBookingToClassSession = (b: any): ClassSession => {
+    const hasReview = Array.isArray(b.reviews) ? b.reviews.length > 0 : !!b.reviews;
+    return {
+      session_id: b.booking_id,
+      booking_id: b.booking_id,
+      course_id: b.course?.course_id,
+      type: b.course?.type || 'online',
+      courseTitle: b.course?.title || 'Khóa học',
+      tutorName: b.course?.tutor?.user?.full_name || 'Giảng viên',
+      tutorAvatar: b.course?.tutor?.user?.avatar_url || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
+      startTime: b.schedule?.start_time || new Date().toISOString(),
+      endTime: b.schedule?.end_time || new Date().toISOString(),
+      status: b.status === 'confirmed' ? 'scheduled' : (b.status === 'completed' ? 'completed' : 'cancelled'),
+      meetingLink: `https://meet.jit.si/novalearn-${b.booking_id}`,
+      bookingStatus: b.status,
+      paymentStatus: b.payment_status,
+      isReviewed: hasReview
+    };
+  };
+
+  const fetchWalletData = async () => {
+    try {
+      const walletRes = await bookingApi.getWallet();
+      if (walletRes && walletRes.success && walletRes.data) {
+        setWalletBalance(walletRes.data.balance || 0);
+        setWalletTransactions(walletRes.data.transactions || []);
+      }
+    } catch (err) {
+      console.error('Error refreshing wallet:', err);
+    }
+  };
 
   // Authentication check
   useEffect(() => {
@@ -95,47 +150,6 @@ export const useStudentDashboard = () => {
           setFormAddressDetail(mappedProfile.address_detail);
         }
 
-        // Helper mapper functions for bookings
-        const mapBookingToEnrolledCourse = (b: any): EnrolledCourse => {
-          const hasReview = Array.isArray(b.reviews) ? b.reviews.length > 0 : !!b.reviews;
-          return {
-            course_id: b.course?.course_id || '',
-            booking_id: b.booking_id,
-            type: b.course?.type || 'online',
-            title: b.course?.title || 'Khóa học',
-            subject: b.course?.subject || 'Môn học',
-            instructor: b.course?.tutor?.user?.full_name || 'Giảng viên',
-            thumbnail: b.course?.thumbnail_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500&auto=format&fit=crop&q=60',
-            progress: b.status === 'completed' ? 100 : 50,
-            completedLessons: b.status === 'completed' ? (b.course?.total_sessions || 1) : 0,
-            totalLessons: b.course?.total_sessions || 1,
-            nextSessionTime: b.schedule?.start_time || undefined,
-            bookingStatus: b.status,
-            paymentStatus: b.payment_status,
-            isReviewed: hasReview
-          };
-        };
-
-        const mapBookingToClassSession = (b: any): ClassSession => {
-          const hasReview = Array.isArray(b.reviews) ? b.reviews.length > 0 : !!b.reviews;
-          return {
-            session_id: b.booking_id,
-            booking_id: b.booking_id,
-            course_id: b.course?.course_id,
-            type: b.course?.type || 'online',
-            courseTitle: b.course?.title || 'Khóa học',
-            tutorName: b.course?.tutor?.user?.full_name || 'Giảng viên',
-            tutorAvatar: b.course?.tutor?.user?.avatar_url || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
-            startTime: b.schedule?.start_time || new Date().toISOString(),
-            endTime: b.schedule?.end_time || new Date().toISOString(),
-            status: b.status === 'confirmed' ? 'scheduled' : (b.status === 'completed' ? 'completed' : 'cancelled'),
-            meetingLink: `https://meet.jit.si/novalearn-${b.booking_id}`,
-            bookingStatus: b.status,
-            paymentStatus: b.payment_status,
-            isReviewed: hasReview
-          };
-        };
-
         // 2. Fetch Bookings (for Enrolled Courses & Class Sessions)
         const bookingsRes = await bookingApi.getMyBookings();
         if (bookingsRes && bookingsRes.success && Array.isArray(bookingsRes.data)) {
@@ -145,6 +159,9 @@ export const useStudentDashboard = () => {
           const mappedSessions = bookingsRes.data.map(mapBookingToClassSession);
           setClassSessions(mappedSessions);
         }
+
+        // Fetch Wallet Data
+        await fetchWalletData();
 
         // 3. Quiz Attempts
         const quizAttemptsRes = await quizApi.getMyAttempts();
@@ -329,7 +346,45 @@ export const useStudentDashboard = () => {
     toast.success(`Hoàn thành bài kiểm tra "${quizTitle}"! Điểm số: ${score}/10`);
   };
 
-  // Format date helper
+  const handleDeposit = async (amount: number) => {
+    try {
+      const res = await bookingApi.depositWallet(amount);
+      if (res && res.success) {
+        await fetchWalletData();
+        return true;
+      }
+      return false;
+    } catch (err: any) {
+      console.error('Error depositing to wallet:', err);
+      toast.error(err.response?.data?.error || err.message || 'Nạp tiền thất bại.');
+      return false;
+    }
+  };
+
+  const handlePayBooking = async (bookingId: string) => {
+    try {
+      const res = await bookingApi.payBooking(bookingId);
+      if (res && res.success) {
+        await fetchWalletData();
+        const bookingsRes = await bookingApi.getMyBookings();
+        if (bookingsRes && bookingsRes.success && Array.isArray(bookingsRes.data)) {
+          const mappedCourses = bookingsRes.data.map(mapBookingToEnrolledCourse);
+          setEnrolledCourses(mappedCourses);
+
+          const mappedSessions = bookingsRes.data.map(mapBookingToClassSession);
+          setClassSessions(mappedSessions);
+        }
+        return true;
+      }
+      return false;
+    } catch (err: any) {
+      console.error('Error paying for booking:', err);
+      toast.error(err.response?.data?.error || err.message || 'Thanh toán thất bại.');
+      return false;
+    }
+  };
+
+  // Helper date-time formatters
   const formatDate = (isoString: string) => {
     const d = new Date(isoString);
     return d.toLocaleDateString('vi-VN', {
@@ -381,6 +436,8 @@ export const useStudentDashboard = () => {
     favoriteTutors,
     myClassRequests,
     fetchMyClassRequests,
+    walletBalance,
+    walletTransactions,
     formState: {
       formName,
       formPhone,
@@ -408,7 +465,9 @@ export const useStudentDashboard = () => {
       handleRemoveFavorite,
       handleSimulateQuiz,
       handleLogout,
-      handleAvatarFileChange
+      handleAvatarFileChange,
+      handleDeposit,
+      handlePayBooking
     },
     helpers: {
       formatDate,

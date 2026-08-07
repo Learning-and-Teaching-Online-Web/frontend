@@ -16,6 +16,7 @@ const CourseDetail: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [selectedLessonModal, setSelectedLessonModal] = useState<any | null>(null);
   const [isFavoriteTutor, setIsFavoriteTutor] = useState<boolean>(false);
+  const [myBooking, setMyBooking] = useState<any | null>(null);
 
   const getEmbedUrl = (url: string) => {
     if (!url) return null;
@@ -78,6 +79,7 @@ const CourseDetail: React.FC = () => {
       const bookingsRes = await bookingApi.getMyBookings();
       if (bookingsRes && bookingsRes.success && Array.isArray(bookingsRes.data)) {
         const booking = bookingsRes.data.find((b: any) => b.course?.course_id === courseId);
+        setMyBooking(booking || null);
         if (!booking) {
           setEnrollmentStatus({
             canComment: false,
@@ -206,25 +208,59 @@ const CourseDetail: React.FC = () => {
 
     if (!courseId || !course) return;
 
-    if (!course.isFree) {
-      toast.info('Khóa học này có phí. Tính năng thanh toán đang được phát triển. Vui lòng liên hệ để được hỗ trợ.');
+    // Trường hợp 1: Đã đăng ký nhưng chưa thanh toán -> Tiến hành thanh toán bằng ví học viên
+    if (myBooking && myBooking.payment_status !== 'paid') {
+      try {
+        toast.info('Đang thực hiện thanh toán qua ví học viên...');
+        const res = await bookingApi.payBooking(myBooking.booking_id);
+        if (res && res.success) {
+          toast.success('Thanh toán khóa học thành công! Bạn hiện đã có quyền xem video bài giảng.');
+          setMyBooking(prev => ({
+            ...prev,
+            payment_status: 'paid',
+            status: 'confirmed'
+          }));
+          await checkEnrollmentStatus(course.type);
+        } else {
+          toast.error(res.error || 'Thanh toán thất bại.');
+        }
+      } catch (err: any) {
+        console.error('Error paying for course:', err);
+        const msg = err.response?.data?.error || err.message || 'Thanh toán thất bại do lỗi hệ thống.';
+        toast.error(msg);
+      }
       return;
     }
 
+    // Trường hợp 2: Đã đăng ký và thanh toán thành công
+    if (myBooking && myBooking.payment_status === 'paid') {
+      return;
+    }
+
+    // Trường hợp 3: Chưa đăng ký -> Tạo đơn đặt lớp (Booking) ở trạng thái unpaid/pending
     const schedules = course.schedules || [];
-    const availableSchedule = schedules.find((s: any) => !s.is_booked);
+    const availableSchedule = schedules.find((s: any) => s.status !== 'completed');
 
     try {
       toast.info('Đang xử lý đăng ký khóa học...');
       const res = await bookingApi.create({
         courseId: courseId,
         scheduleId: availableSchedule?.schedule_id,
-        notes: 'Đăng ký học miễn phí từ NovaLearn'
+        notes: course.isFree ? 'Đăng ký học miễn phí từ NovaLearn' : 'Đăng ký khóa học trả phí từ NovaLearn'
       });
 
       if (res && res.success) {
-        toast.success('Đăng ký khóa học miễn phí thành công! Chuyển đến bảng điều khiển...');
-        setTimeout(() => navigate('/student/dashboard'), 1500);
+        if (course.isFree) {
+          toast.success('Đăng ký khóa học miễn phí thành công! Đang chuyển đến bảng điều khiển...');
+          setTimeout(() => navigate('/student/dashboard'), 1500);
+        } else {
+          toast.success('Đăng ký thành công! Vui lòng nhấn nút "Thanh toán ngay bằng Ví" để hoàn tất mua khóa học.');
+          setMyBooking({
+            booking_id: res.data?.booking_id || res.data?.id,
+            payment_status: 'unpaid',
+            status: 'pending'
+          });
+        }
       } else {
         toast.error(res.error || 'Có lỗi xảy ra khi đăng ký khóa học.');
       }
@@ -411,9 +447,26 @@ const CourseDetail: React.FC = () => {
               <button 
                 className="start-now-btn"
                 onClick={handleStartNow}
-                style={course.isFree ? { background: 'linear-gradient(135deg, #10b981, #059669)' } : {}}
+                disabled={myBooking && myBooking.payment_status === 'paid'}
+                style={
+                  course.isFree 
+                    ? { background: 'linear-gradient(135deg, #10b981, #059669)' } 
+                    : (myBooking && myBooking.payment_status === 'paid'
+                        ? { background: '#cbd5e1', color: '#64748b', cursor: 'default', boxShadow: 'none' }
+                        : {}
+                      )
+                }
               >
-                {course.isFree ? '🎓 Đăng ký trọn gói ngay' : '💳 Đăng ký khóa học ngay'}
+                {course.isFree 
+                  ? '🎓 Đăng ký trọn gói ngay' 
+                  : (myBooking 
+                      ? (myBooking.payment_status === 'paid' 
+                          ? 'Đã đăng ký & Thanh toán ✓' 
+                          : `💳 Thanh toán bằng Ví (${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(course.price)})`
+                        )
+                      : '💳 Đăng ký khóa học ngay'
+                    )
+                }
               </button>
               {course.isFree && (
                 <p style={{ textAlign: 'center', fontSize: '13px', color: '#10b981', marginTop: '8px', fontWeight: 500 }}>
@@ -565,7 +618,18 @@ const CourseDetail: React.FC = () => {
                               {item.url && item.url !== '#' && (
                                 embedUrl ? (
                                   <button
-                                    onClick={() => setSelectedLessonModal(item)}
+                                    onClick={() => {
+                                      const userRole = authStorage.getUserRole();
+                                      const isAuthor = userRole === 'tutor' && course.instructor === authStorage.getUserName();
+                                      const isAdmin = userRole === 'admin';
+                                      const isPaid = myBooking?.payment_status === 'paid' || myBooking?.status === 'confirmed' || myBooking?.status === 'completed';
+                                      
+                                      if (!course.isFree && !isPaid && !isAuthor && !isAdmin) {
+                                        toast.error('Bạn cần phải đăng ký mua khóa học và thanh toán thành công mới có quyền xem video bài giảng này!');
+                                        return;
+                                      }
+                                      setSelectedLessonModal(item);
+                                    }}
                                     style={{
                                       border: 'none',
                                       background: 'var(--primary)',
@@ -585,6 +649,17 @@ const CourseDetail: React.FC = () => {
                                 ) : (
                                   <a
                                     href={item.url}
+                                    onClick={(e) => {
+                                      const userRole = authStorage.getUserRole();
+                                      const isAuthor = userRole === 'tutor' && course.instructor === authStorage.getUserName();
+                                      const isAdmin = userRole === 'admin';
+                                      const isPaid = myBooking?.payment_status === 'paid' || myBooking?.status === 'confirmed' || myBooking?.status === 'completed';
+                                      
+                                      if (!course.isFree && !isPaid && !isAuthor && !isAdmin) {
+                                        e.preventDefault();
+                                        toast.error('Bạn cần phải đăng ký mua khóa học và thanh toán thành công mới có quyền truy cập tài liệu này!');
+                                      }
+                                    }}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     style={{
