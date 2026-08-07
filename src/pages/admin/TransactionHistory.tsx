@@ -6,20 +6,21 @@ import { toast } from 'react-toastify';
 
 interface TransactionItem {
   transaction_id: string;
-  booking_id: string;
+  booking_id: string | null;
   amount: string;
   payment_method: string;
+  description?: string | null;
   status: 'pending' | 'success' | 'failed' | 'refunded';
   created_at: string;
   user: {
     full_name: string;
     email: string;
   };
-  booking: {
+  booking?: {
     course: {
       title: string;
     };
-  };
+  } | null;
 }
 
 interface PayoutItem {
