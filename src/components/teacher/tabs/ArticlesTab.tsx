@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus, Edit2, Trash2, FileText, X } from 'lucide-react';
+import { blogApi } from '../../../services/blogApi';
 
 interface ArticlesTabProps {
   articles: any[];
@@ -52,6 +53,17 @@ export const ArticlesTab: React.FC<ArticlesTabProps> = ({
   articleTags, setArticleTags,
   handleArticleSubmit
 }) => {
+  const [categories, setCategories] = useState<string[]>(CATEGORY_OPTIONS);
+
+  useEffect(() => {
+    blogApi.getCategories()
+      .then(res => {
+        if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+          setCategories(res.data.map((c: any) => c.name));
+        }
+      })
+      .catch(err => console.error('Lỗi lấy danh mục bài viết:', err));
+  }, []);
   return (
     <div className="section-card">
       <div className="section-header">
@@ -170,7 +182,7 @@ export const ArticlesTab: React.FC<ArticlesTabProps> = ({
                     value={articleCategory}
                     onChange={(e) => setArticleCategory(e.target.value)}
                   >
-                    {CATEGORY_OPTIONS.map(cat => (
+                    {categories.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </select>
