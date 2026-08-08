@@ -104,7 +104,7 @@ export const CoursesTab: React.FC<CoursesTabProps> = ({
                       {isUnpaid && onPay && (
                         <button
                           onClick={async () => {
-                            if (window.confirm(`Bạn xác nhận thanh toán học phí cho khóa học "${course.title}"?`)) {
+                            if (course.booking_id && window.confirm(`Bạn xác nhận thanh toán học phí cho khóa học "${course.title}"?`)) {
                               await onPay(course.booking_id);
                             }
                           }}
@@ -192,7 +192,7 @@ export const CoursesTab: React.FC<CoursesTabProps> = ({
                             toast.error(`Bạn cần phải thanh toán học phí cho khóa "${course.title}" trước khi vào học!`);
                             return;
                           }
-                          if (course.type === 'offline' || course.type === 'video') {
+                          if ((course.type as string) === 'offline' || (course.type as string) === 'video') {
                             navigate(`/courses/${course.course_id}`);
                           } else {
                             toast.info(`Bắt đầu vào lớp: ${course.title}. Hệ thống LMS đang được tải...`);

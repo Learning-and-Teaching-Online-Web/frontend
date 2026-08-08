@@ -176,8 +176,8 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
             <h4 style={{ color: 'var(--primary)', marginBottom: '8px', fontSize: '14px' }}>Thông tin học tập cá nhân</h4>
             <p style={{ fontSize: '12px', color: 'var(--text-main)', lineHeight: 1.5 }}>
               <strong>Trình độ:</strong> {profile.grade_level || 'Chưa cập nhật'}<br />
-              <strong>Mục tiêu:</strong> {profile.learning_goals ? profile.learning_goals.substring(0, 70) + '...' : 'Chưa cập nhật'}<br />
-              <strong>Phương thức:</strong> {profile.preferred_mode === 'both' ? 'Online & Offline' : profile.preferred_mode === 'online' ? 'Online' : 'Offline'}
+              <strong>Mục tiêu:</strong> {(profile as any).learning_goals ? (profile as any).learning_goals.substring(0, 70) + '...' : 'Chưa cập nhật'}<br />
+              <strong>Phương thức:</strong> {(profile as any).preferred_mode === 'both' ? 'Online & Offline' : (profile as any).preferred_mode === 'online' ? 'Online' : 'Offline'}
             </p>
           </div>
         </div>

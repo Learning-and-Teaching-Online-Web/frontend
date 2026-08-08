@@ -215,7 +215,7 @@ const CourseDetail: React.FC = () => {
         const res = await bookingApi.payBooking(myBooking.booking_id);
         if (res && res.success) {
           toast.success('Thanh toán khóa học thành công! Bạn hiện đã có quyền xem video bài giảng.');
-          setMyBooking(prev => ({
+          setMyBooking((prev: any) => ({
             ...prev,
             payment_status: 'paid',
             status: 'confirmed'

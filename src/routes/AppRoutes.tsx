@@ -6,6 +6,8 @@ import CourseDetail from '../pages/CourseDetail';
 import BlogList from '../pages/BlogList';
 import BlogDetail from '../pages/BlogDetail';
 import AuthPage from '../pages/AuthPage';
+import VerifyEmailPage from '../pages/VerifyEmailPage';
+import ResetPasswordPage from '../pages/ResetPasswordPage';
 import FaqPage from '../pages/FaqPage';
 import ContactPage from '../pages/ContactPage';
 import StudentDashboard from '../pages/StudentDashboard';
@@ -42,7 +44,10 @@ const AppRoutes: React.FC = () => {
       <Route path="/blog" element={<BlogList />} />
       <Route path="/blog/:articleId" element={<BlogDetail />} />
       <Route path="/auth" element={<AuthPage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/faq" element={<FaqPage />} />
+
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/instructors" element={<InstructorList />} />
       <Route path="/instructors/:tutorId" element={<InstructorDetail />} />

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import tutorApi from '../../services/tutorApi';
-import { Star, Award, CheckCircle2, ArrowRight, UserCheck, BookOpen } from 'lucide-react';
+import { Star, Award, CheckCircle2, ArrowRight, UserCheck } from 'lucide-react';
 
 interface Tutor {
   tutor_id: string;

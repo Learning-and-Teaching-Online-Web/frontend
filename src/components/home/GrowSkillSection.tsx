@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, UserCheck, BookOpen, ShieldCheck, Clock, Award, ArrowRight } from 'lucide-react';
+import { UserCheck, BookOpen, ShieldCheck, Clock, Award, ArrowRight } from 'lucide-react';
 
 const GrowSkillSection: React.FC = () => {
   const navigate = useNavigate();
