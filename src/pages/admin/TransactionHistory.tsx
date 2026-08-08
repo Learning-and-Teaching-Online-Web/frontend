@@ -6,20 +6,21 @@ import { toast } from 'react-toastify';
 
 interface TransactionItem {
   transaction_id: string;
-  booking_id: string;
+  booking_id: string | null;
   amount: string;
   payment_method: string;
+  description?: string | null;
   status: 'pending' | 'success' | 'failed' | 'refunded';
   created_at: string;
   user: {
     full_name: string;
     email: string;
   };
-  booking: {
+  booking?: {
     course: {
       title: string;
     };
-  };
+  } | null;
 }
 
 interface PayoutItem {
@@ -171,8 +172,8 @@ const TransactionHistory: React.FC = () => {
                           <span style={{ fontWeight: 600 }}>{tx.user?.full_name || tx.user?.email?.split('@')[0] || 'Người dùng'}</span>
                           <span style={{ display: 'block', fontSize: '11px', color: 'var(--admin-text-muted)' }}>{tx.user?.email}</span>
                         </td>
-                        <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {tx.booking?.course?.title || 'Đăng ký lớp học'}
+                        <td style={{ maxWidth: '250px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={tx.description || tx.booking?.course?.title || 'Đăng ký lớp học'}>
+                          {tx.description || tx.booking?.course?.title || 'Đăng ký lớp học'}
                         </td>
                         <td style={{ color: '#34d399', fontWeight: 600 }}>
                           <ArrowDownLeft size={14} style={{ marginRight: '4px', verticalAlign: 'middle' }} />

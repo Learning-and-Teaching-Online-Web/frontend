@@ -1,40 +1,40 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Palette, Code, Globe, Video, Camera, TrendingUp, FileText, DollarSign, Atom, Share2 } from 'lucide-react';
+import { Calculator, Globe, Code, Atom, BookOpen, Award, Music, Sparkles } from 'lucide-react';
 
 const TopCategories: React.FC = () => {
   const navigate = useNavigate();
-  const onSelectCategory = (_categoryName: string) => navigate('/courses');
-  const onViewAll = () => navigate('/courses');
+
   const categoriesList = [
-    { name: 'Nghệ thuật & Thiết kế', icon: Palette, count: 38 },
-    { name: 'Phát triển phần mềm', icon: Code, count: 38 },
-    { name: 'Giao tiếp', icon: Globe, count: 38 },
-    { name: 'Quay phim', icon: Video, count: 38 },
-    { name: 'Nhiếp ảnh', icon: Camera, count: 38 },
-    { name: 'Marketing', icon: TrendingUp, count: 38 },
-    { name: 'Viết nội dung', icon: FileText, count: 38 },
-    { name: 'Tài chính', icon: DollarSign, count: 38 },
-    { name: 'Khoa học', icon: Atom, count: 38 },
-    { name: 'Mạng máy tính', icon: Share2, count: 38 }
+    { name: 'Toán Học', icon: Calculator, count: '120+ Lớp', query: 'Toán' },
+    { name: 'Tiếng Anh & Ngoại Ngữ', icon: Globe, count: '150+ Lớp', query: 'Tiếng Anh' },
+    { name: 'Lập Trình & CNTT', icon: Code, count: '85+ Lớp', query: 'Lập Trình' },
+    { name: 'Vật Lý & Hóa Học', icon: Atom, count: '90+ Lớp', query: 'Vật Lý' },
+    { name: 'Ngữ Văn & Lịch Sử', icon: BookOpen, count: '65+ Lớp', query: 'Văn' },
+    { name: 'Luyện Thi Đại Học / Chuyên', icon: Award, count: '200+ Lớp', query: 'Luyện thi' },
+    { name: 'Âm Nhạc & Nghệ Thuật', icon: Music, count: '45+ Lớp', query: 'Nghệ thuật' },
+    { name: 'Kỹ Năng & Tin Học', icon: Sparkles, count: '70+ Lớp', query: 'Tin học' },
   ];
 
+  const handleSelectCategory = (query: string) => {
+    navigate(`/lop-hoc-moi?search=${encodeURIComponent(query)}`);
+  };
+
   return (
-    <section className="top-categories-section" style={{ padding: '80px 0 40px 0' }}>
+    <section className="top-categories-section">
       <div className="container">
-        
-        {/* Section Header */}
         <div className="section-header-row">
           <div className="section-title-group">
-            <h2>Danh mục hàng đầu</h2>
-            <p>Khám phá các danh mục phổ biến của chúng tôi</p>
+            <span className="section-subtitle">Danh Mục Môn Học</span>
+            <h2 className="section-title">
+              Các Môn Học <span>Được Quan Tâm Nhất</span>
+            </h2>
           </div>
-          <button className="section-header-btn" onClick={onViewAll}>
-            Tất cả danh mục
+          <button className="section-header-btn" onClick={() => navigate('/lop-hoc-moi')}>
+            Xem tất cả môn học
           </button>
         </div>
 
-        {/* Categories Grid */}
         <div className="categories-grid">
           {categoriesList.map((cat, idx) => {
             const Icon = cat.icon;
@@ -42,18 +42,17 @@ const TopCategories: React.FC = () => {
               <div 
                 key={idx} 
                 className="category-card"
-                onClick={() => onSelectCategory(cat.name)}
+                onClick={() => handleSelectCategory(cat.query)}
               >
                 <div className="category-icon-wrapper">
                   <Icon size={24} />
                 </div>
                 <h3 className="category-name">{cat.name}</h3>
-                <span className="category-courses-count">{cat.count} Khóa học</span>
+                <span className="category-courses-count">{cat.count}</span>
               </div>
             );
           })}
         </div>
-
       </div>
     </section>
   );

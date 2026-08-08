@@ -15,7 +15,7 @@ export interface DashboardStats {
   activeSchedules: number;
 }
 
-export type TeacherTab = 'overview' | 'courses' | 'schedules' | 'bookings' | 'articles' | 'reviews' | 'wallet' | 'profile';
+export type TeacherTab = 'overview' | 'courses' | 'schedules' | 'bookings' | 'articles' | 'reviews' | 'wallet' | 'profile' | 'offline_classes';
 
 export const useTeacherDashboard = () => {
   const navigate = useNavigate();
@@ -119,7 +119,14 @@ export const useTeacherDashboard = () => {
     try {
       // 0. Fetch My Profile & Certificates
       const profileRes = await tutorApi.getMyProfile();
-      if (profileRes.success) setTutorProfile(profileRes.data);
+      if (profileRes.success && profileRes.data) {
+        setTutorProfile(profileRes.data);
+        const rawName = profileRes.data.full_name || profileRes.data.user?.full_name || authStorage.getUserName();
+        if (rawName && rawName !== 'Người dùng') {
+          const cleanName = rawName.replace(/^Học viên\s+/i, '');
+          setTeacherName(cleanName);
+        }
+      }
 
       // 1. Fetch Stats
       const statsRes = await tutorApi.getStats();
@@ -191,11 +198,33 @@ export const useTeacherDashboard = () => {
     }
 
     if (name) {
-      setTeacherName(name);
+      const cleanName = name.replace(/^Học viên\s+/i, '');
+      setTeacherName(cleanName);
     }
 
     loadDashboardData();
   }, [navigate]);
+
+  const handleAvatarUpload = async (file: File) => {
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64Url = reader.result as string;
+        try {
+          await authApi.updateProfile({ avatarUrl: base64Url });
+          await tutorApi.updateMyProfile({ avatarUrl: base64Url });
+          window.dispatchEvent(new Event('authChange'));
+          toast.success('Cập nhật ảnh đại diện gia sư thành công!');
+          loadDashboardData();
+        } catch (err: any) {
+          toast.error(err.response?.data?.error || 'Tải ảnh đại diện thất bại.');
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (err: any) {
+      toast.error('Lỗi khi đọc tệp hình ảnh.');
+    }
+  };
 
 
 
@@ -957,6 +986,7 @@ export const useTeacherDashboard = () => {
     setActiveTab,
     isLoading,
     teacherName,
+    handleAvatarUpload,
     stats,
     tutorProfile,
     isApprovedTutor,
@@ -1062,6 +1092,7 @@ export const useTeacherDashboard = () => {
     handleDeleteArticle,
     // Booking actions
     handleConfirmBooking,
-    handleCancelBooking
+    handleCancelBooking,
+    loadDashboardData
   };
 };

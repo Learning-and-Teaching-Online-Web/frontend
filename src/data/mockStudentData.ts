@@ -4,12 +4,13 @@ export interface StudentProfile {
   email: string;
   phone: string;
   avatar: string;
+  gender: string;
+  date_of_birth: string;
   grade_level: string;
-  learning_goals: string;
-  preferred_subjects: string[];
-  preferred_mode: 'online' | 'offline' | 'both';
-  budget_min: number;
-  budget_max: number;
+  academic_level: string;
+  province: string;
+  district: string;
+  address_detail: string;
   joinedAt: string;
 }
 
@@ -75,12 +76,13 @@ export const initialStudentProfile: StudentProfile = {
   email: "",
   phone: "",
   avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-  grade_level: "",
-  learning_goals: "",
-  preferred_subjects: [],
-  preferred_mode: "both",
-  budget_min: 0,
-  budget_max: 1000000,
+  gender: "male",
+  date_of_birth: "",
+  grade_level: "Lớp 11",
+  academic_level: "Khá",
+  province: "",
+  district: "",
+  address_detail: "",
   joinedAt: new Date().toISOString()
 };
 

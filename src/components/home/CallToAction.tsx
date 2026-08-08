@@ -1,11 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GraduationCap } from 'lucide-react';
+import { GraduationCap, UserCheck, BookOpen } from 'lucide-react';
 
 const CallToAction: React.FC = () => {
   const navigate = useNavigate();
-  const onJoinAsStudent = () => navigate('/auth');
-  const onJoinAsInstructor = () => navigate('/auth');
   return (
     <section className="cta-banner-section-wrapper" style={{ padding: '20px 0' }}>
       <div className="container">
@@ -16,16 +14,23 @@ const CallToAction: React.FC = () => {
               <div className="cta-icon-circle">
                 <GraduationCap size={28} />
               </div>
-              <h3 className="cta-title">Bắt đầu cùng Academy LMS</h3>
+              <div>
+                <h3 className="cta-title">Sẵn Sàng Bắt Đầu Học Tập Cùng NovaLearn?</h3>
+                <p style={{ margin: '4px 0 0', color: 'rgba(255, 255, 255, 0.9)', fontSize: '0.95rem' }}>
+                  Đăng ký ngay để tìm gia sư giỏi nhất hoặc đăng ký giảng dạy để tăng thu nhập.
+                </p>
+              </div>
             </div>
 
             {/* Right side: Action buttons */}
             <div className="cta-right-btns">
-              <button className="cta-student-btn" onClick={onJoinAsStudent}>
-                Tôi là học viên
+              <button className="cta-student-btn" onClick={() => navigate('/tim-gia-su')}>
+                <UserCheck size={16} style={{ marginRight: '6px' }} />
+                Tìm gia sư ngay
               </button>
-              <button className="cta-instructor-btn" onClick={onJoinAsInstructor}>
-                Trở thành giảng viên
+              <button className="cta-instructor-btn" onClick={() => navigate('/lop-hoc-moi')}>
+                <BookOpen size={16} style={{ marginRight: '6px' }} />
+                Dành cho gia sư
               </button>
             </div>
           </div>

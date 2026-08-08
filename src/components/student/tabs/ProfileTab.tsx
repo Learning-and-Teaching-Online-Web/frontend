@@ -8,24 +8,27 @@ interface ProfileTabProps {
   formState: {
     formName: string;
     formPhone: string;
+    formGender: string;
+    formDateOfBirth: string;
     formGrade: string;
-    formGoals: string;
-    formSubjects: string[];
-    formMode: 'online' | 'offline' | 'both';
-    formBudgetMax: number;
+    formAcademicLevel: string;
+    formProvince: string;
+    formDistrict: string;
+    formAddressDetail: string;
   };
   formSetters: {
     setFormName: (v: string) => void;
     setFormPhone: (v: string) => void;
+    setFormGender: (v: string) => void;
+    setFormDateOfBirth: (v: string) => void;
     setFormGrade: (v: string) => void;
-    setFormGoals: (v: string) => void;
-    setFormSubjects: (v: string[]) => void;
-    setFormMode: (v: 'online' | 'offline' | 'both') => void;
-    setFormBudgetMax: (v: number) => void;
+    setFormAcademicLevel: (v: string) => void;
+    setFormProvince: (v: string) => void;
+    setFormDistrict: (v: string) => void;
+    setFormAddressDetail: (v: string) => void;
   };
   handlers: {
     handleProfileSubmit: (e: React.FormEvent) => void;
-    handleSubjectCheckbox: (subject: string) => void;
     handleAvatarFileChange?: (file: File) => void;
   };
 }
@@ -40,7 +43,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
     <div>
       <div className="content-header">
         <h2>Cài đặt hồ sơ học viên</h2>
-        <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Cập nhật thông tin lớp học và mục tiêu học tập để tìm giảng viên phù hợp</span>
+        <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Cập nhật thông tin cá nhân và trình độ học vấn của bạn</span>
       </div>
 
       <form onSubmit={handlers.handleProfileSubmit}>
@@ -83,7 +86,9 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
             </label>
           </div>
         </div>
+
         <div className="profile-form-grid">
+          {/* 1. Full Name */}
           <div className="profile-form-group">
             <label htmlFor="fullName">Họ và tên *</label>
             <input 
@@ -96,6 +101,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
             />
           </div>
 
+          {/* 2. Email */}
           <div className="profile-form-group">
             <label htmlFor="email">Email (Không được thay đổi)</label>
             <input 
@@ -108,6 +114,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
             />
           </div>
 
+          {/* 3. Phone */}
           <div className="profile-form-group">
             <label htmlFor="phone">Số điện thoại</label>
             <input 
@@ -116,77 +123,116 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
               className="profile-form-input" 
               value={formState.formPhone}
               onChange={(e) => formSetters.setFormPhone(e.target.value)}
+              placeholder="VD: 0987654321..."
             />
           </div>
 
+          {/* 4. Gender */}
           <div className="profile-form-group">
-            <label htmlFor="gradeLevel">Trình độ học vấn</label>
+            <label htmlFor="gender">Giới tính</label>
+            <select 
+              id="gender"
+              className="profile-form-select"
+              value={formState.formGender}
+              onChange={(e) => formSetters.setFormGender(e.target.value)}
+            >
+              <option value="male">Nam</option>
+              <option value="female">Nữ</option>
+              <option value="other">Khác</option>
+            </select>
+          </div>
+
+          {/* 5. Date of Birth */}
+          <div className="profile-form-group">
+            <label htmlFor="dateOfBirth">Ngày tháng năm sinh</label>
+            <input 
+              type="date" 
+              id="dateOfBirth"
+              className="profile-form-input" 
+              value={formState.formDateOfBirth}
+              onChange={(e) => formSetters.setFormDateOfBirth(e.target.value)}
+            />
+          </div>
+
+          {/* 6. Grade Level */}
+          <div className="profile-form-group">
+            <label htmlFor="gradeLevel">Trình độ học vấn / Khối lớp</label>
             <select 
               id="gradeLevel"
               className="profile-form-select"
               value={formState.formGrade}
               onChange={(e) => formSetters.setFormGrade(e.target.value)}
             >
+              <option value="Lớp 1">Lớp 1</option>
+              <option value="Lớp 2">Lớp 2</option>
+              <option value="Lớp 3">Lớp 3</option>
+              <option value="Lớp 4">Lớp 4</option>
+              <option value="Lớp 5">Lớp 5</option>
+              <option value="Lớp 6">Lớp 6</option>
+              <option value="Lớp 7">Lớp 7</option>
+              <option value="Lớp 8">Lớp 8</option>
+              <option value="Lớp 9">Lớp 9</option>
               <option value="Lớp 10">Lớp 10</option>
               <option value="Lớp 11">Lớp 11</option>
               <option value="Lớp 12">Lớp 12</option>
-              <option value="Đại học">Đại học</option>
-              <option value="Khác">Khác / Người đi làm</option>
+              <option value="Ôn thi Đại Học">Ôn thi Đại Học</option>
+              <option value="Đại học / Khác">Đại học / Người đi làm / Khác</option>
             </select>
           </div>
 
+          {/* 7. Academic Level */}
           <div className="profile-form-group">
-            <label htmlFor="preferredMode">Hình thức học mong muốn</label>
+            <label htmlFor="academicLevel">Học lực hiện tại</label>
             <select 
-              id="preferredMode"
+              id="academicLevel"
               className="profile-form-select"
-              value={formState.formMode}
-              onChange={(e) => formSetters.setFormMode(e.target.value as 'online' | 'offline' | 'both')}
+              value={formState.formAcademicLevel}
+              onChange={(e) => formSetters.setFormAcademicLevel(e.target.value)}
             >
-              <option value="online">Học trực tuyến (Online)</option>
-              <option value="offline">Học trực tiếp (Offline)</option>
-              <option value="both">Cả hai hình thức</option>
+              <option value="Giỏi">Giỏi / Xuất sắc</option>
+              <option value="Khá">Khá</option>
+              <option value="Trung bình">Trung bình</option>
+              <option value="Yếu">Mất gốc / Yếu</option>
             </select>
           </div>
 
+          {/* 8. Province */}
           <div className="profile-form-group">
-            <label htmlFor="budgetMax">Học phí tối đa mong muốn (VNĐ/giờ)</label>
+            <label htmlFor="province">Tỉnh / Thành phố</label>
             <input 
-              type="number" 
-              id="budgetMax"
-              step="50000"
-              min="50000"
+              type="text" 
+              id="province"
               className="profile-form-input" 
-              value={formState.formBudgetMax}
-              onChange={(e) => formSetters.setFormBudgetMax(Number(e.target.value))}
+              value={formState.formProvince}
+              onChange={(e) => formSetters.setFormProvince(e.target.value)}
+              placeholder="VD: Hà Nội, TP. Hồ Chí Minh..."
             />
           </div>
 
-          <div className="profile-form-group full-width">
-            <label>Môn học quan tâm học tập</label>
-            <div className="profile-checkbox-group">
-              {['Photography', 'Design', 'Office', 'Academy', 'University'].map(subj => (
-                <label key={subj} className="profile-checkbox-label">
-                  <input 
-                    type="checkbox"
-                    checked={formState.formSubjects.includes(subj)}
-                    onChange={() => handlers.handleSubjectCheckbox(subj)}
-                  />
-                  <span>{subj}</span>
-                </label>
-              ))}
-            </div>
+          {/* 9. District */}
+          <div className="profile-form-group">
+            <label htmlFor="district">Quận / Huyện</label>
+            <input 
+              type="text" 
+              id="district"
+              className="profile-form-input" 
+              value={formState.formDistrict}
+              onChange={(e) => formSetters.setFormDistrict(e.target.value)}
+              placeholder="VD: Cầu Giấy, Quận 1..."
+            />
           </div>
 
+          {/* 10. Address Detail */}
           <div className="profile-form-group full-width">
-            <label htmlFor="learningGoals">Mục tiêu học tập cá nhân</label>
-            <textarea 
-              id="learningGoals"
-              className="profile-form-textarea" 
-              placeholder="Mục tiêu cụ thể như thi lấy chứng chỉ, cải thiện kỹ năng Photoshop..."
-              value={formState.formGoals}
-              onChange={(e) => formSetters.setFormGoals(e.target.value)}
-            ></textarea>
+            <label htmlFor="addressDetail">Địa chỉ chi tiết (Số nhà, tên đường, phường/xã)</label>
+            <input 
+              type="text" 
+              id="addressDetail"
+              className="profile-form-input" 
+              value={formState.formAddressDetail}
+              onChange={(e) => formSetters.setFormAddressDetail(e.target.value)}
+              placeholder="VD: Số 12, ngõ 34, đường Nguyễn Trãi, Phường Thanh Xuân Trung..."
+            />
           </div>
         </div>
 

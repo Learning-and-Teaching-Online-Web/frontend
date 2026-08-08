@@ -51,12 +51,29 @@ const Navbar: React.FC = () => {
           </li>
           <li>
             <NavLink
+              to="/tim-gia-su"
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+            >
+              Tìm Gia Sư
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/lop-hoc-moi"
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+            >
+              Lớp Offline
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
               to="/courses"
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             >
               Khóa học
             </NavLink>
           </li>
+
           <li>
             <NavLink
               to="/blog"

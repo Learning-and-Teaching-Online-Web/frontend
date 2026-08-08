@@ -13,6 +13,8 @@ const InstructorList: React.FC = () => {
   const [favoriteTutorIds, setFavoriteTutorIds] = useState<string[]>([]);
 
   const isAuthenticated = authStorage.isAuthenticated();
+  const userRole = authStorage.getUserRole();
+  const isTutorOrAdmin = userRole === 'tutor' || userRole === 'admin';
 
   useEffect(() => {
     const fetchTutors = async () => {
@@ -30,7 +32,7 @@ const InstructorList: React.FC = () => {
     };
 
     const fetchFavorites = async () => {
-      if (!isAuthenticated) return;
+      if (!isAuthenticated || isTutorOrAdmin) return;
       try {
         const res = await favoriteApi.getMyFavorites();
         if (res && res.success && Array.isArray(res.data)) {
@@ -44,11 +46,16 @@ const InstructorList: React.FC = () => {
 
     fetchTutors();
     fetchFavorites();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isTutorOrAdmin]);
 
   const handleToggleFavorite = async (tutorId: string, tutorName: string) => {
     if (!isAuthenticated) {
       toast.warning('Bạn cần đăng nhập với tài khoản Học viên để thêm giảng viên yêu thích.');
+      return;
+    }
+
+    if (isTutorOrAdmin) {
+      toast.error('Chỉ tài khoản Học viên mới có thể lưu giảng viên yêu thích.');
       return;
     }
 
@@ -113,37 +120,39 @@ const InstructorList: React.FC = () => {
               return (
                 <div key={tutor.tutor_id} className="instructor-card">
                   <div className="instructor-card-top">
-                    {/* Favorite Button */}
-                    <button
-                      onClick={() => handleToggleFavorite(tutor.tutor_id, name)}
-                      title={isFav ? "Bỏ yêu thích" : "Yêu thích giảng viên"}
-                      style={{
-                        position: 'absolute',
-                        top: '12px',
-                        right: '12px',
-                        background: 'rgba(255, 255, 255, 0.95)',
-                        border: 'none',
-                        borderRadius: '50%',
-                        width: '36px',
-                        height: '36px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                        transition: 'all 0.2s ease',
-                        zIndex: 2
-                      }}
-                    >
-                      <Heart
-                        size={18}
-                        fill={isFav ? '#ef4444' : 'none'}
-                        color={isFav ? '#ef4444' : '#64748b'}
-                      />
-                    </button>
+                    {/* Favorite Button (only show for student / guest) */}
+                    {!isTutorOrAdmin && (
+                      <button
+                        onClick={() => handleToggleFavorite(tutor.tutor_id, name)}
+                        title={isFav ? "Bỏ yêu thích" : "Yêu thích giảng viên"}
+                        style={{
+                          position: 'absolute',
+                          top: '12px',
+                          right: '12px',
+                          background: 'rgba(255, 255, 255, 0.95)',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: '36px',
+                          height: '36px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                          transition: 'all 0.2s ease',
+                          zIndex: 2
+                        }}
+                      >
+                        <Heart
+                          size={18}
+                          fill={isFav ? '#ef4444' : 'none'}
+                          color={isFav ? '#ef4444' : '#64748b'}
+                        />
+                      </button>
+                    )}
 
                     {/* Avatar */}
-                    <div className="instructor-avatar-wrapper">
+                    <Link to={`/instructors/${tutor.tutor_id}`} className="instructor-avatar-wrapper" style={{ textDecoration: 'none' }}>
                       {avatar ? (
                         <img
                           src={avatar}
@@ -155,13 +164,18 @@ const InstructorList: React.FC = () => {
                           {initials}
                         </div>
                       )}
-                    </div>
+                    </Link>
                   </div>
 
                   <div className="instructor-card-body">
-                    <h3 className="instructor-name">{name}</h3>
-                    {tutor.specialization && (
-                      <p className="instructor-spec">{tutor.specialization}</p>
+                    <Link to={`/instructors/${tutor.tutor_id}`} style={{ textDecoration: 'none' }}>
+                      <h3 className="instructor-name">{name}</h3>
+                    </Link>
+                    {tutor.current_role && (
+                      <p className="instructor-spec">{tutor.current_role}</p>
+                    )}
+                    {tutor.university && !tutor.current_role && (
+                      <p className="instructor-spec">{tutor.university}</p>
                     )}
                     {tutor.bio && (
                       <p className="instructor-bio">{tutor.bio}</p>
@@ -183,13 +197,34 @@ const InstructorList: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Link to courses of this tutor */}
-                    <Link
-                      to={`/courses?tutor_id=${tutor.tutor_id}`}
-                      className="instructor-view-courses"
-                    >
-                      Xem khóa học
-                    </Link>
+                    {/* Link to detail profile of this tutor */}
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                      <Link
+                        to={`/instructors/${tutor.tutor_id}`}
+                        className="instructor-view-courses"
+                        style={{ flex: 1, margin: 0 }}
+                      >
+                        Xem hồ sơ gia sư
+                      </Link>
+                      {tutor.total_courses > 0 && (
+                        <Link
+                          to={`/courses?tutor_id=${tutor.tutor_id}`}
+                          className="instructor-view-courses"
+                          style={{
+                            flex: '0 0 auto',
+                            margin: 0,
+                            background: '#f1f5f9',
+                            borderColor: '#cbd5e1',
+                            color: '#475569',
+                            fontSize: '12px',
+                            padding: '10px 12px'
+                          }}
+                          title="Xem danh sách khóa học của gia sư"
+                        >
+                          Khóa học ({tutor.total_courses})
+                        </Link>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

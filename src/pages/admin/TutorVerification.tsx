@@ -3,14 +3,32 @@ import AdminLayout from '../../components/admin/AdminLayout';
 import { adminApi } from '../../services/adminApi';
 import { Eye, Check, X, FileText, Clock } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { formatMoneyString } from '../../utils/formatters';
 
 interface TutorItem {
   tutor_id: string;
   user_id: string;
-  bio: string | null;
-  education: string | null;
-  experience_years: number | null;
+  tutor_code?: string | null;
+  full_name?: string | null;
+  phone?: string | null;
+  avatar_url?: string | null;
+  date_of_birth?: string | null;
+  gender?: string | null;
+  hometown?: string | null;
+  current_address?: string | null;
+  id_card_front_url?: string | null;
+  university?: string | null;
+  major?: string | null;
+  graduation_year?: number | null;
+  current_role?: string | null;
+  min_salary_requirement?: string | null;
+  experience_years?: number | null;
+  rating?: number | null;
+  review_count?: number | null;
+  teaching_mode?: string | null;
   verified_status: 'pending' | 'approved' | 'rejected';
+  created_at?: string;
+  bio?: string | null;
   user: {
     full_name: string;
     email: string;
@@ -288,42 +306,160 @@ const TutorVerification: React.FC = () => {
         {/* Selected Tutor profile detail and certificate gallery */}
         {selectedTutor && (
           <div className="admin-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--admin-border)', paddingBottom: '12px' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: 600, margin: 0 }}>Hồ sơ chi tiết</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--admin-border)', paddingBottom: '12px' }}>
+              <div>
+                <h2 style={{ fontSize: '18px', fontWeight: 600, margin: 0 }}>Hồ sơ Gia sư Chi tiết</h2>
+                {selectedTutor.tutor_code && (
+                  <span style={{ fontSize: '12px', color: '#6366f1', fontWeight: 700 }}>Mã số: {selectedTutor.tutor_code}</span>
+                )}
+              </div>
               <button onClick={() => setSelectedTutor(null)} className="admin-btn sm secondary">Đóng</button>
             </div>
 
-            <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
+            {/* Profile Header Row */}
+            <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', alignItems: 'center', background: 'rgba(255, 255, 255, 0.03)', padding: '14px', borderRadius: '10px', border: '1px solid var(--admin-border)' }}>
               <img 
-                src={selectedTutor.user?.avatar_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=100&q=80'} 
+                src={selectedTutor.avatar_url || selectedTutor.user?.avatar_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=100&q=80'} 
                 alt="Avatar"
-                style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--admin-border)' }}
+                style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #6366f1' }}
               />
-              <div>
-                <h3 style={{ fontSize: '16px', fontWeight: 600, margin: '0 0 4px 0' }}>{selectedTutor.user?.full_name || selectedTutor.user?.email?.split('@')[0] || 'Giảng viên'}</h3>
-                <span style={{ fontSize: '13px', color: 'var(--admin-text-muted)', display: 'block' }}>Email: {selectedTutor.user?.email}</span>
-                <span style={{ fontSize: '13px', color: 'var(--admin-text-muted)', display: 'block' }}>SĐT: {selectedTutor.user?.phone || 'Chưa cung cấp'}</span>
+              <div style={{ flex: 1 }}>
+                <h3 style={{ fontSize: '17px', fontWeight: 700, margin: '0 0 4px 0', color: 'var(--admin-text-main)' }}>
+                  {selectedTutor.full_name || selectedTutor.user?.full_name || selectedTutor.user?.email?.split('@')[0] || 'Giảng viên'}
+                </h3>
+                <div style={{ fontSize: '13px', color: 'var(--admin-text-muted)', display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                  <span>📧 Email: <strong style={{ color: 'var(--admin-text-main)' }}>{selectedTutor.user?.email}</strong></span>
+                  <span>📞 SĐT: <strong style={{ color: 'var(--admin-text-main)' }}>{selectedTutor.phone || selectedTutor.user?.phone || 'Chưa cập nhật'}</strong></span>
+                </div>
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-              <div>
-                <span style={{ fontSize: '12px', color: 'var(--admin-text-muted)', display: 'block', textTransform: 'uppercase' }}>Học vấn / Bằng cấp</span>
-                <div style={{ fontSize: '14px', background: 'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--admin-border)' }}>
-                  {selectedTutor.education || 'Chưa điền học vấn.'}
+            {/* Comprehensive Tutor Attributes Grid */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '24px' }}>
+              
+              {/* Group 1: Chuyên môn & Học vấn */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+                <div>
+                  <span style={{ fontSize: '11px', color: 'var(--admin-text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: 600 }}>Hiện là</span>
+                  <div style={{ fontSize: '13px', background: 'rgba(255,255,255,0.02)', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', fontWeight: 600, color: '#818cf8' }}>
+                    {selectedTutor.current_role || 'Chưa cập nhật'}
+                  </div>
+                </div>
+
+                <div>
+                  <span style={{ fontSize: '11px', color: 'var(--admin-text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: 600 }}>Trường Đại học / Cao đẳng</span>
+                  <div style={{ fontSize: '13px', background: 'rgba(255,255,255,0.02)', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)' }}>
+                    {selectedTutor.university || 'Chưa cập nhật'}
+                  </div>
+                </div>
+
+                <div>
+                  <span style={{ fontSize: '11px', color: 'var(--admin-text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: 600 }}>Chuyên ngành</span>
+                  <div style={{ fontSize: '13px', background: 'rgba(255,255,255,0.02)', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)' }}>
+                    {selectedTutor.major || 'Chưa cập nhật'}
+                  </div>
+                </div>
+
+                <div>
+                  <span style={{ fontSize: '11px', color: 'var(--admin-text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: 600 }}>Năm tốt nghiệp</span>
+                  <div style={{ fontSize: '13px', background: 'rgba(255,255,255,0.02)', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)' }}>
+                    {selectedTutor.graduation_year || 'Chưa cập nhật'}
+                  </div>
                 </div>
               </div>
-              <div>
-                <span style={{ fontSize: '12px', color: 'var(--admin-text-muted)', display: 'block', textTransform: 'uppercase' }}>Kinh nghiệm giảng dạy</span>
-                <div style={{ fontSize: '14px', background: 'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--admin-border)' }}>
-                  {selectedTutor.experience_years ? `${selectedTutor.experience_years} năm` : 'Chưa cập nhật.'}
+
+              {/* Group 2: Cá nhân & Địa điểm */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+                <div>
+                  <span style={{ fontSize: '11px', color: 'var(--admin-text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: 600 }}>Ngày sinh & Giới tính</span>
+                  <div style={{ fontSize: '13px', background: 'rgba(255,255,255,0.02)', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)' }}>
+                    {selectedTutor.date_of_birth ? new Date(selectedTutor.date_of_birth).toLocaleDateString('vi-VN') : 'Chưa cập nhật'} 
+                    {' • '}
+                    {selectedTutor.gender === 'male' ? 'Nam' : selectedTutor.gender === 'female' ? 'Nữ' : 'Khác'}
+                  </div>
+                </div>
+
+                <div>
+                  <span style={{ fontSize: '11px', color: 'var(--admin-text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: 600 }}>Nguyên quán</span>
+                  <div style={{ fontSize: '13px', background: 'rgba(255,255,255,0.02)', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)' }}>
+                    {selectedTutor.hometown || 'Chưa cập nhật'}
+                  </div>
+                </div>
+
+                <div>
+                  <span style={{ fontSize: '11px', color: 'var(--admin-text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: 600 }}>Địa chỉ hiện tại / Khu vực dạy</span>
+                  <div style={{ fontSize: '13px', background: 'rgba(255,255,255,0.02)', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)' }}>
+                    {selectedTutor.current_address || 'Chưa cập nhật'}
+                  </div>
+                </div>
+
+                <div>
+                  <span style={{ fontSize: '11px', color: 'var(--admin-text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: 600 }}>Số năm kinh nghiệm</span>
+                  <div style={{ fontSize: '13px', background: 'rgba(255,255,255,0.02)', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', fontWeight: 600, color: '#34d399' }}>
+                    {selectedTutor.experience_years ? `${selectedTutor.experience_years} năm kinh nghiệm` : 'Chưa cập nhật'}
+                  </div>
                 </div>
               </div>
-              <div>
-                <span style={{ fontSize: '12px', color: 'var(--admin-text-muted)', display: 'block', textTransform: 'uppercase' }}>Giới thiệu bản thân</span>
-                <div style={{ fontSize: '14px', background: 'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--admin-border)' }}>
-                  {selectedTutor.bio || 'Chưa điền giới thiệu.'}
+
+              {/* Group 3: Hình thức & Lương yêu cầu */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+                <div>
+                  <span style={{ fontSize: '11px', color: 'var(--admin-text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: 600 }}>Yêu cầu lương tối thiểu</span>
+                  <div style={{ fontSize: '13px', background: 'rgba(255,255,255,0.02)', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', fontWeight: 700, color: '#f59e0b' }}>
+                    {formatMoneyString(selectedTutor.min_salary_requirement)}
+                  </div>
                 </div>
+
+                <div>
+                  <span style={{ fontSize: '11px', color: 'var(--admin-text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: 600 }}>Hình thức giảng dạy</span>
+                  <div style={{ fontSize: '13px', background: 'rgba(255,255,255,0.02)', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)' }}>
+                    {selectedTutor.teaching_mode === 'online' ? 'Chỉ dạy Trực tuyến (Online)' : selectedTutor.teaching_mode === 'offline' ? 'Chỉ dạy Trực tiếp (Offline)' : 'Linh hoạt (Online & Offline)'}
+                  </div>
+                </div>
+
+                <div>
+                  <span style={{ fontSize: '11px', color: 'var(--admin-text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: 600 }}>Đánh giá hệ thống</span>
+                  <div style={{ fontSize: '13px', background: 'rgba(255,255,255,0.02)', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)' }}>
+                    ⭐ {selectedTutor.rating ? Number(selectedTutor.rating).toFixed(1) : '5.0'} ({selectedTutor.review_count || 0} đánh giá)
+                  </div>
+                </div>
+              </div>
+
+              {/* Group 4: Giới thiệu bản thân */}
+              <div>
+                <span style={{ fontSize: '11px', color: 'var(--admin-text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: 600, marginBottom: '2px' }}>Giới thiệu bản thân</span>
+                <div style={{ fontSize: '13px', background: 'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--admin-border)', whiteSpace: 'pre-line', lineHeight: 1.5 }}>
+                  {selectedTutor.bio || 'Chưa có thông tin giới thiệu.'}
+                </div>
+              </div>
+
+              {/* Group 5: Ảnh CCCD Mặt trước */}
+              <div>
+                <span style={{ fontSize: '11px', color: 'var(--admin-text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: 600, marginBottom: '4px' }}>Ảnh CCCD / CMND Mặt trước</span>
+                {selectedTutor.id_card_front_url ? (
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '8px', border: '1px solid var(--admin-border)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <img 
+                      src={selectedTutor.id_card_front_url} 
+                      alt="CCCD Mặt trước"
+                      style={{ width: '130px', height: '80px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--admin-border)', cursor: 'pointer' }}
+                      onClick={() => handleOpenCertFile(selectedTutor.id_card_front_url!)}
+                      title="Nhấp để phóng to / xem ảnh gốc"
+                    />
+                    <div>
+                      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--admin-text-main)', display: 'block' }}>Ảnh xác thực định danh (CCCD)</span>
+                      <button 
+                        onClick={() => handleOpenCertFile(selectedTutor.id_card_front_url!)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: 'var(--admin-primary)', textDecoration: 'underline', padding: 0, marginTop: '4px' }}
+                      >
+                        Xem/Mở ảnh gốc ↗
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '13px', color: 'var(--admin-text-muted)', background: 'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--admin-border)', fontStyle: 'italic' }}>
+                    Chưa tải lên ảnh CCCD mặt trước.
+                  </div>
+                )}
               </div>
             </div>
 

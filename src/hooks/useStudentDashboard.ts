@@ -16,6 +16,8 @@ import { bookingApi } from '../services/bookingApi';
 import { favoriteApi } from '../services/favoriteApi';
 import authStorage from '../utils/authStorage';
 import { quizApi } from '../services/quizApi';
+import axiosClient from '../services/axiosClient';
+import type { StudentClassRequest } from '../components/student/tabs/ClassRequestsTab';
 
 export const useStudentDashboard = () => {
   const navigate = useNavigate();
@@ -28,16 +30,74 @@ export const useStudentDashboard = () => {
   const [classSessions, setClassSessions] = useState<ClassSession[]>([]);
   const [quizAttempts, setQuizAttempts] = useState<QuizAttempt[]>([]);
   const [favoriteTutors, setFavoriteTutors] = useState<FavoriteTutor[]>([]);
+  const [myClassRequests, setMyClassRequests] = useState<StudentClassRequest[]>([]);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [walletTransactions, setWalletTransactions] = useState<any[]>([]);
 
   // Form states for profile edit
   const [formName, setFormName] = useState('');
   const [formPhone, setFormPhone] = useState('');
-  const [formGrade, setFormGrade] = useState('');
-  const [formGoals, setFormGoals] = useState('');
-  const [formSubjects, setFormSubjects] = useState<string[]>([]);
-  const [formMode, setFormMode] = useState<'online' | 'offline' | 'both'>('both');
-  const [formBudgetMax, setFormBudgetMax] = useState<number>(1000000);
+  const [formGender, setFormGender] = useState('male');
+  const [formDateOfBirth, setFormDateOfBirth] = useState('');
+  const [formGrade, setFormGrade] = useState('Lớp 11');
+  const [formAcademicLevel, setFormAcademicLevel] = useState('Khá');
+  const [formProvince, setFormProvince] = useState('');
+  const [formDistrict, setFormDistrict] = useState('');
+  const [formAddressDetail, setFormAddressDetail] = useState('');
   const [avatarBase64, setAvatarBase64] = useState<string | null>(null);
+
+  // Helper mapper functions for bookings
+  const mapBookingToEnrolledCourse = (b: any): EnrolledCourse => {
+    const hasReview = Array.isArray(b.reviews) ? b.reviews.length > 0 : !!b.reviews;
+    return {
+      course_id: b.course?.course_id || '',
+      booking_id: b.booking_id,
+      type: b.course?.type || 'online',
+      title: b.course?.title || 'Khóa học',
+      subject: b.course?.subject || 'Môn học',
+      instructor: b.course?.tutor?.user?.full_name || 'Giảng viên',
+      thumbnail: b.course?.thumbnail_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500&auto=format&fit=crop&q=60',
+      progress: b.status === 'completed' ? 100 : 50,
+      completedLessons: b.status === 'completed' ? (b.course?.total_sessions || 1) : 0,
+      totalLessons: b.course?.total_sessions || 1,
+      nextSessionTime: b.schedule?.start_time || undefined,
+      bookingStatus: b.status,
+      paymentStatus: b.payment_status,
+      isReviewed: hasReview
+    };
+  };
+
+  const mapBookingToClassSession = (b: any): ClassSession => {
+    const hasReview = Array.isArray(b.reviews) ? b.reviews.length > 0 : !!b.reviews;
+    return {
+      session_id: b.booking_id,
+      booking_id: b.booking_id,
+      course_id: b.course?.course_id,
+      type: b.course?.type || 'online',
+      courseTitle: b.course?.title || 'Khóa học',
+      tutorName: b.course?.tutor?.user?.full_name || 'Giảng viên',
+      tutorAvatar: b.course?.tutor?.user?.avatar_url || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
+      startTime: b.schedule?.start_time || new Date().toISOString(),
+      endTime: b.schedule?.end_time || new Date().toISOString(),
+      status: b.status === 'confirmed' ? 'scheduled' : (b.status === 'completed' ? 'completed' : 'cancelled'),
+      meetingLink: `https://meet.jit.si/novalearn-${b.booking_id}`,
+      bookingStatus: b.status,
+      paymentStatus: b.payment_status,
+      isReviewed: hasReview
+    };
+  };
+
+  const fetchWalletData = async () => {
+    try {
+      const walletRes = await bookingApi.getWallet();
+      if (walletRes && walletRes.success && walletRes.data) {
+        setWalletBalance(walletRes.data.balance || 0);
+        setWalletTransactions(walletRes.data.transactions || []);
+      }
+    } catch (err) {
+      console.error('Error refreshing wallet:', err);
+    }
+  };
 
   // Authentication check
   useEffect(() => {
@@ -65,68 +125,30 @@ export const useStudentDashboard = () => {
           const dbUser = profileRes.data;
           const mappedProfile: StudentProfile = {
             student_id: dbUser.user_id,
-            fullName: dbUser.full_name,
-            email: dbUser.email,
+            fullName: dbUser.full_name || '',
+            email: dbUser.email || '',
             phone: dbUser.phone || '',
             avatar: dbUser.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+            gender: dbUser.gender || 'male',
+            date_of_birth: dbUser.date_of_birth ? dbUser.date_of_birth.split('T')[0] : '',
             grade_level: dbUser.metadata?.grade_level || 'Lớp 11',
-            learning_goals: dbUser.metadata?.learning_goals || 'Chưa thiết lập mục tiêu.',
-            preferred_subjects: dbUser.metadata?.preferred_subjects || [],
-            preferred_mode: dbUser.metadata?.preferred_mode || 'both',
-            budget_min: Number(dbUser.metadata?.budget_min) || 0,
-            budget_max: Number(dbUser.metadata?.budget_max) || 1000000,
+            academic_level: dbUser.metadata?.academic_level || 'Khá',
+            province: dbUser.metadata?.province || '',
+            district: dbUser.metadata?.district || '',
+            address_detail: dbUser.metadata?.address_detail || '',
             joinedAt: dbUser.created_at
           };
           setProfile(mappedProfile);
           setFormName(mappedProfile.fullName);
           setFormPhone(mappedProfile.phone);
+          setFormGender(mappedProfile.gender);
+          setFormDateOfBirth(mappedProfile.date_of_birth);
           setFormGrade(mappedProfile.grade_level);
-          setFormGoals(mappedProfile.learning_goals);
-          setFormSubjects(mappedProfile.preferred_subjects);
-          setFormMode(mappedProfile.preferred_mode);
-          setFormBudgetMax(mappedProfile.budget_max);
+          setFormAcademicLevel(mappedProfile.academic_level);
+          setFormProvince(mappedProfile.province);
+          setFormDistrict(mappedProfile.district);
+          setFormAddressDetail(mappedProfile.address_detail);
         }
-
-        // Helper mapper functions for bookings
-        const mapBookingToEnrolledCourse = (b: any): EnrolledCourse => {
-          const hasReview = Array.isArray(b.reviews) ? b.reviews.length > 0 : !!b.reviews;
-          return {
-            course_id: b.course?.course_id || '',
-            booking_id: b.booking_id,
-            type: b.course?.type || 'online',
-            title: b.course?.title || 'Khóa học',
-            subject: b.course?.subject || 'Môn học',
-            instructor: b.course?.tutor?.user?.full_name || 'Giảng viên',
-            thumbnail: b.course?.thumbnail_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500&auto=format&fit=crop&q=60',
-            progress: b.status === 'completed' ? 100 : 50,
-            completedLessons: b.status === 'completed' ? (b.course?.total_sessions || 1) : 0,
-            totalLessons: b.course?.total_sessions || 1,
-            nextSessionTime: b.schedule?.start_time || undefined,
-            bookingStatus: b.status,
-            paymentStatus: b.payment_status,
-            isReviewed: hasReview
-          };
-        };
-
-        const mapBookingToClassSession = (b: any): ClassSession => {
-          const hasReview = Array.isArray(b.reviews) ? b.reviews.length > 0 : !!b.reviews;
-          return {
-            session_id: b.booking_id,
-            booking_id: b.booking_id,
-            course_id: b.course?.course_id,
-            type: b.course?.type || 'online',
-            courseTitle: b.course?.title || 'Khóa học',
-            tutorName: b.course?.tutor?.user?.full_name || 'Giảng viên',
-            tutorAvatar: b.course?.tutor?.user?.avatar_url || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
-            startTime: b.schedule?.start_time || new Date().toISOString(),
-            endTime: b.schedule?.end_time || new Date().toISOString(),
-            status: b.status === 'confirmed' ? 'scheduled' : (b.status === 'completed' ? 'completed' : 'cancelled'),
-            meetingLink: `https://meet.jit.si/novalearn-${b.booking_id}`,
-            bookingStatus: b.status,
-            paymentStatus: b.payment_status,
-            isReviewed: hasReview
-          };
-        };
 
         // 2. Fetch Bookings (for Enrolled Courses & Class Sessions)
         const bookingsRes = await bookingApi.getMyBookings();
@@ -137,6 +159,9 @@ export const useStudentDashboard = () => {
           const mappedSessions = bookingsRes.data.map(mapBookingToClassSession);
           setClassSessions(mappedSessions);
         }
+
+        // Fetch Wallet Data
+        await fetchWalletData();
 
         // 3. Quiz Attempts
         const quizAttemptsRes = await quizApi.getMyAttempts();
@@ -185,6 +210,16 @@ export const useStudentDashboard = () => {
         } else {
           setFavoriteTutors([]);
         }
+
+        // 5. My Offline Class Requests
+        try {
+          const reqRes = await axiosClient.get('/class-requests/my-requests');
+          if (reqRes && reqRes.data && Array.isArray(reqRes.data.data)) {
+            setMyClassRequests(reqRes.data.data);
+          }
+        } catch {
+          setMyClassRequests([]);
+        }
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
         toast.error('Có lỗi xảy ra khi tải thông tin bảng điều khiển.');
@@ -193,6 +228,17 @@ export const useStudentDashboard = () => {
 
     fetchDashboardData();
   }, [navigate]);
+
+  const fetchMyClassRequests = async () => {
+    try {
+      const res = await axiosClient.get('/class-requests/my-requests');
+      if (res && res.data && Array.isArray(res.data.data)) {
+        setMyClassRequests(res.data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching my class requests:', err);
+    }
+  };
 
   const handleAvatarFileChange = (file: File) => {
     if (!file) return;
@@ -217,12 +263,14 @@ export const useStudentDashboard = () => {
       const payload: any = {
         fullName: formName,
         phone: formPhone,
+        gender: formGender,
+        dateOfBirth: formDateOfBirth,
         metadata: {
           grade_level: formGrade,
-          learning_goals: formGoals,
-          preferred_subjects: formSubjects,
-          preferred_mode: formMode,
-          budget_max: formBudgetMax
+          academic_level: formAcademicLevel,
+          province: formProvince,
+          district: formDistrict,
+          address_detail: formAddressDetail
         }
       };
 
@@ -238,16 +286,18 @@ export const useStudentDashboard = () => {
           ...profile,
           fullName: formName,
           phone: formPhone,
+          gender: formGender,
+          date_of_birth: formDateOfBirth,
           avatar: newAvatar,
           grade_level: formGrade,
-          learning_goals: formGoals,
-          preferred_subjects: formSubjects,
-          preferred_mode: formMode,
-          budget_max: formBudgetMax
+          academic_level: formAcademicLevel,
+          province: formProvince,
+          district: formDistrict,
+          address_detail: formAddressDetail
         };
 
         setProfile(updatedProfile);
-        authStorage.setAuthSession(undefined, undefined, formName);
+        authStorage.updateUserName(formName);
         window.dispatchEvent(new Event('authChange'));
         toast.success('Cập nhật hồ sơ thành công!');
       } else {
@@ -256,15 +306,6 @@ export const useStudentDashboard = () => {
     } catch (err: any) {
       console.error('Error updating profile:', err);
       toast.error(err?.response?.data?.error || 'Có lỗi xảy ra khi cập nhật hồ sơ.');
-    }
-  };
-
-  // Toggle Subject checkbox
-  const handleSubjectCheckbox = (subject: string) => {
-    if (formSubjects.includes(subject)) {
-      setFormSubjects(formSubjects.filter(s => s !== subject));
-    } else {
-      setFormSubjects([...formSubjects, subject]);
     }
   };
 
@@ -305,7 +346,45 @@ export const useStudentDashboard = () => {
     toast.success(`Hoàn thành bài kiểm tra "${quizTitle}"! Điểm số: ${score}/10`);
   };
 
-  // Format date helper
+  const handleDeposit = async (amount: number) => {
+    try {
+      const res = await bookingApi.depositWallet(amount);
+      if (res && res.success) {
+        await fetchWalletData();
+        return true;
+      }
+      return false;
+    } catch (err: any) {
+      console.error('Error depositing to wallet:', err);
+      toast.error(err.response?.data?.error || err.message || 'Nạp tiền thất bại.');
+      return false;
+    }
+  };
+
+  const handlePayBooking = async (bookingId: string) => {
+    try {
+      const res = await bookingApi.payBooking(bookingId);
+      if (res && res.success) {
+        await fetchWalletData();
+        const bookingsRes = await bookingApi.getMyBookings();
+        if (bookingsRes && bookingsRes.success && Array.isArray(bookingsRes.data)) {
+          const mappedCourses = bookingsRes.data.map(mapBookingToEnrolledCourse);
+          setEnrolledCourses(mappedCourses);
+
+          const mappedSessions = bookingsRes.data.map(mapBookingToClassSession);
+          setClassSessions(mappedSessions);
+        }
+        return true;
+      }
+      return false;
+    } catch (err: any) {
+      console.error('Error paying for booking:', err);
+      toast.error(err.response?.data?.error || err.message || 'Thanh toán thất bại.');
+      return false;
+    }
+  };
+
+  // Helper date-time formatters
   const formatDate = (isoString: string) => {
     const d = new Date(isoString);
     return d.toLocaleDateString('vi-VN', {
@@ -355,31 +434,40 @@ export const useStudentDashboard = () => {
     classSessions,
     quizAttempts,
     favoriteTutors,
+    myClassRequests,
+    fetchMyClassRequests,
+    walletBalance,
+    walletTransactions,
     formState: {
       formName,
       formPhone,
+      formGender,
+      formDateOfBirth,
       formGrade,
-      formGoals,
-      formSubjects,
-      formMode,
-      formBudgetMax
+      formAcademicLevel,
+      formProvince,
+      formDistrict,
+      formAddressDetail
     },
     formSetters: {
       setFormName,
       setFormPhone,
+      setFormGender,
+      setFormDateOfBirth,
       setFormGrade,
-      setFormGoals,
-      setFormSubjects,
-      setFormMode,
-      setFormBudgetMax
+      setFormAcademicLevel,
+      setFormProvince,
+      setFormDistrict,
+      setFormAddressDetail
     },
     handlers: {
       handleProfileSubmit,
-      handleSubjectCheckbox,
       handleRemoveFavorite,
       handleSimulateQuiz,
       handleLogout,
-      handleAvatarFileChange
+      handleAvatarFileChange,
+      handleDeposit,
+      handlePayBooking
     },
     helpers: {
       formatDate,

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   LayoutDashboard,
   BookOpen,
@@ -14,7 +14,9 @@ import {
   Globe,
   PlayCircle,
   Sparkles,
-  Info
+  Info,
+  Camera,
+  ClipboardList
 } from 'lucide-react';
 
 import '../styles/TeacherDashboard.css';
@@ -27,16 +29,20 @@ import { ArticlesTab } from './teacher/tabs/ArticlesTab';
 import { ReviewsTab } from './teacher/tabs/ReviewsTab';
 import { WalletTab } from './teacher/tabs/WalletTab';
 import { ProfileTab } from './teacher/tabs/ProfileTab';
+import { OfflineClassesTab } from './teacher/tabs/OfflineClassesTab';
 import { VerificationBanner } from './teacher/VerificationBanner';
 import { LessonManagementModal } from './teacher/LessonManagementModal';
 import { DocumentManagementModal } from './teacher/DocumentManagementModal';
 
 const TeacherDashboard: React.FC = () => {
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
   const {
     activeTab,
     setActiveTab,
     isLoading,
     teacherName,
+    handleAvatarUpload,
     stats,
     tutorProfile,
     courses,
@@ -45,6 +51,7 @@ const TeacherDashboard: React.FC = () => {
     transactions,
     walletBalance,
     articles,
+    loadDashboardData,
 
     formatVND,
     formatDateString,
@@ -151,6 +158,10 @@ const TeacherDashboard: React.FC = () => {
     );
   }
 
+  const rawDisplayName = tutorProfile?.full_name || tutorProfile?.user?.full_name || teacherName || 'Gia sư';
+  const displayName = rawDisplayName.replace(/^Học viên\s+/i, '');
+  const avatarUrl = tutorProfile?.avatar_url || tutorProfile?.user?.avatar_url;
+
   return (
     <div className="dashboard-wrapper">
       <div className="dashboard-container">
@@ -158,18 +169,43 @@ const TeacherDashboard: React.FC = () => {
         {/* SIDEBAR NAVIGATION */}
         <aside className="dashboard-sidebar">
           <div className="sidebar-profile">
-            <div className="sidebar-avatar" style={{ overflow: 'hidden', padding: 0 }}>
-              {tutorProfile?.user?.avatar_url ? (
+            {/* Hidden Avatar File Input */}
+            <input
+              type="file"
+              ref={avatarInputRef}
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleAvatarUpload(file);
+              }}
+            />
+
+            <div
+              className="sidebar-avatar avatar-clickable"
+              onClick={() => avatarInputRef.current?.click()}
+              title="Nhấp vào đây để thay đổi ảnh đại diện gia sư"
+              style={{
+                position: 'relative',
+                cursor: 'pointer',
+                overflow: 'hidden',
+                padding: 0
+              }}
+            >
+              {avatarUrl ? (
                 <img
-                  src={tutorProfile.user.avatar_url}
-                  alt={teacherName}
+                  src={avatarUrl}
+                  alt={displayName}
                   style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
                 />
               ) : (
-                teacherName.charAt(0).toUpperCase()
+                displayName.charAt(0).toUpperCase()
               )}
+              <div className="sidebar-avatar-overlay">
+                <Camera size={18} color="#ffffff" />
+              </div>
             </div>
-            <h3 className="sidebar-name">{teacherName}</h3>
+            <h3 className="sidebar-name">{displayName}</h3>
             <span className="sidebar-role">Gia Sư Đối Tác</span>
           </div>
 
@@ -212,6 +248,15 @@ const TeacherDashboard: React.FC = () => {
             </li>
             <li>
               <button
+                className={`menu-item-btn ${activeTab === 'offline_classes' ? 'active' : ''}`}
+                onClick={() => setActiveTab('offline_classes')}
+              >
+                <ClipboardList size={18} />
+                Lớp offline cần dạy
+              </button>
+            </li>
+            <li>
+              <button
                 className={`menu-item-btn ${activeTab === 'articles' ? 'active' : ''}`}
                 onClick={() => setActiveTab('articles')}
               >
@@ -239,6 +284,7 @@ const TeacherDashboard: React.FC = () => {
             </li>
             <li>
               <button
+                id="tab-btn-wallet"
                 className={`menu-item-btn ${activeTab === 'wallet' ? 'active' : ''}`}
                 onClick={() => setActiveTab('wallet')}
               >
@@ -383,7 +429,12 @@ const TeacherDashboard: React.FC = () => {
               transactions={transactions}
               formatVND={formatVND}
               setIsWithdrawModalOpen={setIsWithdrawModalOpen}
+              loadDashboardData={loadDashboardData}
             />
+          )}
+
+          {activeTab === 'offline_classes' && (
+            <OfflineClassesTab />
           )}
         </main>
 

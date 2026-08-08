@@ -1,21 +1,24 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Eye, EyeOff, Mail, CheckCircle2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { authApi } from '../services/authApi';
 import authStorage from '../utils/authStorage';
 import '../styles/AuthPage.css';
 
 interface AuthPageProps {
-  initialMode?: 'login' | 'register';
+  initialMode?: 'login' | 'register' | 'forgot';
 }
 
 type Gender = 'male' | 'female' | 'other';
-
 type Role = 'student' | 'tutor';
 
 const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>(initialMode);
+  const [searchParams] = useSearchParams();
+
+  const navigate = useNavigate();
+
+  const [activeTab, setActiveTab] = useState<'login' | 'register' | 'forgot'>(initialMode);
 
   // Login states
   const [loginIdentifier, setLoginIdentifier] = useState('');
@@ -35,11 +38,72 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showRegisterConfirmPassword, setShowRegisterConfirmPassword] = useState(false);
 
-  const navigate = useNavigate();
+  // Register success notice screen state
+  const [registeredEmailNotice, setRegisteredEmailNotice] = useState<string | null>(null);
+
+  // Forgot password state
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotSuccessMessage, setForgotSuccessMessage] = useState<string | null>(null);
+
+  // Google Role Modal state
+  const [showGoogleRoleModal, setShowGoogleRoleModal] = useState(false);
+  const [googleSignupData, setGoogleSignupData] = useState<{ email: string; fullName: string; googleId: string } | null>(null);
+
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleTabSwitch = (tab: 'login' | 'register') => {
+  // Parse URL search params for OAuth responses & verification flags
+  useEffect(() => {
+    const verified = searchParams.get('verified');
+    const reset = searchParams.get('reset');
+    const googleSuccess = searchParams.get('google_success');
+    const googleSignup = searchParams.get('google_signup');
+    const errorParam = searchParams.get('error');
+
+    if (verified === 'true') {
+      toast.success('Kích hoạt tài khoản thành công! Vui lòng đăng nhập.');
+      setActiveTab('login');
+    }
+
+    if (reset === 'true') {
+      toast.success('Đặt lại mật khẩu thành công! Vui lòng đăng nhập với mật khẩu mới.');
+      setActiveTab('login');
+    }
+
+    if (googleSuccess === 'true') {
+      const token = searchParams.get('token');
+      const refreshToken = searchParams.get('refreshToken');
+      const role = searchParams.get('role') || 'student';
+      const fullName = searchParams.get('fullName') || 'Google User';
+
+      if (token && refreshToken) {
+        authStorage.setAuthSession(token, refreshToken, role, fullName);
+        window.dispatchEvent(new Event('authChange'));
+        toast.success('Đăng nhập bằng Google thành công!');
+
+        if (role === 'admin') navigate('/admin');
+        else if (role === 'tutor') navigate('/teacher/dashboard');
+        else navigate('/');
+      }
+    }
+
+    if (googleSignup === 'true') {
+      const email = searchParams.get('email') || '';
+      const fullName = searchParams.get('fullName') || '';
+      const googleId = searchParams.get('googleId') || '';
+
+      setGoogleSignupData({ email, fullName, googleId });
+      setShowGoogleRoleModal(true);
+    }
+
+    if (errorParam) {
+      toast.error(decodeURIComponent(errorParam));
+    }
+  }, [searchParams, navigate]);
+
+  const handleTabSwitch = (tab: 'login' | 'register' | 'forgot') => {
     setActiveTab(tab);
+    setRegisteredEmailNotice(null);
+    setForgotSuccessMessage(null);
   };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -56,7 +120,6 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
 
     setIsLoading(true);
     try {
-
       const response = await authApi.login({
         email: loginIdentifier,
         password: loginPassword,
@@ -65,20 +128,17 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
       const user = response?.data?.user;
       const token = response?.data?.access_token;
       const refreshToken = response?.data?.refresh_token;
-      const role = user?.role || (loginIdentifier.toLowerCase().includes('tutor') ? 'tutor' : 'student');
+      const role = user?.role || 'student';
       const fullName = user?.full_name || loginIdentifier.split('@')[0];
 
       authStorage.setAuthSession(token, refreshToken, role, fullName);
 
       window.dispatchEvent(new Event('authChange'));
       toast.success('Đăng nhập thành công!');
-      if (role === 'admin') {
-        navigate('/admin');
-      } else if (role === 'tutor') {
-        navigate('/teacher/dashboard');
-      } else {
-        navigate('/');
-      }
+
+      if (role === 'admin') navigate('/admin');
+      else if (role === 'tutor') navigate('/teacher/dashboard');
+      else navigate('/');
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
     } finally {
@@ -137,23 +197,72 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
       });
 
       if (response.success) {
-        const token = response.data?.access_token;
-        const refreshToken = response.data?.refresh_token;
-
-        if (token && refreshToken) {
-          authStorage.setAuthSession(token, refreshToken, registerRole, registerFullName);
-          window.dispatchEvent(new Event('authChange'));
-          toast.success('Đăng ký tài khoản thành công!');
-          navigate('/');
-        } else {
-          toast.success('Đăng ký thành công! Vui lòng đăng nhập.');
-          setActiveTab('login');
-        }
+        setRegisteredEmailNotice(registerEmail);
+        toast.success(response.message || 'Đăng ký thành công! Vui lòng kiểm tra email kích hoạt.');
       } else {
-        toast.error(response.data.error || 'Đăng ký thất bại. Vui lòng thử lại.');
+        toast.error(response.data?.error || 'Đăng ký thất bại. Vui lòng thử lại.');
       }
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Đăng ký thất bại. Vui lòng thử lại.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!forgotEmail.trim()) {
+      toast.error('Vui lòng nhập địa chỉ Email.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const res = await authApi.forgotPassword(forgotEmail.trim());
+      setForgotSuccessMessage(res.message || 'Đã gửi yêu cầu đặt lại mật khẩu. Vui lòng kiểm tra email của bạn.');
+      toast.success('Đã gửi email khôi phục mật khẩu!');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Yêu cầu thất bại. Vui lòng thử lại.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = () => {
+    const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    window.location.href = `${backendUrl}/auth/google`;
+  };
+
+  const handleCompleteGoogleSignup = async (selectedRole: 'student' | 'tutor') => {
+    if (!googleSignupData) return;
+
+    setIsLoading(true);
+    try {
+      const res = await authApi.completeGoogleSignup({
+        email: googleSignupData.email,
+        fullName: googleSignupData.fullName,
+        googleId: googleSignupData.googleId,
+        role: selectedRole
+      });
+
+      if (res.success) {
+        const user = res.data?.user;
+        const token = res.data?.access_token;
+        const refreshToken = res.data?.refresh_token;
+        const role = user?.role || selectedRole;
+        const fullName = user?.full_name || googleSignupData.fullName;
+
+        authStorage.setAuthSession(token, refreshToken, role, fullName);
+        window.dispatchEvent(new Event('authChange'));
+        setShowGoogleRoleModal(false);
+        toast.success('Đăng ký tài khoản bằng Google thành công!');
+
+        if (role === 'tutor') navigate('/teacher/dashboard');
+        else navigate('/');
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Hoàn tất đăng ký Google thất bại.');
     } finally {
       setIsLoading(false);
     }
@@ -166,14 +275,18 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
         <div className="container breadcrumbs-container">
           <Link to="/">Trang chủ</Link>
           <span className="breadcrumbs-separator">/</span>
-          <span className="breadcrumbs-current">Đăng nhập / Đăng ký</span>
+          <span className="breadcrumbs-current">
+            {activeTab === 'login' ? 'Đăng nhập' : activeTab === 'register' ? 'Đăng ký' : 'Quên mật khẩu'}
+          </span>
         </div>
       </div>
 
       {/* 2. Page Title Banner */}
       <div className="page-title-banner">
         <div className="container">
-          <h1>Đăng nhập / Đăng ký</h1>
+          <h1>
+            {activeTab === 'login' ? 'Đăng nhập' : activeTab === 'register' ? 'Đăng ký Tài Khoản' : 'Khôi Phục Mật Khẩu'}
+          </h1>
         </div>
       </div>
 
@@ -200,10 +313,92 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
           {/* Form Content */}
           <div className="auth-form-container">
 
-            {activeTab === 'login' ? (
+            {registeredEmailNotice ? (
+              /* REGISTER NOTICE SCREEN */
+              <div className="email-notice-card">
+                <div className="email-notice-icon">
+                  <Mail size={36} />
+                </div>
+                <h2 className="auth-form-title" style={{ color: '#2563eb' }}>Kiểm Tra Hộp Thư Email</h2>
+                <p style={{ color: '#4b5563', fontSize: '15px', lineHeight: 1.6, marginBottom: '20px' }}>
+                  Hệ thống đã gửi một liên kết kích hoạt đến email: <br />
+                  <strong style={{ color: '#1d4ed8' }}>{registeredEmailNotice}</strong>
+                </p>
+                <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '24px' }}>
+                  Vui lòng kiểm tra hộp thư của bạn và nhấn vào link kích hoạt (có hiệu lực trong <strong>24 giờ</strong>) để hoàn tất đăng ký và bắt đầu đăng nhập.
+                </p>
+                <button
+                  onClick={() => handleTabSwitch('login')}
+                  className="auth-submit-btn"
+                >
+                  Đồng ý, Chuyển tới Đăng nhập
+                </button>
+              </div>
+            ) : activeTab === 'forgot' ? (
+              /* FORGOT PASSWORD FORM */
+              <form onSubmit={handleForgotSubmit} noValidate>
+                <h2 className="auth-form-title">Quên Mật Khẩu</h2>
+                <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '20px' }}>
+                  Nhập địa chỉ email đăng ký của bạn. Hệ thống sẽ gửi một liên kết để tạo lại mật khẩu mới (có hiệu lực trong 2 giờ).
+                </p>
+
+                {forgotSuccessMessage ? (
+                  <div className="auth-alert auth-alert-success" style={{ marginBottom: '20px' }}>
+                    <CheckCircle2 size={20} className="auth-alert-icon" />
+                    <span>{forgotSuccessMessage}</span>
+                  </div>
+                ) : (
+                  <div className="form-group">
+                    <input
+                      type="email"
+                      className="form-input"
+                      placeholder="Nhập Email của bạn*"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
+
+                {!forgotSuccessMessage && (
+                  <button type="submit" className="auth-submit-btn" disabled={isLoading}>
+                    {isLoading ? 'Đang gửi...' : 'Gửi liên kết đặt lại mật khẩu'}
+                  </button>
+                )}
+
+                <div className="auth-footer-prompt">
+                  Nhớ mật khẩu?
+                  <span
+                    className="auth-switch-link"
+                    onClick={() => handleTabSwitch('login')}
+                  >
+                    Đăng nhập ngay
+                  </span>
+                </div>
+              </form>
+            ) : activeTab === 'login' ? (
               /* LOGIN FORM */
               <form onSubmit={handleLoginSubmit} noValidate>
                 <h2 className="auth-form-title">Đăng nhập</h2>
+
+                {/* Google Sign-in Button */}
+                <button
+                  type="button"
+                  className="google-btn"
+                  onClick={handleGoogleLogin}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                  </svg>
+                  Tiếp tục với Google
+                </button>
+
+                <div className="social-divider">
+                  <span>HOẶC</span>
+                </div>
 
                 <div className="form-group">
                   <input
@@ -251,7 +446,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                     className="lost-password-link"
                     onClick={(e) => {
                       e.preventDefault();
-                      toast.info('Tính năng khôi phục mật khẩu đang được phát triển.');
+                      handleTabSwitch('forgot');
                     }}
                   >
                     Quên mật khẩu?
@@ -276,6 +471,25 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
               /* REGISTER FORM */
               <form onSubmit={handleRegisterSubmit} noValidate>
                 <h2 className="auth-form-title">Đăng ký</h2>
+
+                {/* Google Sign-in Button */}
+                <button
+                  type="button"
+                  className="google-btn"
+                  onClick={handleGoogleLogin}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                  </svg>
+                  Đăng ký nhanh với Google
+                </button>
+
+                <div className="social-divider">
+                  <span>HOẶC</span>
+                </div>
 
                 <div className="form-group">
                   <input
@@ -402,6 +616,51 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
 
         </div>
       </div>
+
+      {/* Google Signup Role Selection Modal */}
+      {showGoogleRoleModal && (
+        <div className="modal-overlay">
+          <div className="role-modal">
+            <h2 className="role-modal-title">Chọn Vai Trò Của Bạn</h2>
+            <p className="role-modal-subtitle">
+              Chào mừng <strong>{googleSignupData?.fullName}</strong>! Vui lòng chọn vai trò sử dụng tài khoản Gia Sư Online:
+            </p>
+
+            <div className="role-options-grid">
+              <div
+                className="role-option-card"
+                onClick={() => handleCompleteGoogleSignup('student')}
+              >
+                <div className="role-option-icon">🎓</div>
+                <div className="role-option-label">Học Viên</div>
+                <span style={{ fontSize: '12px', color: '#6b7280' }}>Tìm kiếm gia sư & khóa học</span>
+              </div>
+
+              <div
+                className="role-option-card"
+                onClick={() => handleCompleteGoogleSignup('tutor')}
+              >
+                <div className="role-option-icon">👨‍🏫</div>
+                <div className="role-option-label">Gia Sư</div>
+                <span style={{ fontSize: '12px', color: '#6b7280' }}>Tạo khóa học & giảng dạy</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowGoogleRoleModal(false)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#9ca3af',
+                fontSize: '14px',
+                cursor: 'pointer'
+              }}
+            >
+              Hủy đăng ký
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

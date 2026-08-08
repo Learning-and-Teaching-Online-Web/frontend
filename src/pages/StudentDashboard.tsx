@@ -9,6 +9,8 @@ import { ScheduleTab } from '../components/student/tabs/ScheduleTab';
 import { QuizzesTab } from '../components/student/tabs/QuizzesTab';
 import { FavoritesTab } from '../components/student/tabs/FavoritesTab';
 import { ProfileTab } from '../components/student/tabs/ProfileTab';
+import { ClassRequestsTab } from '../components/student/tabs/ClassRequestsTab';
+import { WalletTab } from '../components/student/tabs/WalletTab';
 import '../styles/StudentDashboard.css';
 
 const StudentDashboard: React.FC = () => {
@@ -21,6 +23,10 @@ const StudentDashboard: React.FC = () => {
     classSessions,
     quizAttempts,
     favoriteTutors,
+    myClassRequests,
+    fetchMyClassRequests,
+    walletBalance,
+    walletTransactions,
     formState,
     formSetters,
     handlers,
@@ -59,6 +65,8 @@ const StudentDashboard: React.FC = () => {
           onLogout={handlers.handleLogout}
           quizCount={quizAttempts.length}
           favoriteCount={favoriteTutors.length}
+          classRequestCount={myClassRequests.length}
+          handleAvatarFileChange={handlers.handleAvatarFileChange}
         />
 
         {/* Right Content Area */}
@@ -84,6 +92,7 @@ const StudentDashboard: React.FC = () => {
             <CoursesTab
               enrolledCourses={enrolledCourses}
               formatDate={helpers.formatDate}
+              onPay={handlers.handlePayBooking}
             />
           )}
 
@@ -95,7 +104,15 @@ const StudentDashboard: React.FC = () => {
             />
           )}
 
-          {/* TAB 4: QUIZZES */}
+          {/* TAB 4: MY CLASS REQUESTS */}
+          {activeTab === 'class-requests' && (
+            <ClassRequestsTab
+              classRequests={myClassRequests}
+              onRefresh={fetchMyClassRequests}
+            />
+          )}
+
+          {/* TAB 5: QUIZZES */}
           {activeTab === 'quizzes' && (
             <QuizzesTab
               quizAttempts={quizAttempts}
@@ -104,7 +121,7 @@ const StudentDashboard: React.FC = () => {
             />
           )}
 
-          {/* TAB 5: FAVORITE TUTORS */}
+          {/* TAB 6: FAVORITE TUTORS */}
           {activeTab === 'favorites' && (
             <FavoritesTab
               favoriteTutors={favoriteTutors}
@@ -112,13 +129,23 @@ const StudentDashboard: React.FC = () => {
             />
           )}
 
-          {/* TAB 6: PROFILE SETTINGS */}
+          {/* TAB 7: PROFILE SETTINGS */}
           {activeTab === 'profile' && (
             <ProfileTab
               profile={profile}
               formState={formState}
               formSetters={formSetters}
               handlers={handlers}
+            />
+          )}
+
+          {/* TAB 8: PERSONAL WALLET */}
+          {activeTab === 'wallet' && (
+            <WalletTab
+              balance={walletBalance}
+              transactions={walletTransactions}
+              onDeposit={handlers.handleDeposit}
+              formatDate={helpers.formatDate}
             />
           )}
 
