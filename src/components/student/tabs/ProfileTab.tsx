@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Save, Camera } from 'lucide-react';
 import type { StudentProfile } from '../../../data/mockStudentData';
+import tutorApi from '../../../services/tutorApi';
 import '../../../styles/student/ProfileTab.css';
 
 interface ProfileTabProps {
@@ -39,6 +40,15 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
   formSetters,
   handlers
 }) => {
+  const [gradesList, setGradesList] = useState<{ grade_id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    tutorApi.getAllGrades().then((res) => {
+      if (res?.success && Array.isArray(res.data)) {
+        setGradesList(res.data);
+      }
+    }).catch(console.error);
+  }, []);
   return (
     <div>
       <div className="content-header">
@@ -163,20 +173,11 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
               value={formState.formGrade}
               onChange={(e) => formSetters.setFormGrade(e.target.value)}
             >
-              <option value="Lớp 1">Lớp 1</option>
-              <option value="Lớp 2">Lớp 2</option>
-              <option value="Lớp 3">Lớp 3</option>
-              <option value="Lớp 4">Lớp 4</option>
-              <option value="Lớp 5">Lớp 5</option>
-              <option value="Lớp 6">Lớp 6</option>
-              <option value="Lớp 7">Lớp 7</option>
-              <option value="Lớp 8">Lớp 8</option>
-              <option value="Lớp 9">Lớp 9</option>
-              <option value="Lớp 10">Lớp 10</option>
-              <option value="Lớp 11">Lớp 11</option>
-              <option value="Lớp 12">Lớp 12</option>
-              <option value="Ôn thi Đại Học">Ôn thi Đại Học</option>
-              <option value="Đại học / Khác">Đại học / Người đi làm / Khác</option>
+              {gradesList.map((g) => (
+                <option key={g.grade_id || g.name} value={g.name}>
+                  {g.name}
+                </option>
+              ))}
             </select>
           </div>
 

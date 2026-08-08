@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axiosClient from '../../services/axiosClient';
 import { toast } from 'react-toastify';
 import AdminLayout from '../../components/admin/AdminLayout';
-import { CheckCircle2, UserCheck, Eye, X, ClipboardList, Filter, Search } from 'lucide-react';
+import { CheckCircle2, UserCheck, Eye, X, ClipboardList, Filter, Search, Edit3 } from 'lucide-react';
 
 interface Application {
   application_id: string;
@@ -55,6 +55,20 @@ const AdminClassRequests: React.FC = () => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const commissionRate = 35;
+
+  // Edit Modal State
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editFormData, setEditFormData] = useState<any>(null);
+  const [gradesList, setGradesList] = useState<{ grade_id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    axiosClient.get('/grades').then(res => {
+      const items = res.data?.data || (Array.isArray(res.data) ? res.data : []);
+      if (Array.isArray(items) && items.length > 0) {
+        setGradesList(items);
+      }
+    }).catch(console.error);
+  }, []);
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -118,6 +132,50 @@ const AdminClassRequests: React.FC = () => {
     } catch (err: any) {
       console.error('Error assigning tutor:', err);
       toast.error(err.response?.data?.message || 'Có lỗi khi giao lớp cho gia sư.');
+    }
+  };
+
+  const handleOpenEditModal = (cls: ClassRequest) => {
+    setEditFormData({
+      request_id: cls.request_id,
+      code: cls.code,
+      student_name: cls.student_name || '',
+      phone: cls.phone || '',
+      email: (cls as any).email || '',
+      address_detail: cls.address_detail || '',
+      district: cls.district || '',
+      province: cls.province || 'Hồ Chí Minh',
+      grade_level: cls.grade_level || 'Lớp 1',
+      subject_name: cls.subject_name || '',
+      num_students: (cls as any).num_students || 1,
+      academic_level: (cls as any).academic_level || '',
+      sessions_per_week: cls.sessions_per_week || 2,
+      study_time: cls.study_time || '',
+      tutor_requirement: cls.tutor_requirement || 'Sinh viên',
+      desired_price: cls.desired_price || 0,
+      commission_rate: cls.commission_rate || 35,
+      other_requirements: (cls as any).other_requirements || '',
+      status: cls.status || 'PENDING_ADMIN',
+    });
+    setEditModalOpen(true);
+  };
+
+  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setEditFormData((prev: any) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editFormData) return;
+    try {
+      const res = await axiosClient.put(`/admin/class-requests/${editFormData.request_id}`, editFormData);
+      toast.success(res.data.message || 'Cập nhật thông tin lớp học thành công!');
+      setEditModalOpen(false);
+      fetchRequests();
+    } catch (err: any) {
+      console.error('Error updating class request:', err);
+      toast.error(err.response?.data?.message || 'Lỗi khi cập nhật thông tin lớp.');
     }
   };
 
@@ -334,6 +392,16 @@ const AdminClassRequests: React.FC = () => {
                               <Eye size={14} />
                               <span>Xem & Duyệt</span>
                             </button>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditModal(cls)}
+                              className="admin-btn sm secondary"
+                              title="Chỉnh sửa thông tin lớp học"
+                              style={{ background: 'rgba(255, 255, 255, 0.08)', border: '1px solid var(--admin-border)', color: 'var(--admin-text-main)' }}
+                            >
+                              <Edit3 size={14} />
+                              <span>Sửa</span>
+                            </button>
                           </>
                         )}
                       </div>
@@ -507,6 +575,264 @@ const AdminClassRequests: React.FC = () => {
                 Đóng
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Chỉnh Sửa Lớp Học Offline (Admin Edit Modal) */}
+      {editModalOpen && editFormData && (
+        <div className="modal-overlay">
+          <div className="modal-card" style={{ maxWidth: '780px', width: '92%', background: '#111827', border: '1px solid var(--admin-border)', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--admin-border)', paddingBottom: '12px' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--admin-text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Edit3 size={20} color="#818cf8" />
+                <span>Chỉnh sửa Lớp Offline MS: {editFormData.code}</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setEditModalOpen(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--admin-text-muted)' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', fontSize: '13px' }}>
+                {/* Họ tên học viên */}
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Họ tên học viên / Phụ huynh *
+                  </label>
+                  <input
+                    type="text"
+                    name="student_name"
+                    value={editFormData.student_name}
+                    onChange={handleEditFormChange}
+                    required
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                  />
+                </div>
+
+                {/* Số điện thoại */}
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Điện thoại liên hệ *
+                  </label>
+                  <input
+                    type="text"
+                    name="phone"
+                    value={editFormData.phone}
+                    onChange={handleEditFormChange}
+                    required
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={editFormData.email}
+                    onChange={handleEditFormChange}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                  />
+                </div>
+
+                {/* Tỉnh / Thành phố */}
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Tỉnh / Thành phố
+                  </label>
+                  <input
+                    type="text"
+                    name="province"
+                    value={editFormData.province}
+                    onChange={handleEditFormChange}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                  />
+                </div>
+
+                {/* Địa chỉ chi tiết */}
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Địa chỉ chi tiết (Đường, Phường/Xã, Quận/Huyện) *
+                  </label>
+                  <input
+                    type="text"
+                    name="address_detail"
+                    value={editFormData.address_detail}
+                    onChange={handleEditFormChange}
+                    required
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                  />
+                </div>
+
+                {/* Môn học */}
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Môn học *
+                  </label>
+                  <input
+                    type="text"
+                    name="subject_name"
+                    value={editFormData.subject_name}
+                    onChange={handleEditFormChange}
+                    required
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                  />
+                </div>
+
+                {/* Khối lớp */}
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Khối lớp *
+                  </label>
+                  <select
+                    name="grade_level"
+                    value={editFormData.grade_level}
+                    onChange={handleEditFormChange}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: '#1f2937', color: 'var(--admin-text-main)', outline: 'none' }}
+                  >
+                    {gradesList.map((g) => (
+                      <option key={g.grade_id || g.name} value={g.name}>
+                        {g.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Học phí mong muốn */}
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Học phí (VNĐ / tháng) *
+                  </label>
+                  <input
+                    type="number"
+                    name="desired_price"
+                    value={editFormData.desired_price}
+                    onChange={handleEditFormChange}
+                    required
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: '#34d399', fontWeight: 700, outline: 'none' }}
+                  />
+                </div>
+
+                {/* Tỷ lệ Hoa hồng % */}
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Tỷ lệ hoa hồng (%) *
+                  </label>
+                  <input
+                    type="number"
+                    name="commission_rate"
+                    value={editFormData.commission_rate}
+                    onChange={handleEditFormChange}
+                    required
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: '#f87171', fontWeight: 700, outline: 'none' }}
+                  />
+                </div>
+
+                {/* Số buổi / tuần */}
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Số buổi / tuần
+                  </label>
+                  <input
+                    type="number"
+                    name="sessions_per_week"
+                    value={editFormData.sessions_per_week}
+                    onChange={handleEditFormChange}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                  />
+                </div>
+
+                {/* Yêu cầu gia sư */}
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Yêu cầu loại gia sư
+                  </label>
+                  <input
+                    type="text"
+                    name="tutor_requirement"
+                    value={editFormData.tutor_requirement}
+                    onChange={handleEditFormChange}
+                    placeholder="VD: Nữ Sinh Viên, Nam Giáo Viên..."
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                  />
+                </div>
+
+                {/* Trạng thái lớp */}
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Trạng thái Lớp học *
+                  </label>
+                  <select
+                    name="status"
+                    value={editFormData.status}
+                    onChange={handleEditFormChange}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: '#1f2937', color: 'var(--admin-text-main)', fontWeight: 600, outline: 'none' }}
+                  >
+                    <option value="PENDING_ADMIN">CHỜ ADMIM DUYỆT (PENDING_ADMIN)</option>
+                    <option value="OPEN">LỚP CHƯA GIAO / CÔNG KHAI (OPEN)</option>
+                    <option value="WAITING_TUTOR_CONFIRM">CHỜ GIA SƯ ĐÓNG PHÍ (WAITING_TUTOR_CONFIRM)</option>
+                    <option value="ASSIGNED">ĐÃ BÀN GIAO THÀNH CÔNG (ASSIGNED)</option>
+                    <option value="CANCELLED">ĐÃ HỦY (CANCELLED)</option>
+                    <option value="REJECTED">TỪ CHỐI (REJECTED)</option>
+                    <option value="EXPIRED">HẾT HẠN ĐÓNG PHÍ (EXPIRED)</option>
+                  </select>
+                </div>
+
+                {/* Thời gian học */}
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Thời gian học chi tiết
+                  </label>
+                  <input
+                    type="text"
+                    name="study_time"
+                    value={editFormData.study_time}
+                    onChange={handleEditFormChange}
+                    placeholder="VD: Dạy 120 phút/buổi, T2,4,6 tối 18h..."
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                  />
+                </div>
+
+                {/* Ghi chú khác */}
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Ghi chú / Yêu cầu khác
+                  </label>
+                  <textarea
+                    name="other_requirements"
+                    value={editFormData.other_requirements}
+                    onChange={handleEditFormChange}
+                    rows={2}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none', resize: 'vertical' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                <button
+                  type="button"
+                  onClick={() => setEditModalOpen(false)}
+                  className="admin-btn sm secondary"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="admin-btn sm primary"
+                  style={{ fontWeight: 700, padding: '8px 20px' }}
+                >
+                  Lưu thay đổi lớp
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

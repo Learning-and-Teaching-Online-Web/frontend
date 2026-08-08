@@ -55,6 +55,7 @@ const RequestTutorPage: React.FC = () => {
 
   const [subjectList, setSubjectList] = useState<string[]>([]);
   const [loadingSubjects, setLoadingSubjects] = useState<boolean>(true);
+  const [gradeList, setGradeList] = useState<{ grade_id: string; name: string }[]>([]);
 
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [isCustomSubjectActive, setIsCustomSubjectActive] = useState<boolean>(false);
@@ -64,7 +65,7 @@ const RequestTutorPage: React.FC = () => {
   const [startTime, setStartTime] = useState<string>('');
 
   useEffect(() => {
-    const fetchSubjects = async () => {
+    const fetchData = async () => {
       try {
         setLoadingSubjects(true);
         const res = await axiosClient.get('/subjects');
@@ -78,8 +79,18 @@ const RequestTutorPage: React.FC = () => {
       } finally {
         setLoadingSubjects(false);
       }
+
+      try {
+        const resG = await axiosClient.get('/grades');
+        const gItems = resG.data?.data || (Array.isArray(resG.data) ? resG.data : []);
+        if (Array.isArray(gItems) && gItems.length > 0) {
+          setGradeList(gItems);
+        }
+      } catch (err) {
+        console.error('Error fetching grades from database:', err);
+      }
     };
-    fetchSubjects();
+    fetchData();
   }, []);
 
   const [formData, setFormData] = useState({
@@ -384,20 +395,11 @@ const RequestTutorPage: React.FC = () => {
                   onChange={handleChange}
                   style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.95rem', background: '#fff', outline: 'none' }}
                 >
-                  <option value="Lớp 1">Lớp 1</option>
-                  <option value="Lớp 2">Lớp 2</option>
-                  <option value="Lớp 3">Lớp 3</option>
-                  <option value="Lớp 4">Lớp 4</option>
-                  <option value="Lớp 5">Lớp 5</option>
-                  <option value="Lớp 6">Lớp 6</option>
-                  <option value="Lớp 7">Lớp 7</option>
-                  <option value="Lớp 8">Lớp 8</option>
-                  <option value="Lớp 9">Lớp 9</option>
-                  <option value="Lớp 10">Lớp 10</option>
-                  <option value="Lớp 11">Lớp 11</option>
-                  <option value="Lớp 12">Lớp 12</option>
-                  <option value="Luyện thi ĐH">Luyện Thi Đại Học</option>
-                  <option value="Ngoại ngữ">Ngoại Ngữ / Tin Học</option>
+                  {gradeList.map((g) => (
+                    <option key={g.grade_id || g.name} value={g.name}>
+                      {g.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 

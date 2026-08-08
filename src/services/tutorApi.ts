@@ -18,6 +18,12 @@ export const tutorApi = {
     return res.data;
   },
 
+  // Grades
+  getAllGrades: async () => {
+    const res = await axiosClient.get('/grades');
+    return res.data;
+  },
+
   // My Tutor Profile & Certificates
   getMyProfile: async () => {
     const res = await axiosClient.get('/tutors/my-profile');
@@ -33,6 +39,7 @@ export const tutorApi = {
     experience_years?: number;
     hourly_rate?: number;
     specialties?: string[];
+    grade_ids?: string[];
     teaching_mode?: 'online' | 'offline' | 'both';
     province?: string;
     district?: string;

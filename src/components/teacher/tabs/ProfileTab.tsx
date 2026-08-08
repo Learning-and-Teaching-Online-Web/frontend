@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { User, Award, Plus, Trash2, ExternalLink, Save, CheckCircle, Clock, XCircle, Camera } from 'lucide-react';
+import { User, Award, Plus, Trash2, ExternalLink, Save, CheckCircle, Clock, XCircle, Camera, BookOpen } from 'lucide-react';
 import { formatInputNumber, formatMoneyString } from '../../../utils/formatters';
+import tutorApi from '../../../services/tutorApi';
 
 interface ProfileTabProps {
   tutorProfile: any | null;
@@ -33,6 +34,18 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
   const [avatarBase64, setAvatarBase64] = useState<string | null>(null);
   const [idCardFrontBase64, setIdCardFrontBase64] = useState<string | null>(null);
 
+  // Grades state
+  const [availableGrades, setAvailableGrades] = useState<any[]>([]);
+  const [selectedGradeIds, setSelectedGradeIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    tutorApi.getAllGrades().then(res => {
+      if (res?.success && Array.isArray(res.data)) {
+        setAvailableGrades(res.data);
+      }
+    }).catch(console.error);
+  }, []);
+
   useEffect(() => {
     if (tutorProfile) {
       setFullName(tutorProfile.full_name || tutorProfile.user?.full_name || '');
@@ -57,6 +70,11 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
       setMinSalaryRequirement(tutorProfile.min_salary_requirement ? formatMoneyString(tutorProfile.min_salary_requirement, '') : '');
       setTeachingMode(tutorProfile.teaching_mode || 'both');
       setIdCardFrontBase64(tutorProfile.id_card_front_url || null);
+
+      if (Array.isArray(tutorProfile.grades)) {
+        const ids = tutorProfile.grades.map((g: any) => g.grade_id || g.grade?.grade_id).filter(Boolean);
+        setSelectedGradeIds(ids);
+      }
     }
   }, [tutorProfile]);
 
@@ -76,7 +94,8 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
       currentAddress,
       experience_years: Number(experienceYears),
       minSalaryRequirement,
-      teaching_mode: teachingMode
+      teaching_mode: teachingMode,
+      grade_ids: selectedGradeIds
     };
 
     if (avatarBase64) {
@@ -348,6 +367,63 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
               <option value="online">Chỉ dạy Trực tuyến (Online)</option>
               <option value="offline">Chỉ dạy Trực tiếp (Offline / Tại nhà)</option>
             </select>
+          </div>
+
+          {/* KHỐI LỚP NHẬN DẠY (TUTOR_GRADES) */}
+          <div className="form-group-db" style={{ marginTop: '16px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
+              <BookOpen size={16} style={{ color: '#4f46e5' }} /> Khối lớp nhận dạy
+            </label>
+            <p style={{ margin: '0 0 10px 0', fontSize: '12px', color: 'var(--text-light)' }}>
+              Tích chọn các khối lớp bạn có khả năng giảng dạy tốt nhất để học sinh và phụ huynh dễ dàng tìm thấy bạn.
+            </p>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+              gap: '10px',
+              padding: '12px',
+              background: 'var(--bg-dashboard, #f8fafc)',
+              borderRadius: '8px',
+              border: '1px solid var(--border-light, #e2e8f0)'
+            }}>
+              {availableGrades.map((g: any) => {
+                const isChecked = selectedGradeIds.includes(g.grade_id);
+                return (
+                  <label
+                    key={g.grade_id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '13px',
+                      fontWeight: isChecked ? 600 : 400,
+                      color: isChecked ? '#4f46e5' : 'var(--text-dark)',
+                      cursor: 'pointer',
+                      userSelect: 'none'
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedGradeIds(prev => [...prev, g.grade_id]);
+                        } else {
+                          setSelectedGradeIds(prev => prev.filter(id => id !== g.grade_id));
+                        }
+                      }}
+                      style={{ accentColor: '#4f46e5', width: '16px', height: '16px', cursor: 'pointer' }}
+                    />
+                    {g.name}
+                  </label>
+                );
+              })}
+              {availableGrades.length === 0 && (
+                <div style={{ fontSize: '12px', color: 'var(--text-light)', gridColumn: '1 / -1' }}>
+                  Đang tải danh sách khối lớp...
+                </div>
+              )}
+            </div>
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
