@@ -545,6 +545,15 @@ const CourseDetail: React.FC = () => {
                       <h4 style={{ fontSize: '16px', color: '#1e293b', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <Clock size={18} color="var(--primary)" /> Lịch trình giảng dạy trực tuyến (Live)
                       </h4>
+                      {course.course_days && course.course_days.length > 0 && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(79, 70, 229, 0.08)', padding: '10px 14px', borderRadius: '8px', color: '#4f46e5', fontWeight: 600, fontSize: '13px', marginBottom: '14px', border: '1px solid rgba(79, 70, 229, 0.2)' }}>
+                          <Clock size={16} /> Lịch học cố định hàng tuần: {course.course_days.map((cd: any) => {
+                            const dayMap: Record<string, string> = { mon: 'Thứ 2', tue: 'Thứ 3', wed: 'Thứ 4', thu: 'Thứ 5', fri: 'Thứ 6', sat: 'Thứ 7', sun: 'Chủ Nhật' };
+                            const val = cd.day_of_week || cd;
+                            return dayMap[val] || val;
+                          }).join(', ')}
+                        </div>
+                      )}
                       {course.schedules && course.schedules.length > 0 ? (
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px' }}>
                           {course.schedules.map((sch: any, idx: number) => (

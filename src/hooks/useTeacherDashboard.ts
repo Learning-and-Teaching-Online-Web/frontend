@@ -329,7 +329,14 @@ export const useTeacherDashboard = () => {
     setNewCourseMaxStudents(course.max_students || 1);
     setNewCourseStatus(course.status || 'published');
     
-    if (course.schedules && course.schedules.length > 0) {
+    const DAY_MAP = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+    if (Array.isArray(course.course_days) && course.course_days.length > 0) {
+      const days = course.course_days.map((cd: any) => {
+        const key = typeof cd === 'string' ? cd : cd.day_of_week;
+        return DAY_MAP.indexOf(key);
+      }).filter((idx: number) => idx !== -1);
+      setNewCourseScheduleDays(days);
+    } else if (course.schedules && course.schedules.length > 0) {
       const days = [...new Set(course.schedules.map((s: any) => s.day_of_week))];
       setNewCourseScheduleDays(days as number[]);
       
@@ -386,9 +393,11 @@ export const useTeacherDashboard = () => {
           toast.error('Vui lòng chọn khung giờ học và các ngày dạy trong tuần!');
           return;
         }
+        const DAY_MAP = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
         payload.start_date = newCourseStartDate || undefined;
         payload.end_date = newCourseEndDate || undefined;
         payload.duration_months = Number(newCourseDurationMonths) || undefined;
+        payload.course_days = newCourseScheduleDays.map(d => DAY_MAP[d]);
       }
 
       const generateAndAddSchedules = async (courseId: string) => {

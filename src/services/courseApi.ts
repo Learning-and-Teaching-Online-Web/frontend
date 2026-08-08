@@ -30,6 +30,7 @@ export const mapBackendCourseToFrontend = (beCourse: any) => {
     lessonsCount: (beCourse.lessons && beCourse.lessons.length > 0) ? beCourse.lessons.length : (beCourse.total_sessions || 0),
     quizzesCount: beCourse.quizzes?.length || 0,
     schedules: beCourse.schedules || [],
+    course_days: beCourse.course_days || [],
     lessons: beCourse.lessons || [],
     documents: beCourse.documents || [],
     curriculum: (beCourse.lessons || []).map((lesson: any) => ({
