@@ -76,6 +76,7 @@ export const OfflineClassesTab: React.FC = () => {
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [pendingPaymentClass, setPendingPaymentClass] = useState<ClassRequestItem | null>(null);
+  const [pendingDeclineClass, setPendingDeclineClass] = useState<ClassRequestItem | null>(null);
 
   // Fetch wallet balance
   const fetchWalletBalance = async () => {
@@ -139,8 +140,32 @@ export const OfflineClassesTab: React.FC = () => {
     }
   };
 
-  // Tutor accepts or declines a class directed to them
+  // Execute decline class request
+  const executeDecline = async (requestId: string) => {
+    try {
+      setSubmitting(true);
+      const res = await axiosClient.patch(`/class-requests/tutor-respond/${requestId}`, { action: 'DECLINE' });
+      toast.success(res.data.message || 'Đã từ chối nhận lớp thành công!');
+      setPendingDeclineClass(null);
+      fetchMyClasses();
+    } catch (err: any) {
+      console.error('Error declining class:', err);
+      toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi từ chối nhận lớp.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Tutor accepts a class directed to them
   const handleRespondClass = async (requestId: string, action: 'ACCEPT' | 'DECLINE') => {
+    if (action === 'DECLINE') {
+      const cls = myClasses.find(c => c.request_id === requestId);
+      if (cls) {
+        setPendingDeclineClass(cls);
+        return;
+      }
+    }
+
     const actionText = action === 'ACCEPT' ? 'ĐỒNG Ý NHẬN' : 'TỪ CHỐI / HỦY';
     if (!window.confirm(`Bạn có chắc chắn muốn ${actionText} lớp học này không?`)) {
       return;
@@ -504,6 +529,27 @@ export const OfflineClassesTab: React.FC = () => {
                           Nạp tiền ngay →
                         </button>
                       )}
+
+                      {/* Nút từ chối nhận lớp dành cho gia sư */}
+                      <button
+                        type="button"
+                        disabled={submitting}
+                        onClick={() => handleRespondClass(cls.request_id, 'DECLINE')}
+                        style={{
+                          width: '100%',
+                          padding: '8px',
+                          background: '#ffffff',
+                          color: '#ef4444',
+                          border: '1px solid #fca5a5',
+                          borderRadius: '8px',
+                          fontWeight: 600,
+                          fontSize: '0.82rem',
+                          cursor: 'pointer',
+                          textAlign: 'center'
+                        }}
+                      >
+                        ✕ Từ chối nhận lớp này
+                      </button>
                     </div>
                   ) : isDirected && cls.status === 'WAITING_TUTOR_CONFIRM' && !cls.is_assigned_to_me ? (
                     <div style={{ display: 'flex', gap: '10px' }}>
@@ -629,6 +675,97 @@ export const OfflineClassesTab: React.FC = () => {
                 }}
               >
                 {submitting ? 'Đang xử lý...' : 'Xác nhận thanh toán'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Decline Confirmation Modal */}
+      {pendingDeclineClass && (
+        <div className="modal-overlay" style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.6)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000
+        }}>
+          <div className="modal-card" style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            padding: '24px',
+            maxWidth: '440px',
+            width: '90%',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+            textAlign: 'center'
+          }}>
+            <div style={{
+              width: '52px',
+              height: '52px',
+              borderRadius: '50%',
+              background: '#fee2e2',
+              color: '#dc2626',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 14px auto'
+            }}>
+              <XCircle size={30} />
+            </div>
+            <h3 style={{ margin: '0 0 10px 0', fontSize: '1.2rem', fontWeight: 800, color: '#1e1b4b' }}>
+              Xác Nhận Từ Chối Lớp Học
+            </h3>
+            <p style={{ fontSize: '0.9rem', color: '#475569', lineHeight: '1.5', margin: '0 0 20px 0' }}>
+              Bạn có chắc chắn muốn từ chối nhận lớp 
+              <strong style={{ color: '#f97316' }}> MS: {pendingDeclineClass.code}</strong> ({pendingDeclineClass.subject_name}) không?
+              <br />
+              <span style={{ fontSize: '0.82rem', color: '#64748b', display: 'block', marginTop: '8px', background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px dashed #cbd5e1' }}>
+                ℹ️ Lớp học sẽ được chuyển về danh sách mở công khai để các gia sư khác có thể ứng tuyển.
+              </span>
+            </p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button
+                type="button"
+                onClick={() => setPendingDeclineClass(null)}
+                style={{
+                  padding: '10px 20px',
+                  background: '#f1f5f9',
+                  color: '#475569',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontWeight: 600,
+                  fontSize: '0.88rem',
+                  cursor: 'pointer'
+                }}
+              >
+                Quay lại
+              </button>
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => executeDecline(pendingDeclineClass.request_id)}
+                style={{
+                  padding: '10px 20px',
+                  background: '#ef4444',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontWeight: 700,
+                  fontSize: '0.88rem',
+                  cursor: submitting ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  boxShadow: '0 2px 6px rgba(239, 68, 68, 0.25)'
+                }}
+              >
+                {submitting ? 'Đang xử lý...' : 'Xác nhận từ chối'}
               </button>
             </div>
           </div>
