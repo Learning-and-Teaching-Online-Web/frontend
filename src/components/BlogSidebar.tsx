@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Calendar } from 'lucide-react';
 import { mockCategories, mockTags, mockRecentPosts } from '../data/blogData';
+import { blogApi, type ArticleCategory } from '../services/blogApi';
 
 interface BlogSidebarProps {
   searchQuery: string;
@@ -22,19 +23,40 @@ const BlogSidebar: React.FC<BlogSidebarProps> = ({
   onSelectTag,
   articles = []
 }) => {
-  // Dynamically calculate category counts from real loaded articles
+  const [dbCategories, setDbCategories] = React.useState<ArticleCategory[]>([]);
+
+  React.useEffect(() => {
+    blogApi.getCategories()
+      .then(res => {
+        if (res.success && Array.isArray(res.data)) {
+          setDbCategories(res.data);
+        }
+      })
+      .catch(err => console.error('Failed to load categories in sidebar:', err));
+  }, []);
+
+  // Dynamically calculate category counts from backend categories & loaded articles
   const categoryList = React.useMemo(() => {
     const counts: { [key: string]: number } = {};
     articles.forEach(art => {
-      if (art.category) {
-        counts[art.category] = (counts[art.category] || 0) + 1;
+      const catName = art.category_relation?.name || art.category;
+      if (catName) {
+        counts[catName] = (counts[catName] || 0) + 1;
       }
     });
+
+    if (dbCategories.length > 0) {
+      return dbCategories.map(cat => ({
+        name: cat.name,
+        count: cat._count?.articles ?? counts[cat.name] ?? 0
+      }));
+    }
+
     if (Object.keys(counts).length > 0) {
       return Object.keys(counts).map(name => ({ name, count: counts[name] }));
     }
     return mockCategories;
-  }, [articles]);
+  }, [articles, dbCategories]);
 
   // Dynamically get recent posts from real articles
   const recentPostsList = React.useMemo(() => {

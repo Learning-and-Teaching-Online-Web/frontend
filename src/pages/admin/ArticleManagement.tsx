@@ -58,6 +58,8 @@ const ArticleManagement: React.FC = () => {
     content: ''
   });
 
+  const [categories, setCategories] = useState<string[]>(CATEGORY_OPTIONS);
+
   const fetchArticles = async () => {
     setLoading(true);
     try {
@@ -76,6 +78,13 @@ const ArticleManagement: React.FC = () => {
 
   useEffect(() => {
     fetchArticles();
+    blogApi.getCategories()
+      .then(res => {
+        if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+          setCategories(res.data.map((c: any) => c.name));
+        }
+      })
+      .catch(err => console.error('Lỗi lấy danh mục bài viết:', err));
   }, []);
 
   const openCreateModal = () => {
@@ -83,7 +92,7 @@ const ArticleManagement: React.FC = () => {
     setFormData({
       title: '',
       excerpt: '',
-      category: CATEGORY_OPTIONS[0],
+      category: categories[0] || CATEGORY_OPTIONS[0],
       imageType: 'globe',
       author: authStorage.getUserName() || 'Admin',
       tags: '',
@@ -244,7 +253,7 @@ const ArticleManagement: React.FC = () => {
               onChange={(e) => setCategoryFilter(e.target.value)}
             >
               <option value="">Tất cả thể loại</option>
-              {CATEGORY_OPTIONS.map(cat => (
+              {categories.map(cat => (
                 <option key={cat} value={cat}>{cat}</option>
               ))}
             </select>
@@ -389,7 +398,7 @@ const ArticleManagement: React.FC = () => {
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   >
-                    {CATEGORY_OPTIONS.map(cat => (
+                    {categories.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </select>

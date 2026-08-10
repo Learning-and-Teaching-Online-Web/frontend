@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { User, Award, Plus, Trash2, ExternalLink, Save, CheckCircle, Clock, XCircle, Camera } from 'lucide-react';
+import { User, Award, Plus, Trash2, ExternalLink, Save, CheckCircle, Clock, XCircle, Camera, BookOpen } from 'lucide-react';
 import { formatInputNumber, formatMoneyString } from '../../../utils/formatters';
+import tutorApi from '../../../services/tutorApi';
 
 interface ProfileTabProps {
   tutorProfile: any | null;
@@ -33,6 +34,48 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
   const [avatarBase64, setAvatarBase64] = useState<string | null>(null);
   const [idCardFrontBase64, setIdCardFrontBase64] = useState<string | null>(null);
 
+  // Grades state
+  const [availableGrades, setAvailableGrades] = useState<any[]>([]);
+  const [selectedGradeIds, setSelectedGradeIds] = useState<string[]>([]);
+
+  // Tutor Available Times state (7 days x 3 slots)
+  const [selectedAvailableTimes, setSelectedAvailableTimes] = useState<{ day_of_week: string; time_slot: string }[]>([]);
+
+  const DAYS_OF_WEEK = [
+    { key: 'mon', label: 'Thứ 2' },
+    { key: 'tue', label: 'Thứ 3' },
+    { key: 'wed', label: 'Thứ 4' },
+    { key: 'thu', label: 'Thứ 5' },
+    { key: 'fri', label: 'Thứ 6' },
+    { key: 'sat', label: 'Thứ 7' },
+    { key: 'sun', label: 'Chủ Nhật' },
+  ];
+
+  const TIME_SLOTS = [
+    { key: 'morning', label: 'Sáng (07:00 - 12:00)' },
+    { key: 'afternoon', label: 'Chiều (13:00 - 17:00)' },
+    { key: 'evening', label: 'Tối (18:00 - 22:00)' },
+  ];
+
+  const toggleAvailableTime = (dayKey: string, slotKey: string) => {
+    setSelectedAvailableTimes(prev => {
+      const exists = prev.some(item => item.day_of_week === dayKey && item.time_slot === slotKey);
+      if (exists) {
+        return prev.filter(item => !(item.day_of_week === dayKey && item.time_slot === slotKey));
+      } else {
+        return [...prev, { day_of_week: dayKey, time_slot: slotKey }];
+      }
+    });
+  };
+
+  useEffect(() => {
+    tutorApi.getAllGrades().then(res => {
+      if (res?.success && Array.isArray(res.data)) {
+        setAvailableGrades(res.data);
+      }
+    }).catch(console.error);
+  }, []);
+
   useEffect(() => {
     if (tutorProfile) {
       setFullName(tutorProfile.full_name || tutorProfile.user?.full_name || '');
@@ -57,6 +100,19 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
       setMinSalaryRequirement(tutorProfile.min_salary_requirement ? formatMoneyString(tutorProfile.min_salary_requirement, '') : '');
       setTeachingMode(tutorProfile.teaching_mode || 'both');
       setIdCardFrontBase64(tutorProfile.id_card_front_url || null);
+
+      if (Array.isArray(tutorProfile.grades)) {
+        const ids = tutorProfile.grades.map((g: any) => g.grade_id || g.grade?.grade_id).filter(Boolean);
+        setSelectedGradeIds(ids);
+      }
+
+      if (Array.isArray(tutorProfile.available_times)) {
+        const times = tutorProfile.available_times.map((t: any) => ({
+          day_of_week: t.day_of_week,
+          time_slot: t.time_slot
+        }));
+        setSelectedAvailableTimes(times);
+      }
     }
   }, [tutorProfile]);
 
@@ -76,7 +132,9 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
       currentAddress,
       experience_years: Number(experienceYears),
       minSalaryRequirement,
-      teaching_mode: teachingMode
+      teaching_mode: teachingMode,
+      grade_ids: selectedGradeIds,
+      available_times: selectedAvailableTimes
     };
 
     if (avatarBase64) {
@@ -94,7 +152,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
-      
+
       {/* SECTION 1: PROFILE INFO FORM (MATCHING DATABASE COLUMNS) */}
       <div className="section-card">
         <div className="section-header">
@@ -350,7 +408,115 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
             </select>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+          {/* KHỐI LỚP NHẬN DẠY (TUTOR_GRADES) */}
+          <div className="form-group-db" style={{ marginTop: '16px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
+              <BookOpen size={16} style={{ color: '#4f46e5' }} /> Khối lớp nhận dạy
+            </label>
+            <p style={{ margin: '0 0 10px 0', fontSize: '12px', color: 'var(--text-light)' }}>
+              Tích chọn các khối lớp bạn có khả năng giảng dạy tốt nhất để học sinh và phụ huynh dễ dàng tìm thấy bạn.
+            </p>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+              gap: '10px',
+              padding: '12px',
+              background: 'var(--bg-dashboard, #f8fafc)',
+              borderRadius: '8px',
+              border: '1px solid var(--border-light, #e2e8f0)'
+            }}>
+              {availableGrades.map((g: any) => {
+                const isChecked = selectedGradeIds.includes(g.grade_id);
+                return (
+                  <label
+                    key={g.grade_id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '13px',
+                      fontWeight: isChecked ? 600 : 400,
+                      color: isChecked ? '#4f46e5' : 'var(--text-dark)',
+                      cursor: 'pointer',
+                      userSelect: 'none'
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedGradeIds(prev => [...prev, g.grade_id]);
+                        } else {
+                          setSelectedGradeIds(prev => prev.filter(id => id !== g.grade_id));
+                        }
+                      }}
+                      style={{ accentColor: '#4f46e5', width: '16px', height: '16px', cursor: 'pointer' }}
+                    />
+                    {g.name}
+                  </label>
+                );
+              })}
+              {availableGrades.length === 0 && (
+                <div style={{ fontSize: '12px', color: 'var(--text-light)', gridColumn: '1 / -1' }}>
+                  Đang tải danh sách khối lớp...
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* LỊCH RẢNH GIẢNG DẠY (TUTOR_AVAILABLE_TIMES) */}
+          <div className="form-group-db" style={{ marginTop: '20px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
+              <Clock size={16} style={{ color: '#4f46e5' }} /> Lịch rảnh có thể giảng dạy
+            </label>
+            <p style={{ margin: '0 0 12px 0', fontSize: '12px', color: 'var(--text-light)' }}>
+              Tick chọn các khung giờ bạn sẵn sàng nhận lớp trong tuần để hệ thống gợi ý lớp phù hợp nhất.
+            </p>
+            <div style={{ overflowX: 'auto', border: '1px solid var(--border-light, #e2e8f0)', borderRadius: '8px', background: 'var(--bg-dashboard, #f8fafc)', padding: '12px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', fontSize: '13px' }}>
+                <thead>
+                  <tr style={{ background: 'rgba(79, 70, 229, 0.08)', borderBottom: '1px solid var(--border-light, #cbd5e1)' }}>
+                    <th style={{ padding: '10px', textAlign: 'left', fontWeight: 600, color: '#334155' }}>Ca học / Ngày</th>
+                    {DAYS_OF_WEEK.map(d => (
+                      <th key={d.key} style={{ padding: '10px', fontWeight: 600, color: '#4f46e5' }}>{d.label}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {TIME_SLOTS.map(slot => (
+                    <tr key={slot.key} style={{ borderBottom: '1px solid var(--border-light, #f1f5f9)' }}>
+                      <td style={{ padding: '10px', textAlign: 'left', fontWeight: 600, color: '#475569', background: 'rgba(255,255,255,0.5)' }}>{slot.label}</td>
+                      {DAYS_OF_WEEK.map(day => {
+                        const isSelected = selectedAvailableTimes.some(t => t.day_of_week === day.key && t.time_slot === slot.key);
+                        return (
+                          <td
+                            key={day.key}
+                            onClick={() => toggleAvailableTime(day.key, slot.key)}
+                            style={{
+                              padding: '10px',
+                              cursor: 'pointer',
+                              background: isSelected ? 'rgba(79, 70, 229, 0.15)' : 'transparent',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => { }}
+                              style={{ accentColor: '#4f46e5', width: '16px', height: '16px', cursor: 'pointer' }}
+                            />
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
             <button type="submit" className="btn-primary-db">
               <Save size={16} /> Lưu thay đổi hồ sơ
             </button>
