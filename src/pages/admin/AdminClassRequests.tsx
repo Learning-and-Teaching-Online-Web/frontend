@@ -36,6 +36,8 @@ interface ClassRequest {
   commission_rate: number;
   status: string;
   created_at: string;
+  selected_tutor_id?: string;
+  selected_tutor_code?: string;
   selected_tutor?: { full_name: string; phone?: string };
   assigned_tutor?: { full_name: string; phone?: string };
   payment_deadline?: string;
@@ -301,15 +303,27 @@ const AdminClassRequests: React.FC = () => {
                         ) : (
                           <>
                             {cls.status === 'PENDING_ADMIN' && (
-                              <button
-                                type="button"
-                                onClick={() => handleApproveOpen(cls.request_id)}
-                                className="admin-btn sm success"
-                                title="Duyệt mở lớp công khai"
-                              >
-                                <CheckCircle2 size={14} />
-                                <span>Duyệt Lớp</span>
-                              </button>
+                              cls.selected_tutor_id ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handleAssignTutor(cls.request_id, cls.selected_tutor_id)}
+                                  className="admin-btn sm success"
+                                  title="Giao lớp cho Gia sư chỉ định"
+                                >
+                                  <UserCheck size={14} />
+                                  <span>Giao Lớp</span>
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handleApproveOpen(cls.request_id)}
+                                  className="admin-btn sm success"
+                                  title="Duyệt mở lớp công khai"
+                                >
+                                  <CheckCircle2 size={14} />
+                                  <span>Duyệt Mở</span>
+                                </button>
+                              )
                             )}
                             <button
                               type="button"
@@ -353,6 +367,42 @@ const AdminClassRequests: React.FC = () => {
             <div style={{ fontSize: '13px', color: 'var(--admin-text-muted)', marginBottom: '16px' }}>
               Môn dạy: <strong style={{ color: 'var(--admin-text-main)' }}>{selectedClass.subject_name}</strong> | Lớp: <strong style={{ color: 'var(--admin-text-main)' }}>{selectedClass.grade_level || 'N/A'}</strong> | Học phí: <strong style={{ color: '#34d399' }}>{formatCurrency(Number(selectedClass.desired_price))}</strong>
             </div>
+
+            {selectedClass.status === 'PENDING_ADMIN' && (selectedClass.selected_tutor || selectedClass.selected_tutor_code) && (
+              <div style={{
+                background: 'rgba(99, 102, 241, 0.1)',
+                border: '1px solid #6366f1',
+                borderRadius: '8px',
+                padding: '12px 16px',
+                marginBottom: '16px',
+                fontSize: '13px',
+                color: 'var(--admin-text-main)'
+              }}>
+                <div style={{ fontWeight: 700, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <UserCheck size={16} color="#818cf8" />
+                  <span style={{ color: '#818cf8', fontWeight: 800 }}>
+                    HỌC VIÊN CHỈ ĐỊNH GIA SƯ
+                  </span>
+                </div>
+                <div>
+                  Học viên yêu cầu giao lớp này cho: <strong>{selectedClass.selected_tutor?.full_name || selectedClass.selected_tutor_code}</strong>
+                  {selectedClass.selected_tutor?.phone && ` (SĐT: ${selectedClass.selected_tutor.phone})`}
+                </div>
+                {selectedClass.selected_tutor_id && (
+                   <button
+                     type="button"
+                     onClick={() => {
+                        handleAssignTutor(selectedClass.request_id, selectedClass.selected_tutor_id);
+                        setModalOpen(false);
+                     }}
+                     className="admin-btn sm success"
+                     style={{ marginTop: '10px', width: 'fit-content' }}
+                   >
+                     Duyệt & Giao cho Gia sư này
+                   </button>
+                )}
+              </div>
+            )}
 
             {/* Show assignment status details if assigned, waiting for fee, or expired */}
             {(selectedClass.status === 'WAITING_TUTOR_CONFIRM' || selectedClass.status === 'ASSIGNED' || selectedClass.status === 'EXPIRED') && (

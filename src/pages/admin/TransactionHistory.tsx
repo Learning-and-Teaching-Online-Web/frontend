@@ -122,16 +122,38 @@ const TransactionHistory: React.FC = () => {
   return (
     <AdminLayout title="Đối soát & Giao dịch tài chính">
       {/* Tabs */}
-      <div className="auth-tabs" style={{ maxWidth: '400px', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
         <button 
-          className={`auth-tab-btn ${activeTab === 'transactions' ? 'active' : ''}`}
+          type="button"
           onClick={() => { setActiveTab('transactions'); setPayoutsPage(1); }}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '10px',
+            border: activeTab === 'transactions' ? '1px solid #6366f1' : '1px solid var(--admin-border)',
+            background: activeTab === 'transactions' ? 'rgba(99, 102, 241, 0.2)' : 'rgba(255, 255, 255, 0.03)',
+            color: activeTab === 'transactions' ? '#818cf8' : 'var(--admin-text-muted)',
+            fontWeight: activeTab === 'transactions' ? '700' : '600',
+            fontSize: '14px',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+          }}
         >
           Lịch sử giao dịch
         </button>
         <button 
-          className={`auth-tab-btn ${activeTab === 'payouts' ? 'active' : ''}`}
+          type="button"
           onClick={() => { setActiveTab('payouts'); setTxsPage(1); }}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '10px',
+            border: activeTab === 'payouts' ? '1px solid #6366f1' : '1px solid var(--admin-border)',
+            background: activeTab === 'payouts' ? 'rgba(99, 102, 241, 0.2)' : 'rgba(255, 255, 255, 0.03)',
+            color: activeTab === 'payouts' ? '#818cf8' : 'var(--admin-text-muted)',
+            fontWeight: activeTab === 'payouts' ? '700' : '600',
+            fontSize: '14px',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+          }}
         >
           Yêu cầu rút tiền
         </button>
