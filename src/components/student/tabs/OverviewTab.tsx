@@ -1,16 +1,16 @@
 import React from 'react';
-import { 
-  BookOpen, 
-  FileText, 
-  Award, 
-  Clock, 
-  Video 
+import {
+  BookOpen,
+  FileText,
+  Award,
+  Clock,
+  Video
 } from 'lucide-react';
-import type { 
-  StudentProfile, 
-  EnrolledCourse, 
-  ClassSession, 
-  QuizAttempt 
+import type {
+  StudentProfile,
+  EnrolledCourse,
+  ClassSession,
+  QuizAttempt
 } from '../../../data/mockStudentData';
 import { StatCard } from '../ui/StatCard';
 import '../../../styles/student/OverviewTab.css';
@@ -49,25 +49,25 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
 
       {/* Statistics Grid */}
       <div className="stats-grid">
-        <StatCard 
+        <StatCard
           icon={<BookOpen size={22} />}
           colorClass="courses"
           label="Khóa học đang học"
           value={`${enrolledCourses.length} Khóa`}
         />
-        <StatCard 
+        <StatCard
           icon={<FileText size={22} />}
           colorClass="lessons"
           label="Lịch học trực tuyến"
           value={`${classSessions.filter(s => s.status === 'scheduled').length} Buổi`}
         />
-        <StatCard 
+        <StatCard
           icon={<Award size={22} />}
           colorClass="quiz"
           label="Điểm trắc nghiệm TB"
           value={avgQuizScore}
         />
-        <StatCard 
+        <StatCard
           icon={<Clock size={22} />}
           colorClass="hours"
           label="Thời gian học"
@@ -92,10 +92,10 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                   {formatDate(nextSession.startTime)} | {formatTime(nextSession.startTime)} - {formatTime(nextSession.endTime)}
                 </span>
               </div>
-              <a 
-                href={nextSession.meetingLink} 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href={nextSession.meetingLink}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="btn-join-live"
               >
                 <Video size={18} />
@@ -114,7 +114,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
             <BookOpen size={20} style={{ color: 'var(--primary)' }} />
             Khóa học đang học gần đây
           </h3>
-          
+
           {enrolledCourses.length > 0 ? (
             <div className="courses-grid" style={{ gridTemplateColumns: '1fr' }}>
               {enrolledCourses.slice(0, 2).map(course => (
@@ -149,7 +149,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
             <Award size={20} style={{ color: 'var(--primary)' }} />
             Trắc nghiệm gần đây
           </h3>
-          
+
           <ul className="sidebar-menu" style={{ gap: '12px' }}>
             {quizAttempts.slice(0, 3).map(attempt => (
               <li key={attempt.attempt_id} style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: '12px' }}>

@@ -125,7 +125,7 @@ const CourseDetail: React.FC = () => {
         if (res && res.success && res.data) {
           const mapped = mapBackendCourseToFrontend(res.data);
           setCourse(mapped);
-          
+
           if (mapped.tutor_id && isAuthenticated && authStorage.getUserRole() !== 'tutor' && authStorage.getUserRole() !== 'admin') {
             try {
               const favRes = await favoriteApi.getMyFavorites();
@@ -323,11 +323,11 @@ const CourseDetail: React.FC = () => {
     return (
       <div className="stars-row" style={{ display: 'inline-flex', gap: '2px', color: '#ffb800' }}>
         {[...Array(5)].map((_, i) => (
-          <Star 
-            key={i} 
-            size={14} 
-            fill={i < rating ? "#ffb800" : "none"} 
-            color={i < rating ? "#ffb800" : "#cbd5e1"} 
+          <Star
+            key={i}
+            size={14}
+            fill={i < rating ? "#ffb800" : "none"}
+            color={i < rating ? "#ffb800" : "#cbd5e1"}
           />
         ))}
       </div>
@@ -385,7 +385,7 @@ const CourseDetail: React.FC = () => {
               bởi <span style={{ fontWeight: 600 }}>{course.instructor}</span>
             </div>
             <h1 className="detail-title">{course.title}</h1>
-            
+
             <div className="detail-meta-list">
               {course.type === 'online' && course.start_date && (
                 <div className="detail-meta-item">
@@ -421,7 +421,7 @@ const CourseDetail: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           <div></div>
         </div>
 
@@ -431,7 +431,7 @@ const CourseDetail: React.FC = () => {
             <div className="detail-sidebar-img-wrapper">
               <img src={course.thumbnail} alt={course.title} className="detail-sidebar-img" />
             </div>
-            
+
             <div className="detail-sidebar-body">
               <div className="detail-price-row">
                 {course.isFree ? (
@@ -444,28 +444,28 @@ const CourseDetail: React.FC = () => {
                 )}
               </div>
 
-              <button 
+              <button
                 className="start-now-btn"
                 onClick={handleStartNow}
                 disabled={myBooking && myBooking.payment_status === 'paid'}
                 style={
-                  course.isFree 
-                    ? { background: 'linear-gradient(135deg, #10b981, #059669)' } 
+                  course.isFree
+                    ? { background: 'linear-gradient(135deg, #10b981, #059669)' }
                     : (myBooking && myBooking.payment_status === 'paid'
-                        ? { background: '#cbd5e1', color: '#64748b', cursor: 'default', boxShadow: 'none' }
-                        : {}
-                      )
+                      ? { background: '#cbd5e1', color: '#64748b', cursor: 'default', boxShadow: 'none' }
+                      : {}
+                    )
                 }
               >
-                {course.isFree 
-                  ? '🎓 Đăng ký trọn gói ngay' 
-                  : (myBooking 
-                      ? (myBooking.payment_status === 'paid' 
-                          ? 'Đã đăng ký & Thanh toán ✓' 
-                          : `💳 Thanh toán bằng Ví (${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(course.price)})`
-                        )
-                      : '💳 Đăng ký khóa học ngay'
+                {course.isFree
+                  ? '🎓 Đăng ký trọn gói ngay'
+                  : (myBooking
+                    ? (myBooking.payment_status === 'paid'
+                      ? 'Đã đăng ký & Thanh toán ✓'
+                      : `💳 Thanh toán bằng Ví (${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(course.price)})`
                     )
+                    : '💳 Đăng ký khóa học ngay'
+                  )
                 }
               </button>
               {course.isFree && (
@@ -482,35 +482,35 @@ const CourseDetail: React.FC = () => {
       {/* 4. Main Body Content */}
       <div className="container">
         <div className="detail-content-layout">
-          
+
           <div className="detail-main-left">
             {/* Tabs Header */}
             <div className="tabs-container">
-              <button 
+              <button
                 className={`tab-button ${activeTab === 'overview' ? 'active' : ''}`}
                 onClick={() => setActiveTab('overview')}
               >
                 Tổng quan
               </button>
-              <button 
+              <button
                 className={`tab-button ${activeTab === 'curriculum' ? 'active' : ''}`}
                 onClick={() => setActiveTab('curriculum')}
               >
                 Chương trình học & Lịch trình
               </button>
-              <button 
+              <button
                 className={`tab-button ${activeTab === 'instructor' ? 'active' : ''}`}
                 onClick={() => setActiveTab('instructor')}
               >
                 Giảng viên
               </button>
-              <button 
+              <button
                 className={`tab-button ${activeTab === 'faqs' ? 'active' : ''}`}
                 onClick={() => setActiveTab('faqs')}
               >
                 Hỏi đáp
               </button>
-              <button 
+              <button
                 className={`tab-button ${activeTab === 'reviews' ? 'active' : ''}`}
                 onClick={() => setActiveTab('reviews')}
               >
@@ -538,7 +538,7 @@ const CourseDetail: React.FC = () => {
 
               {activeTab === 'curriculum' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  
+
                   {/* Lịch học cho khóa Online */}
                   {course.type === 'online' && (
                     <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
@@ -623,7 +623,7 @@ const CourseDetail: React.FC = () => {
                                       const isAuthor = userRole === 'tutor' && course.instructor === authStorage.getUserName();
                                       const isAdmin = userRole === 'admin';
                                       const isPaid = myBooking?.payment_status === 'paid' || myBooking?.status === 'confirmed' || myBooking?.status === 'completed';
-                                      
+
                                       if (!course.isFree && !isPaid && !isAuthor && !isAdmin) {
                                         toast.error('Bạn cần phải đăng ký mua khóa học và thanh toán thành công mới có quyền xem video bài giảng này!');
                                         return;
@@ -654,7 +654,7 @@ const CourseDetail: React.FC = () => {
                                       const isAuthor = userRole === 'tutor' && course.instructor === authStorage.getUserName();
                                       const isAdmin = userRole === 'admin';
                                       const isPaid = myBooking?.payment_status === 'paid' || myBooking?.status === 'confirmed' || myBooking?.status === 'completed';
-                                      
+
                                       if (!course.isFree && !isPaid && !isAuthor && !isAdmin) {
                                         e.preventDefault();
                                         toast.error('Bạn cần phải đăng ký mua khóa học và thanh toán thành công mới có quyền truy cập tài liệu này!');
@@ -779,9 +779,9 @@ const CourseDetail: React.FC = () => {
                         <div key={comm.comment_id} style={{ padding: '16px', background: 'var(--bg-light)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                              <img 
-                                src={comm.user?.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'} 
-                                alt={comm.user?.full_name} 
+                              <img
+                                src={comm.user?.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'}
+                                alt={comm.user?.full_name}
                                 style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }}
                               />
                               <div>
@@ -795,7 +795,7 @@ const CourseDetail: React.FC = () => {
                           </div>
                           <p style={{ margin: '8px 0 0 0', fontSize: '14px', lineHeight: '1.5', color: 'var(--text-main)' }}>{comm.content}</p>
                           {(authStorage.getUserRole() === 'admin') && (
-                            <button 
+                            <button
                               onClick={() => handleDeleteComment(comm.comment_id)}
                               style={{ border: 'none', background: 'none', color: '#ef4444', fontSize: '12px', cursor: 'pointer', marginTop: '8px', padding: 0, display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                             >
@@ -813,14 +813,14 @@ const CourseDetail: React.FC = () => {
             {/* Leave A Comment / Review Form */}
             <div className="comments-section" style={{ marginTop: '40px' }}>
               <h3 className="comments-title">Để lại bình luận & Đánh giá</h3>
-              
+
               {!isAuthenticated ? (
                 <div style={{ padding: '24px', backgroundColor: 'var(--bg-light)', borderRadius: 'var(--radius-md)', textAlign: 'center', margin: '20px 0', border: '1px dashed var(--border)' }}>
                   <p style={{ fontSize: '16px', color: 'var(--text-main)', marginBottom: '16px', fontWeight: 500 }}>
                     🔒 Bạn cần đăng nhập để tham gia bình luận và đánh giá khóa học.
                   </p>
-                  <button 
-                    className="submit-comment-btn" 
+                  <button
+                    className="submit-comment-btn"
                     style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', background: 'var(--primary)', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: 'var(--radius-sm)' }}
                     onClick={() => navigate('/auth')}
                   >
@@ -904,10 +904,10 @@ const CourseDetail: React.FC = () => {
 
                     <div className="form-group">
                       <label className="form-label" htmlFor="course-comment-text">Nội dung bình luận*</label>
-                      <textarea 
-                        id="course-comment-text" 
-                        className="form-input form-textarea" 
-                        required 
+                      <textarea
+                        id="course-comment-text"
+                        className="form-input form-textarea"
+                        required
                         rows={4}
                         placeholder="Viết nhận xét của bạn về khóa học này..."
                         value={commentText}

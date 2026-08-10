@@ -72,11 +72,11 @@ export const CoursesTab: React.FC<CoursesTabProps> = ({
                     {course.subject} ({course.type === 'offline' ? 'Offline' : 'Online'})
                   </span>
                 </div>
-                
+
                 <div className="enrolled-info">
                   <h3>{course.title}</h3>
                   <p className="enrolled-instructor">Giáo viên: {course.instructor}</p>
-                  
+
                   {isUnpaid && (
                     <div style={{ margin: '8px 0', padding: '6px 10px', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '6px', fontSize: '13px', color: '#b91c1c', fontWeight: 600 }}>
                       ⚠️ Khóa học này chưa được thanh toán học phí!
@@ -185,7 +185,7 @@ export const CoursesTab: React.FC<CoursesTabProps> = ({
                         </button>
                       )}
 
-                      <button 
+                      <button
                         className="btn-learn"
                         onClick={() => {
                           if (isUnpaid) {
