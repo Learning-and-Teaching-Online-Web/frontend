@@ -505,7 +505,7 @@ export const OfflineClassesTab: React.FC = () => {
                         </button>
                       )}
                     </div>
-                  ) : isDirected ? (
+                  ) : isDirected && cls.status === 'WAITING_TUTOR_CONFIRM' && !cls.is_assigned_to_me ? (
                     <div style={{ display: 'flex', gap: '10px' }}>
                       <button
                         type="button"
@@ -520,42 +520,33 @@ export const OfflineClassesTab: React.FC = () => {
                           borderRadius: '8px',
                           fontWeight: 700,
                           fontSize: '0.85rem',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '6px',
-                          boxShadow: '0 2px 6px rgba(22, 163, 74, 0.25)'
+                          cursor: 'pointer'
                         }}
                       >
-                        <CheckCircle2 size={16} />
-                        Đồng ý nhận lớp
+                        ĐỒNG Ý NHẬN
                       </button>
-
                       <button
                         type="button"
                         disabled={submitting}
                         onClick={() => handleRespondClass(cls.request_id, 'DECLINE')}
                         style={{
-                          padding: '10px 14px',
-                          background: '#dc2626',
+                          flex: 1,
+                          padding: '10px',
+                          background: '#ef4444',
                           color: '#ffffff',
                           border: 'none',
                           borderRadius: '8px',
                           fontWeight: 700,
                           fontSize: '0.85rem',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '6px',
-                          boxShadow: '0 2px 6px rgba(220, 38, 38, 0.25)'
+                          cursor: 'pointer'
                         }}
-                        title="Từ chối nhận lớp - Đẩy lớp về công khai để tuyển gia sư khác"
                       >
-                        <XCircle size={16} />
-                        Từ chối / Hủy
+                        TỪ CHỐI / HỦY
                       </button>
+                    </div>
+                  ) : isDirected && cls.status === 'PENDING_ADMIN' ? (
+                    <div style={{ color: '#0ea5e9', background: '#f0f9ff', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, textAlign: 'center' }}>
+                      ⏳ Đang chờ Admin duyệt và báo phí nhận lớp...
                     </div>
                   ) : (
                     <div style={{ color: '#475569', fontSize: '0.85rem', textAlign: 'center' }}>
