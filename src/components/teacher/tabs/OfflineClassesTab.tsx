@@ -41,30 +41,6 @@ interface ClassRequestItem {
   _count?: { applications: number };
 }
 
-const CountdownTimer: React.FC<{ deadline: string }> = ({ deadline }) => {
-  const [timeLeft, setTimeLeft] = useState<string>('');
-
-  useEffect(() => {
-    const updateTimer = () => {
-      const diff = new Date(deadline).getTime() - new Date().getTime();
-      if (diff <= 0) {
-        setTimeLeft('Đã hết hạn');
-        return;
-      }
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      setTimeLeft(`${hours} giờ ${minutes} phút ${seconds} giây`);
-    };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-    return () => clearInterval(interval);
-  }, [deadline]);
-
-  return <span style={{ fontWeight: 700, color: '#dc2626' }}>{timeLeft}</span>;
-};
-
 export const OfflineClassesTab: React.FC = () => {
   const [subTab, setSubTab] = useState<'all' | 'directed'>('all');
   
@@ -316,11 +292,12 @@ export const OfflineClassesTab: React.FC = () => {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px' }}>
           {displayedList.map((cls) => {
             const isDirected = cls.is_directed_to_me;
-            const isWaitingFee = cls.status === 'WAITING_TUTOR_CONFIRM' && cls.is_assigned_to_me;
+            const isWaitingFee = cls.status === 'WAITING_PAYMENT' && cls.is_assigned_to_me;
+            const isActiveClass = (cls as any).is_active_offline_class || cls.status === 'ACTIVE';
 
             return (
               <div
-                key={cls.request_id}
+                key={cls.request_id || (cls as any).class_id}
                 style={{
                   background: '#ffffff',
                   borderRadius: '16px',
@@ -328,8 +305,8 @@ export const OfflineClassesTab: React.FC = () => {
                     ? '2px solid #eab308'
                     : cls.status === 'EXPIRED'
                       ? '2px solid #ef4444'
-                      : isDirected 
-                        ? (cls.status === 'ASSIGNED' ? '2px solid #22c55e' : '2px solid #6366f1')
+                      : isActiveClass
+                        ? '2px solid #22c55e'
                         : '1px solid #e2e8f0',
                   boxShadow: isWaitingFee
                     ? '0 4px 14px rgba(234,179,8,0.1)'
@@ -345,34 +322,28 @@ export const OfflineClassesTab: React.FC = () => {
                   {/* Header Line */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9' }}>
                     <span style={{ fontWeight: 800, color: '#f97316', fontSize: '1.05rem' }}>
-                      MS: {cls.code}
+                      MS: {cls.code || (cls as any).class_offline_code}
                     </span>
 
                     {isWaitingFee ? (
                       <span style={{ background: '#fef9c3', color: '#854d0e', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Clock size={14} />
-                        CHỜ ĐÓNG PHÍ
+                        CHỜ ĐÓNG PHÍ ESCROW
                       </span>
                     ) : cls.status === 'EXPIRED' ? (
                       <span style={{ background: '#fee2e2', color: '#991b1b', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <XCircle size={14} />
                         HẾT HẠN ĐÓNG PHÍ
                       </span>
-                    ) : isDirected ? (
-                      cls.status === 'ASSIGNED' ? (
-                        <span style={{ background: '#dcfce7', color: '#15803d', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <CheckCircle2 size={14} />
-                          ĐÃ XÁC NHẬN DẠY
-                        </span>
-                      ) : (
-                        <span style={{ background: '#e0e7ff', color: '#4338ca', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Star size={14} fill="#6366f1" />
-                          HỌC VIÊN CHỈ ĐỊNH
-                        </span>
-                      )
+                    ) : isActiveClass ? (
+                      <span style={{ background: '#dcfce7', color: '#15803d', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <CheckCircle2 size={14} />
+                        LỚP ĐANG HOẠT ĐỘNG (ACTIVE)
+                      </span>
                     ) : (
-                      <span style={{ background: '#f1f5f9', color: '#475569', padding: '3px 10px', borderRadius: '12px', fontWeight: 600, fontSize: '0.78rem' }}>
-                        LỚP CỦA TÔI
+                      <span style={{ background: '#e0e7ff', color: '#4338ca', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Star size={14} fill="#6366f1" />
+                        ĐANG ỨNG TUYỂN / CHỜ DUYỆT
                       </span>
                     )}
                   </div>
@@ -381,7 +352,7 @@ export const OfflineClassesTab: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.88rem', color: '#334155' }}>
                     <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', marginBottom: '4px' }}>
                       <strong>Học viên yêu cầu:</strong> {cls.student_name}
-                      {cls.status === 'ASSIGNED' && cls.phone && (
+                      {cls.phone && (
                         <span style={{ color: '#2563eb', marginLeft: '6px', fontWeight: 600 }}>
                           • SĐT: {cls.phone}
                         </span>
@@ -419,12 +390,10 @@ export const OfflineClassesTab: React.FC = () => {
                         fontSize: '0.85rem'
                       }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#b45309', fontWeight: 700, marginBottom: '6px' }}>
-                          <span>⚠️ Phí nhận lớp ({cls.commission_rate}%): {formatVND(Number(cls.fee_amount))}</span>
+                          <span>⚠️ Phí nhận lớp (35%): {formatVND(Number(cls.fee_amount))}</span>
                         </div>
                         <div style={{ color: '#451a03', fontSize: '0.82rem' }}>
-                          <strong>Hạn đóng phí:</strong> {cls.payment_deadline ? new Date(cls.payment_deadline).toLocaleString('vi-VN') : 'Không giới hạn'}
-                          <br />
-                          <strong>Còn lại:</strong> {cls.payment_deadline && <CountdownTimer deadline={cls.payment_deadline} />}
+                          Nộp phí giữ chỗ để mở lớp chính thức cùng Học viên.
                         </div>
                       </div>
                     )}
@@ -433,7 +402,7 @@ export const OfflineClassesTab: React.FC = () => {
 
                 {/* Footer / Actions */}
                 <div style={{ marginTop: '18px', paddingTop: '14px', borderTop: '1px solid #f1f5f9' }}>
-                  {cls.status === 'ASSIGNED' ? (
+                  {isActiveClass ? (
                     <div style={{ color: '#166534', background: '#f0fdf4', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, textAlign: 'center' }}>
                       ✓ Bạn đã nhận lớp dạy thành công (Phí đã thanh toán)!
                     </div>
