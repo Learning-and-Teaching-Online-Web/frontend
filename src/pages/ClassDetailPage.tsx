@@ -157,7 +157,7 @@ const ClassDetailPage: React.FC = () => {
   return (
     <div style={{ background: '#f8fafc', minHeight: '100vh', padding: '30px 16px' }}>
       <div style={{ maxWidth: '1050px', margin: '0 auto' }}>
-        
+
         {/* Back Link */}
         <div style={{ marginBottom: '16px' }}>
           <Link to="/lop-hoc-moi" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#2563eb', fontWeight: '600', textDecoration: 'none' }}>
@@ -172,7 +172,7 @@ const ClassDetailPage: React.FC = () => {
 
         {/* Main Content Layout (Grid 2 Columns) */}
         <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderTop: 'none', borderRadius: '0 0 8px 8px', padding: '24px', display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', boxShadow: '0 4px 14px rgba(0,0,0,0.05)' }}>
-          
+
           {/* Left Column: Detail Info */}
           <div style={{ fontSize: '0.95rem', lineHeight: '1.8', color: '#1e293b' }}>
             <p style={{ margin: '0 0 8px 0' }}>
@@ -331,7 +331,7 @@ const ClassDetailPage: React.FC = () => {
                   <input
                     type="datetime-local"
                     value={availableFrom}
-                    min={new Date().toISOString().slice(0, 16)}
+                    min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
                     onChange={(e) => setAvailableFrom(e.target.value)}
                     required
                     style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #67e8f9', fontSize: '0.9rem', outline: 'none', background: '#fff' }}

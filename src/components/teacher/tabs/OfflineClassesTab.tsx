@@ -111,6 +111,11 @@ export const OfflineClassesTab: React.FC = () => {
     } catch (err: any) {
       console.error('Error paying commission:', err);
       toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi thanh toán.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleCancelAssignment = async (requestId: string) => {
     if (!window.confirm('Bạn có chắc chắn muốn hủy nhận lớp học này không? Lớp sẽ được mở lại để các Gia sư khác ứng tuyển.')) {
       return;
