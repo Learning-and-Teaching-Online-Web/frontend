@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axiosClient from '../../services/axiosClient';
 import { MapPin, ArrowRight, BookOpen, Clock, Calendar, Sparkles } from 'lucide-react';
+import { formatGradeLevel } from '../../utils/formatters';
 
 interface ClassRequest {
   request_id: string;
@@ -83,7 +84,7 @@ const HotOpenClasses: React.FC = () => {
                 </div>
                 <div className="home-class-card-body">
                   <h3 className="home-class-title">
-                    {cls.subject_name} - {cls.grade_level || 'Tất cả các lớp'}
+                    {cls.subject_name} - {formatGradeLevel(cls.grade_level)}
                   </h3>
                   
                   <div className="home-class-info-list">

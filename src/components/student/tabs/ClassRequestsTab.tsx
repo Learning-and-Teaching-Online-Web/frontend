@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import axiosClient from '../../../services/axiosClient';
+import { formatGradeLevel } from '../../../utils/formatters';
 
 export interface StudentClassRequest {
   request_id?: string;
@@ -345,7 +346,7 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
                     <span style={{ color: '#64748b', fontSize: '0.83rem', display: 'block' }}>Môn học & Khối lớp:</span>
                     <strong style={{ color: '#1e293b', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
                       <BookOpen size={16} color="#2563eb" />
-                      {item.subject_name} ({item.grade_level || 'N/A'})
+                      {item.subject_name} ({formatGradeLevel(item.grade_level)})
                     </strong>
                   </div>
 

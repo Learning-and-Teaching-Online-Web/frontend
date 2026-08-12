@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import axiosClient from '../../../services/axiosClient';
+import { formatGradeLevel } from '../../../utils/formatters';
 
 interface ClassRequestItem {
   request_id: string;
@@ -110,6 +111,19 @@ export const OfflineClassesTab: React.FC = () => {
     } catch (err: any) {
       console.error('Error paying commission:', err);
       toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi thanh toán.');
+  const handleCancelAssignment = async (requestId: string) => {
+    if (!window.confirm('Bạn có chắc chắn muốn hủy nhận lớp học này không? Lớp sẽ được mở lại để các Gia sư khác ứng tuyển.')) {
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const res = await axiosClient.post(`/class-requests/${requestId}/cancel-assignment`);
+      toast.success(res.data.message || 'Đã hủy nhận lớp thành công!');
+      fetchMyClasses();
+    } catch (err: any) {
+      console.error('Error cancelling assignment:', err);
+      toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi hủy nhận lớp.');
     } finally {
       setSubmitting(false);
     }
@@ -361,7 +375,7 @@ export const OfflineClassesTab: React.FC = () => {
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <BookOpen size={16} color="#2563eb" style={{ flexShrink: 0 }} />
-                      <span><strong>Môn & Lớp:</strong> {cls.subject_name} ({cls.grade_level})</span>
+                      <span><strong>Môn & Lớp:</strong> {cls.subject_name} ({formatGradeLevel(cls.grade_level)})</span>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
@@ -440,6 +454,26 @@ export const OfflineClassesTab: React.FC = () => {
                         }}
                       >
                         {submitting ? 'Đang xử lý...' : (walletBalance >= Number(cls.fee_amount || 0) ? 'Thanh toán phí & Nhận lớp' : 'Số dư ví không đủ')}
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={submitting}
+                        onClick={() => handleCancelAssignment(cls.request_id)}
+                        style={{
+                          width: '100%',
+                          padding: '8px',
+                          background: '#ef4444',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '8px',
+                          fontWeight: 700,
+                          fontSize: '0.85rem',
+                          cursor: submitting ? 'not-allowed' : 'pointer',
+                          textAlign: 'center'
+                        }}
+                      >
+                        Hủy nhận lớp
                       </button>
 
                       {walletBalance < Number(cls.fee_amount || 0) && (

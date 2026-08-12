@@ -3,6 +3,7 @@ import AdminLayout from '../../components/admin/AdminLayout';
 import { adminApi } from '../../services/adminApi';
 import { Search, UserCheck, UserX, Eye, X } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { formatGradeLevel } from '../../utils/formatters';
 
 interface StudentItem {
   user_id: string;
@@ -255,7 +256,7 @@ const StudentManagement: React.FC = () => {
               </div>
               <div>
                 <span style={{ fontSize: '12px', color: '#64748b', display: 'block' }}>Trình độ học vấn</span>
-                <strong style={{ fontSize: '14px', color: '#0f172a' }}>{selectedStudent.student_profile?.grade_level || 'Chưa cập nhật'}</strong>
+                <strong style={{ fontSize: '14px', color: '#0f172a' }}>{formatGradeLevel(selectedStudent.student_profile?.grade_level, 'Chưa cập nhật')}</strong>
               </div>
             </div>
 

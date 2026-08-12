@@ -3,6 +3,7 @@ import AdminLayout from '../../components/admin/AdminLayout';
 import { adminApi } from '../../services/adminApi';
 import { Search, UserCheck, UserX, Eye, X } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { formatGradeLevel } from '../../utils/formatters';
 
 interface UserItem {
   user_id: string;
@@ -384,7 +385,7 @@ const UserManagement: React.FC = () => {
             {selectedUser.role === 'student' && selectedUser.student_profile && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px', background: '#f8fafc', padding: '14px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                 <h5 style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#4f46e5' }}>Thông tin Hồ sơ Học viên</h5>
-                <div style={{ fontSize: '13px' }}>Cấp học: <strong>{selectedUser.student_profile.grade_level || 'Chưa điền'}</strong></div>
+                <div style={{ fontSize: '13px' }}>Cấp học: <strong>{formatGradeLevel(selectedUser.student_profile.grade_level, 'Chưa điền')}</strong></div>
                 <div style={{ fontSize: '13px' }}>Mục tiêu: <strong>{selectedUser.student_profile.learning_goals || 'Chưa điền'}</strong></div>
               </div>
             )}

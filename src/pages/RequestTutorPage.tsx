@@ -107,13 +107,23 @@ const RequestTutorPage: React.FC = () => {
     sessions_per_week: 2,
     study_time: '',
     tutor_requirement: 'Sinh viên',
-    selected_tutor_id: '',
+    selected_tutor_code: '',
     desired_price: '',
     other_requirements: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    if (name === 'sessions_per_week') {
+      const newSessions = Number(value);
+      setFormData((prev) => ({ ...prev, sessions_per_week: newSessions }));
+      if (selectedDays.length > newSessions) {
+        const trimmed = selectedDays.slice(0, newSessions);
+        setSelectedDays(trimmed);
+        updateStudyTimeCombined(trimmed, startTime, formData.tutor_requirement);
+      }
+      return;
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -124,40 +134,52 @@ const RequestTutorPage: React.FC = () => {
   };
 
   const toggleSubject = (sub: string) => {
-    const nextSubjects = selectedSubjects.includes(sub)
-      ? selectedSubjects.filter((s) => s !== sub)
-      : [...selectedSubjects, sub];
-    setSelectedSubjects(nextSubjects);
-    updateSubjectNameStr(nextSubjects, isCustomSubjectActive, customSubject);
+    if (selectedSubjects.includes(sub)) {
+      setSelectedSubjects([]);
+      setIsCustomSubjectActive(false);
+      setFormData((prev) => ({ ...prev, subject_name: '' }));
+    } else {
+      setSelectedSubjects([sub]);
+      setIsCustomSubjectActive(false);
+      setCustomSubject('');
+      setFormData((prev) => ({ ...prev, subject_name: sub }));
+    }
   };
 
   const toggleCustomSubjectActive = () => {
-    const nextActive = !isCustomSubjectActive;
-    setIsCustomSubjectActive(nextActive);
-    updateSubjectNameStr(selectedSubjects, nextActive, customSubject);
+    if (isCustomSubjectActive) {
+      setIsCustomSubjectActive(false);
+      setFormData((prev) => ({ ...prev, subject_name: '' }));
+    } else {
+      setSelectedSubjects([]);
+      setIsCustomSubjectActive(true);
+      setFormData((prev) => ({ ...prev, subject_name: customSubject }));
+    }
   };
 
   const handleCustomSubjectChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setCustomSubject(val);
-    updateSubjectNameStr(selectedSubjects, isCustomSubjectActive, val);
-  };
-
-  const updateSubjectNameStr = (subjects: string[], customActive: boolean, customVal: string) => {
-    const list = [...subjects];
-    if (customActive && customVal.trim()) {
-      list.push(customVal.trim());
+    if (isCustomSubjectActive) {
+      setFormData((prev) => ({ ...prev, subject_name: val }));
     }
-    const combined = list.join(', ');
-    setFormData((prev) => ({ ...prev, subject_name: combined }));
   };
 
   const toggleDay = (day: string) => {
-    const nextDays = selectedDays.includes(day)
-      ? selectedDays.filter((d) => d !== day)
-      : [...selectedDays, day];
-    setSelectedDays(nextDays);
-    updateStudyTimeCombined(nextDays, startTime, formData.tutor_requirement);
+    const targetSessions = Number(formData.sessions_per_week) || 1;
+    if (selectedDays.includes(day)) {
+      const nextDays = selectedDays.filter((d) => d !== day);
+      setSelectedDays(nextDays);
+      updateStudyTimeCombined(nextDays, startTime, formData.tutor_requirement);
+    } else {
+      if (selectedDays.length >= targetSessions) {
+        toast.warning(`Số buổi/tuần là ${targetSessions} buổi. Bạn chỉ được chọn tối đa ${targetSessions} ngày học! Vui lòng bỏ chọn 1 ngày trước nếu muốn chọn ngày khác.`);
+        return;
+      }
+      const nextDays = [...selectedDays, day];
+      setSelectedDays(nextDays);
+      updateStudyTimeCombined(nextDays, startTime, formData.tutor_requirement);
+    }
   };
 
   const handleStartTimeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -188,6 +210,12 @@ const RequestTutorPage: React.FC = () => {
 
     if (!formData.student_name || !formData.phone || !formData.address_detail || !formData.subject_name || !formData.desired_price) {
       toast.error('Vui lòng điền đầy đủ các thông tin bắt buộc (*)!');
+      return;
+    }
+
+    const targetSessions = Number(formData.sessions_per_week) || 1;
+    if (selectedDays.length !== targetSessions) {
+      toast.error(`Số buổi/tuần là ${targetSessions} buổi. Bạn phải chọn chính xác ${targetSessions} ngày học trong tuần (hiện tại bạn đã chọn ${selectedDays.length} ngày)!`);
       return;
     }
 
@@ -403,10 +431,10 @@ const RequestTutorPage: React.FC = () => {
                 </select>
               </div>
 
-              {/* Môn học (Có thể chọn nhiều môn) */}
+              {/* Môn học (Chỉ chọn 1 môn) */}
               <div style={{ gridColumn: 'span 2' }}>
                 <label style={{ display: 'block', fontWeight: '600', marginBottom: '8px', color: '#334155', fontSize: '0.9rem' }}>
-                  Môn học <span style={{ color: '#ef4444' }}>*</span> <span style={{ fontWeight: 'normal', color: '#64748b', fontSize: '0.82rem' }}>(Có thể chọn nhiều môn học)</span>
+                  Môn học <span style={{ color: '#ef4444' }}>*</span> <span style={{ fontWeight: 'normal', color: '#64748b', fontSize: '0.82rem' }}>(Chỉ chọn 1 môn học)</span>
                 </label>
 
                 {loadingSubjects ? (
@@ -472,10 +500,10 @@ const RequestTutorPage: React.FC = () => {
                       />
                     )}
 
-                    {/* Hiển thị danh sách môn đã chọn */}
+                    {/* Hiển thị môn đã chọn */}
                     {formData.subject_name && (
                       <div style={{ padding: '8px 12px', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', fontSize: '0.85rem', color: '#1e293b' }}>
-                        <strong>Các môn đã chọn:</strong> <span style={{ color: '#2563eb', fontWeight: '600' }}>{formData.subject_name}</span>
+                        <strong>Môn đã chọn:</strong> <span style={{ color: '#2563eb', fontWeight: '600' }}>{formData.subject_name}</span>
                       </div>
                     )}
                   </div>
@@ -541,8 +569,13 @@ const RequestTutorPage: React.FC = () => {
 
                 {/* Chọn thứ trong tuần */}
                 <div style={{ marginBottom: '12px' }}>
-                  <span style={{ fontSize: '0.85rem', color: '#64748b', display: 'block', marginBottom: '6px' }}>
-                    Chọn các ngày học trong tuần:
+                  <span style={{ fontSize: '0.85rem', color: '#334155', display: 'block', marginBottom: '6px', fontWeight: 600 }}>
+                    Chọn các ngày học trong tuần (bắt buộc chọn đúng {formData.sessions_per_week} ngày):{' '}
+                    {selectedDays.length === Number(formData.sessions_per_week) ? (
+                      <span style={{ color: '#16a34a', fontWeight: 700 }}>✓ Đã chọn đủ {selectedDays.length}/{formData.sessions_per_week} ngày</span>
+                    ) : (
+                      <span style={{ color: '#ea580c', fontWeight: 600 }}>⚠️ Hiện chọn {selectedDays.length}/{formData.sessions_per_week} ngày (cần chọn thêm {Number(formData.sessions_per_week) - selectedDays.length} ngày)</span>
+                    )}
                   </span>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                     {DAYS_LIST.map((day) => {
@@ -680,8 +713,8 @@ const RequestTutorPage: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  name="selected_tutor_id"
-                  value={formData.selected_tutor_id}
+                  name="selected_tutor_code"
+                  value={formData.selected_tutor_code}
                   onChange={handleChange}
                   placeholder="Ví dụ: Mã số 7650, 2907..."
                   style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.95rem', outline: 'none' }}
