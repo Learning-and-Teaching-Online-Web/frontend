@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   ClipboardList, 
@@ -45,6 +45,7 @@ export interface StudentClassRequest {
   tutor_phone?: string;
   selected_tutor?: { full_name: string; phone?: string | null; avatar_url?: string | null } | null;
   assigned_tutor?: { full_name: string; phone?: string | null; avatar_url?: string | null } | null;
+  payment_deadline?: string;
   refund_deadline?: string;
   payments?: any[];
   refund_tickets?: any[];
@@ -55,6 +56,76 @@ interface ClassRequestsTabProps {
   classRequests: StudentClassRequest[];
   onRefresh: () => void;
 }
+
+const PaymentCountdown: React.FC<{ deadline?: string }> = ({ deadline }) => {
+  const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number; seconds: number; isExpired: boolean } | null>(null);
+
+  useEffect(() => {
+    if (!deadline) return;
+
+    const calc = () => {
+      const target = new Date(deadline).getTime();
+      const now = Date.now();
+      const diff = target - now;
+
+      if (diff <= 0) {
+        setTimeLeft({ hours: 0, minutes: 0, seconds: 0, isExpired: true });
+        return;
+      }
+
+      const totalSec = Math.floor(diff / 1000);
+      const hours = Math.floor(totalSec / 3600);
+      const minutes = Math.floor((totalSec % 3600) / 60);
+      const seconds = totalSec % 60;
+
+      setTimeLeft({ hours, minutes, seconds, isExpired: false });
+    };
+
+    calc();
+    const interval = setInterval(calc, 1000);
+    return () => clearInterval(interval);
+  }, [deadline]);
+
+  if (!deadline) {
+    return (
+      <div style={{ color: '#b45309', fontWeight: 600, fontSize: '0.82rem', marginTop: '4px' }}>
+        ⏳ Thời hạn nộp học phí: 24 giờ kể từ khi được xếp gia sư
+      </div>
+    );
+  }
+
+  if (!timeLeft) return null;
+
+  if (timeLeft.isExpired) {
+    return (
+      <div style={{ color: '#dc2626', fontWeight: 700, fontSize: '0.84rem', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <span>⚠️ Đã hết hạn nộp học phí! Lớp yêu cầu sẽ bị chuyển về trạng thái trễ hạn.</span>
+      </div>
+    );
+  }
+
+  const formattedDeadlineStr = new Date(deadline).toLocaleString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+  });
+
+  return (
+    <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: '8px', padding: '6px 10px', marginTop: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
+      <span style={{ color: '#92400e', fontWeight: 700, fontSize: '0.83rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <Clock size={14} color="#d97706" />
+        Thời hạn nộp học phí còn:
+      </span>
+      <span style={{ background: '#d97706', color: '#ffffff', fontWeight: 800, fontFamily: 'monospace', fontSize: '0.9rem', padding: '2px 8px', borderRadius: '6px' }}>
+        {timeLeft.hours.toString().padStart(2, '0')}:{timeLeft.minutes.toString().padStart(2, '0')}:{timeLeft.seconds.toString().padStart(2, '0')}
+      </span>
+      <span style={{ color: '#78350f', fontSize: '0.75rem', width: '100%', textAlign: 'right' }}>
+        (Hạn chót: {formattedDeadlineStr})
+      </span>
+    </div>
+  );
+};
 
 export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
   classRequests,
@@ -98,13 +169,24 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
     }
 
     switch (item.status) {
-      case 'WAITING_PAYMENT':
+      case 'WAITING_PAYMENT': {
+        const studentPayment = (item.payments || []).find((p: any) => p.type === 'STUDENT_TUITION');
+        const isStudentPaid = studentPayment?.status === 'PAID';
+        if (isStudentPaid) {
+          return (
+            <span className="badge badge-success" style={{ background: '#dcfce7', color: '#15803d', padding: '4px 12px', borderRadius: '20px', fontWeight: 600, fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <Check size={14} />
+              ĐÃ NỘP HỌC PHÍ (CHỜ GIA SƯ ĐÓNG PHÍ)
+            </span>
+          );
+        }
         return (
           <span className="badge badge-warning" style={{ background: '#fef3c7', color: '#b45309', padding: '4px 12px', borderRadius: '20px', fontWeight: 600, fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
             <Clock size={14} />
             CHỜ ĐÓNG HỌC PHÍ ESCROW
           </span>
         );
+      }
       case 'OPEN':
         return (
           <span className="badge badge-success" style={{ background: '#dcfce7', color: '#15803d', padding: '4px 12px', borderRadius: '20px', fontWeight: 600, fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
@@ -124,6 +206,13 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
           <span className="badge badge-muted" style={{ background: '#f1f5f9', color: '#64748b', padding: '4px 12px', borderRadius: '20px', fontWeight: 600, fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
             <XCircle size={14} />
             ĐÃ HỦY YÊU CẦU
+          </span>
+        );
+      case 'WAITING_TUTOR_CONFIRM':
+        return (
+          <span className="badge badge-warning" style={{ background: '#e0f2fe', color: '#0369a1', padding: '4px 12px', borderRadius: '20px', fontWeight: 600, fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            <Clock size={14} />
+            CHỜ GS CHỈ ĐỊNH XÁC NHẬN
           </span>
         );
       case 'REJECTED':
@@ -264,6 +353,8 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
             const reqId = item.request_id || item.class_id || '';
             const isWaitingPayment = item.status === 'WAITING_PAYMENT';
             const isActiveClass = item.is_active_offline_class && item.status === 'ACTIVE';
+            const studentPayment = (item.payments || []).find((p: any) => p.type === 'STUDENT_TUITION');
+            const isStudentPaid = studentPayment?.status === 'PAID';
 
             return (
               <div 
@@ -380,35 +471,78 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
 
                 {/* WAITING PAYMENT ACTIONS */}
                 {isWaitingPayment && (
-                  <div style={{ background: '#fffbeb', border: '1px solid #fde68a', padding: '14px', borderRadius: '10px', marginBottom: '12px' }}>
-                    <div style={{ color: '#92400e', fontWeight: 700, fontSize: '0.9rem', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <CreditCard size={18} />
-                      Yêu cầu nộp tiền giữ chỗ (Escrow): Học phí tháng đầu
+                  <>
+                    {isStudentPaid ? (
+                      <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '14px', borderRadius: '10px', marginBottom: '12px' }}>
+                        <div style={{ color: '#166534', fontWeight: 700, fontSize: '0.9rem', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Check size={18} color="#16a34a" />
+                          ✓ Đã hoàn tất nộp học phí tháng đầu giữ chỗ (Escrow)!
+                        </div>
+                        <p style={{ color: '#15803d', fontSize: '0.83rem', margin: '0 0 8px 0' }}>
+                          Đang chờ Gia sư hoàn tất nộp phí nhận lớp để hệ thống chính thức kích hoạt (ACTIVE) lớp học.
+                        </p>
+                        <PaymentCountdown deadline={item.payment_deadline} />
+                      </div>
+                    ) : (
+                      <div style={{ background: '#fffbeb', border: '1px solid #fde68a', padding: '14px', borderRadius: '10px', marginBottom: '12px' }}>
+                        <div style={{ color: '#92400e', fontWeight: 700, fontSize: '0.9rem', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <CreditCard size={18} />
+                          Yêu cầu nộp tiền giữ chỗ (Escrow): Học phí tháng đầu
+                        </div>
+                        <p style={{ color: '#78350f', fontSize: '0.83rem', margin: '0 0 10px 0' }}>
+                          Admin đã duyệt chọn gia sư cho lớp học của bạn. Để kích hoạt lớp học chính thức (ACTIVE), bạn cần nộp khoản học phí tháng đầu giữ chỗ ({formatCurrency(Number(item.desired_price))}).
+                        </p>
+                        <button
+                          type="button"
+                          disabled={updating}
+                          onClick={() => handlePayTuition(reqId)}
+                          style={{
+                            padding: '10px 20px',
+                            background: '#d97706',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontWeight: 700,
+                            fontSize: '0.88rem',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            boxShadow: '0 2px 6px rgba(217, 119, 6, 0.25)',
+                            marginBottom: '8px'
+                          }}
+                        >
+                          {updating ? 'Đang xử lý...' : 'Nộp học phí tháng đầu ngay →'}
+                        </button>
+                        <PaymentCountdown deadline={item.payment_deadline} />
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {item.status === 'WAITING_TUTOR_CONFIRM' && (
+                  <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', padding: '14px', borderRadius: '10px', marginBottom: '12px' }}>
+                    <div style={{ color: '#0369a1', fontWeight: 700, fontSize: '0.9rem', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Clock size={18} color="#0284c7" />
+                      Đang chờ Gia sư được chỉ định xác nhận lời mời nhận lớp!
                     </div>
-                    <p style={{ color: '#78350f', fontSize: '0.83rem', margin: '0 0 10px 0' }}>
-                      Admin đã duyệt chọn gia sư cho lớp học của bạn. Để kích hoạt lớp học chính thức (ACTIVE), bạn cần nộp khoản học phí tháng đầu giữ chỗ ({formatCurrency(Number(item.desired_price))}).
+                    <p style={{ color: '#0c4a6e', fontSize: '0.83rem', margin: 0 }}>
+                      Admin đã duyệt bài đăng của bạn. Hệ thống đã gửi thông báo đến Gia sư được chỉ định. Nếu Gia sư từ chối, yêu cầu sẽ tự động chuyển sang bài đăng công khai để các Gia sư khác ứng tuyển.
                     </p>
-                    <button
-                      type="button"
-                      disabled={updating}
-                      onClick={() => handlePayTuition(reqId)}
-                      style={{
-                        padding: '10px 20px',
-                        background: '#d97706',
-                        color: '#ffffff',
-                        border: 'none',
-                        borderRadius: '8px',
-                        fontWeight: 700,
-                        fontSize: '0.88rem',
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        boxShadow: '0 2px 6px rgba(217, 119, 6, 0.25)'
-                      }}
-                    >
-                      {updating ? 'Đang xử lý...' : 'Nộp học phí tháng đầu ngay →'}
-                    </button>
+                  </div>
+                )}
+
+                {item.status === 'REJECTED' && (
+                  <div style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: '14px', borderRadius: '10px', marginBottom: '12px' }}>
+                    <div style={{ color: '#991b1b', fontWeight: 700, fontSize: '0.9rem', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <AlertCircle size={18} color="#dc2626" />
+                      Bài đăng tìm gia sư đã bị Admin từ chối.
+                    </div>
+                    {(item as any).admin_note && (
+                      <p style={{ color: '#7f1d1d', fontSize: '0.83rem', margin: 0 }}>
+                        <strong>Lý do từ chối:</strong> {(item as any).admin_note}
+                      </p>
+                    )}
                   </div>
                 )}
 

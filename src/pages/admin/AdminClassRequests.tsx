@@ -108,6 +108,12 @@ const AdminClassRequests: React.FC = () => {
   const [editFormData, setEditFormData] = useState<any>(null);
   const [editReadOnly, setEditReadOnly] = useState(false);
 
+  // Reject Class Request State
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectingClass, setRejectingClass] = useState<ClassRequest | null>(null);
+  const [rejectNote, setRejectNote] = useState('');
+  const [rejectSubmitting, setRejectSubmitting] = useState(false);
+
   const fetchRequests = async () => {
     setLoading(true);
     try {
@@ -154,11 +160,36 @@ const AdminClassRequests: React.FC = () => {
       const res = await axiosClient.patch(`/admin/class-requests/${requestId}/approve-open`, {
         commission_rate: commissionRate,
       });
-      toast.success(res.data.message || 'Đã duyệt mở lớp công khai (OPEN) thành công!');
+      toast.success(res.data.message || 'Đã duyệt yêu cầu bài đăng thành công!');
       fetchRequests();
     } catch (err: any) {
       console.error('Error approving open:', err);
       toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi duyệt mở lớp.');
+    }
+  };
+
+  const handleOpenRejectModal = (cls: ClassRequest) => {
+    setRejectingClass(cls);
+    setRejectNote('');
+    setRejectModalOpen(true);
+  };
+
+  const handleRejectClass = async () => {
+    if (!rejectingClass) return;
+    try {
+      setRejectSubmitting(true);
+      const res = await axiosClient.patch(`/admin/class-requests/${rejectingClass.request_id}/reject`, {
+        admin_note: rejectNote,
+      });
+      toast.success(res.data.message || 'Đã từ chối bài đăng tìm gia sư thành công!');
+      setRejectModalOpen(false);
+      setRejectingClass(null);
+      fetchRequests();
+    } catch (err: any) {
+      console.error('Error rejecting class:', err);
+      toast.error(err.response?.data?.message || 'Lỗi khi từ chối bài đăng.');
+    } finally {
+      setRejectSubmitting(false);
     }
   };
 
@@ -274,7 +305,18 @@ const AdminClassRequests: React.FC = () => {
       case 'OPEN':
         return <span className="admin-badge success">LỚP CHƯA GIAO (OPEN)</span>;
       case 'WAITING_PAYMENT':
-        return <span className="admin-badge warning" style={{ background: '#f59e0b', color: '#ffffff' }}>CHỜ ĐÓNG PHÍ ESCROW</span>;
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <span className="admin-badge warning" style={{ background: '#f59e0b', color: '#ffffff' }}>CHỜ ĐÓNG PHÍ ESCROW</span>
+            {cls.payment_deadline && (
+              <span style={{ fontSize: '11px', color: '#fbbf24' }}>
+                Hạn: {new Date(cls.payment_deadline).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
+              </span>
+            )}
+          </div>
+        );
+      case 'WAITING_TUTOR_CONFIRM':
+        return <span className="admin-badge warning" style={{ background: '#0284c7', color: '#ffffff' }}>CHỜ GS CHỈ ĐỊNH XÁC NHẬN</span>;
       case 'EXPIRED':
         return <span className="admin-badge danger" style={{ background: '#ef4444', color: '#ffffff' }}>HẾT HẠN ĐÓNG PHÍ (EXPIRED)</span>;
       case 'CANCELLED':
@@ -369,10 +411,12 @@ const AdminClassRequests: React.FC = () => {
                 {[
                   { key: 'all', label: 'Tất cả lớp' },
                   { key: 'PENDING_ADMIN', label: 'Chờ Admin duyệt' },
+                  { key: 'WAITING_TUTOR_CONFIRM', label: 'Chờ GS chỉ định' },
                   { key: 'WAITING_PAYMENT', label: 'Chờ đóng phí escrow' },
                   { key: 'OPEN', label: 'Lớp chưa giao (OPEN)' },
                   { key: 'OFFLINE_ACTIVE', label: 'Đang dạy (đã giao)' },
                   { key: 'EXPIRED', label: 'Hết hạn đóng phí' },
+                  { key: 'REJECTED', label: 'Admin từ chối' },
                   { key: 'CANCELLED', label: 'Đã hủy' },
                   { key: 'OFFLINE_CANCELLED', label: 'Đã hủy (hoàn tiền)' },
                 ].map((tab) => (
@@ -482,15 +526,28 @@ const AdminClassRequests: React.FC = () => {
                             ) : (
                               <>
                                 {cls.status === 'PENDING_ADMIN' && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleApproveOpen(cls.request_id)}
-                                    className="admin-btn sm success"
-                                    title="Duyệt mở lớp công khai (OPEN)"
-                                  >
-                                    <CheckCircle2 size={14} />
-                                    <span>Duyệt Lớp</span>
-                                  </button>
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleApproveOpen(cls.request_id)}
+                                      className="admin-btn sm success"
+                                      title={(cls as any).selected_tutor_code ? "Duyệt gửi lời mời cho Gia sư chỉ định" : "Duyệt mở lớp công khai (OPEN)"}
+                                    >
+                                      <CheckCircle2 size={14} />
+                                      <span>{(cls as any).selected_tutor_code ? "Duyệt Lời Mời" : "Duyệt Lớp"}</span>
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenRejectModal(cls)}
+                                      className="admin-btn sm danger"
+                                      style={{ background: '#ef4444', borderColor: '#ef4444' }}
+                                      title="Từ chối bài đăng tìm gia sư"
+                                    >
+                                      <X size={14} />
+                                      <span>Từ Chối</span>
+                                    </button>
+                                  </>
                                 )}
                                 <button
                                   type="button"
@@ -1189,6 +1246,68 @@ const AdminClassRequests: React.FC = () => {
                 )}
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Modal Từ Chối Bài Đăng Tìm Gia Sư */}
+      {rejectModalOpen && rejectingClass && (
+        <div className="modal-overlay">
+          <div className="modal-card" style={{ maxWidth: '480px', width: '90%', background: '#111827', border: '1px solid var(--admin-border)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--admin-border)', paddingBottom: '12px' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#f87171', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <X size={20} />
+                <span>Từ Chối Bài Đăng Tìm Gia Sư</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setRejectModalOpen(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--admin-text-muted)' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ fontSize: '13px', color: 'var(--admin-text-main)', marginBottom: '16px', background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px' }}>
+              <strong>Mã lớp:</strong> MS: {rejectingClass.code}
+              <br />
+              <strong>Học viên:</strong> {rejectingClass.student_name} ({rejectingClass.phone})
+              <br />
+              <strong>Môn & Lớp:</strong> {rejectingClass.subject_name}
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '6px', fontSize: '13px' }}>
+                Lý do từ chối bài đăng *
+              </label>
+              <textarea
+                rows={3}
+                value={rejectNote}
+                onChange={(e) => setRejectNote(e.target.value)}
+                placeholder="Nhập ghi chú lý do từ chối (VD: Thông tin địa chỉ không rõ ràng, yêu cầu không phù hợp...)"
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button
+                type="button"
+                disabled={rejectSubmitting}
+                onClick={() => setRejectModalOpen(false)}
+                className="admin-btn sm secondary"
+              >
+                Hủy bỏ
+              </button>
+
+              <button
+                type="button"
+                disabled={rejectSubmitting}
+                onClick={handleRejectClass}
+                className="admin-btn sm danger"
+                style={{ background: '#ef4444', borderColor: '#ef4444', fontWeight: 700 }}
+              >
+                {rejectSubmitting ? 'Đang từ chối...' : 'Xác Nhận Từ Chối'}
+              </button>
+            </div>
           </div>
         </div>
       )}

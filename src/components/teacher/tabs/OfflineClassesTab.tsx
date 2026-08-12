@@ -10,7 +10,8 @@ import {
   XCircle, 
   Star, 
   User, 
-  Layers 
+  Layers,
+  RotateCcw
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import axiosClient from '../../../services/axiosClient';
@@ -18,6 +19,7 @@ import { formatGradeLevel } from '../../../utils/formatters';
 
 interface ClassRequestItem {
   request_id: string;
+  class_id?: string;
   code: string;
   student_name: string;
   phone: string;
@@ -36,11 +38,84 @@ interface ClassRequestItem {
   is_directed_to_me?: boolean;
   is_assigned_to_me?: boolean;
   payment_deadline?: string;
+  refund_deadline?: string;
   fee_amount?: number;
   assigned_tutor_id?: string;
   my_application_status?: string | null;
+  payments?: any[];
+  refund_tickets?: any[];
   _count?: { applications: number };
 }
+
+const PaymentCountdown: React.FC<{ deadline?: string }> = ({ deadline }) => {
+  const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number; seconds: number; isExpired: boolean } | null>(null);
+
+  useEffect(() => {
+    if (!deadline) return;
+
+    const calc = () => {
+      const target = new Date(deadline).getTime();
+      const now = Date.now();
+      const diff = target - now;
+
+      if (diff <= 0) {
+        setTimeLeft({ hours: 0, minutes: 0, seconds: 0, isExpired: true });
+        return;
+      }
+
+      const totalSec = Math.floor(diff / 1000);
+      const hours = Math.floor(totalSec / 3600);
+      const minutes = Math.floor((totalSec % 3600) / 60);
+      const seconds = totalSec % 60;
+
+      setTimeLeft({ hours, minutes, seconds, isExpired: false });
+    };
+
+    calc();
+    const interval = setInterval(calc, 1000);
+    return () => clearInterval(interval);
+  }, [deadline]);
+
+  if (!deadline) {
+    return (
+      <div style={{ color: '#b45309', fontWeight: 600, fontSize: '0.82rem', marginTop: '4px' }}>
+        ⏳ Thời hạn nộp phí: 24 giờ kể từ khi được duyệt
+      </div>
+    );
+  }
+
+  if (!timeLeft) return null;
+
+  if (timeLeft.isExpired) {
+    return (
+      <div style={{ color: '#dc2626', fontWeight: 700, fontSize: '0.84rem', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <span>⚠️ Đã hết hạn nộp phí! Lớp sẽ bị hủy hoặc chuyển trả về hệ thống.</span>
+      </div>
+    );
+  }
+
+  const formattedDeadlineStr = new Date(deadline).toLocaleString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+  });
+
+  return (
+    <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: '8px', padding: '6px 10px', marginTop: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
+      <span style={{ color: '#92400e', fontWeight: 700, fontSize: '0.83rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <Clock size={14} color="#d97706" />
+        Thời hạn đóng phí còn:
+      </span>
+      <span style={{ background: '#d97706', color: '#ffffff', fontWeight: 800, fontFamily: 'monospace', fontSize: '0.9rem', padding: '2px 8px', borderRadius: '6px' }}>
+        {timeLeft.hours.toString().padStart(2, '0')}:{timeLeft.minutes.toString().padStart(2, '0')}:{timeLeft.seconds.toString().padStart(2, '0')}
+      </span>
+      <span style={{ color: '#78350f', fontSize: '0.75rem', width: '100%', textAlign: 'right' }}>
+        (Hạn chót: {formattedDeadlineStr})
+      </span>
+    </div>
+  );
+};
 
 export const OfflineClassesTab: React.FC = () => {
   const [subTab, setSubTab] = useState<'all' | 'directed'>('all');
@@ -53,6 +128,8 @@ export const OfflineClassesTab: React.FC = () => {
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [pendingPaymentClass, setPendingPaymentClass] = useState<ClassRequestItem | null>(null);
+  const [refundModalItem, setRefundModalItem] = useState<ClassRequestItem | null>(null);
+  const [refundReason, setRefundReason] = useState<string>('');
 
   // Fetch wallet balance
   const fetchWalletBalance = async () => {
@@ -149,6 +226,31 @@ export const OfflineClassesTab: React.FC = () => {
     } catch (err: any) {
       console.error('Error responding class:', err);
       toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi phản hồi nhận lớp.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSubmitRefundTicket = async () => {
+    const targetClassId = refundModalItem?.class_id || refundModalItem?.request_id;
+    if (!refundModalItem || !targetClassId) return;
+    if (!refundReason.trim()) {
+      toast.error('Vui lòng nhập lý do yêu cầu hủy/hoàn tiền.');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const res = await axiosClient.post(`/class-requests/offline-classes/${targetClassId}/refund-tickets`, {
+        reason: refundReason.trim()
+      });
+      toast.success(res.data.message || 'Đã gửi yêu cầu hủy lớp đến Admin.');
+      setRefundModalItem(null);
+      setRefundReason('');
+      fetchMyClasses();
+    } catch (err: any) {
+      console.error('Error submitting refund ticket:', err);
+      toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi gửi yêu cầu.');
     } finally {
       setSubmitting(false);
     }
@@ -313,6 +415,8 @@ export const OfflineClassesTab: React.FC = () => {
             const isDirected = cls.is_directed_to_me;
             const isWaitingFee = cls.status === 'WAITING_PAYMENT' && cls.is_assigned_to_me;
             const isActiveClass = (cls as any).is_active_offline_class || cls.status === 'ACTIVE';
+            const tutorPayment = (cls.payments || []).find((p: any) => p.type === 'TUTOR_PLACEMENT_FEE');
+            const isTutorPaid = tutorPayment?.status === 'PAID';
 
             return (
               <div
@@ -345,10 +449,17 @@ export const OfflineClassesTab: React.FC = () => {
                     </span>
 
                     {isWaitingFee ? (
-                      <span style={{ background: '#fef9c3', color: '#854d0e', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Clock size={14} />
-                        CHỜ ĐÓNG PHÍ ESCROW
-                      </span>
+                      isTutorPaid ? (
+                        <span style={{ background: '#dcfce7', color: '#15803d', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <CheckCircle2 size={14} />
+                          ĐÃ ĐÓNG PHÍ (CHỜ HỌC VIÊN)
+                        </span>
+                      ) : (
+                        <span style={{ background: '#fef9c3', color: '#854d0e', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Clock size={14} />
+                          CHỜ ĐÓNG PHÍ ESCROW
+                        </span>
+                      )
                     ) : cls.status === 'EXPIRED' ? (
                       <span style={{ background: '#fee2e2', color: '#991b1b', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <XCircle size={14} />
@@ -400,21 +511,43 @@ export const OfflineClassesTab: React.FC = () => {
 
                     {/* Phí nhận lớp cảnh báo & countdown */}
                     {isWaitingFee && cls.fee_amount && (
-                      <div style={{
-                        marginTop: '12px',
-                        padding: '12px',
-                        background: '#fffbeb',
-                        border: '1px solid #fde68a',
-                        borderRadius: '10px',
-                        fontSize: '0.85rem'
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#b45309', fontWeight: 700, marginBottom: '6px' }}>
-                          <span>⚠️ Phí nhận lớp (35%): {formatVND(Number(cls.fee_amount))}</span>
-                        </div>
-                        <div style={{ color: '#451a03', fontSize: '0.82rem' }}>
-                          Nộp phí giữ chỗ để mở lớp chính thức cùng Học viên.
-                        </div>
-                      </div>
+                      <>
+                        {isTutorPaid ? (
+                          <div style={{
+                            marginTop: '12px',
+                            padding: '12px',
+                            background: '#f0fdf4',
+                            border: '1px solid #bbf7d0',
+                            borderRadius: '10px',
+                            fontSize: '0.85rem'
+                          }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#166534', fontWeight: 700, marginBottom: '4px' }}>
+                              <span>✓ Bạn đã hoàn tất đóng phí nhận lớp!</span>
+                            </div>
+                            <div style={{ color: '#15803d', fontSize: '0.82rem', marginBottom: '4px' }}>
+                              Đang chờ Học viên nộp học phí tháng đầu để chính thức kích hoạt lớp học.
+                            </div>
+                            <PaymentCountdown deadline={cls.payment_deadline} />
+                          </div>
+                        ) : (
+                          <div style={{
+                            marginTop: '12px',
+                            padding: '12px',
+                            background: '#fffbeb',
+                            border: '1px solid #fde68a',
+                            borderRadius: '10px',
+                            fontSize: '0.85rem'
+                          }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#b45309', fontWeight: 700, marginBottom: '6px' }}>
+                              <span>⚠️ Phí nhận lớp (35%): {formatVND(Number(cls.fee_amount))}</span>
+                            </div>
+                            <div style={{ color: '#451a03', fontSize: '0.82rem', marginBottom: '4px' }}>
+                              Nộp phí giữ chỗ để mở lớp chính thức cùng Học viên.
+                            </div>
+                            <PaymentCountdown deadline={cls.payment_deadline} />
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -422,97 +555,133 @@ export const OfflineClassesTab: React.FC = () => {
                 {/* Footer / Actions */}
                 <div style={{ marginTop: '18px', paddingTop: '14px', borderTop: '1px solid #f1f5f9' }}>
                   {isActiveClass ? (
-                    <div style={{ color: '#166534', background: '#f0fdf4', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, textAlign: 'center' }}>
-                      ✓ Bạn đã nhận lớp dạy thành công (Phí đã thanh toán)!
+                    <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '12px 14px', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ color: '#166534', fontWeight: 600, fontSize: '0.85rem' }}>
+                        ✓ Bạn đã nhận lớp dạy thành công (Phí đã thanh toán)!
+                      </div>
+                      {cls.refund_deadline && (
+                        <div style={{ color: '#15803d', fontSize: '0.78rem' }}>
+                          Bảo hộ hủy/hoàn tiền 7 ngày có hiệu lực đến: {new Date(cls.refund_deadline).toLocaleString('vi-VN')}
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setRefundModalItem(cls)}
+                        style={{
+                          marginTop: '4px',
+                          background: '#ffffff',
+                          color: '#dc2626',
+                          border: '1px solid #fca5a5',
+                          padding: '6px 12px',
+                          borderRadius: '8px',
+                          fontSize: '0.82rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '4px',
+                          width: '100%'
+                        }}
+                      >
+                        <RotateCcw size={14} />
+                        Yêu cầu hủy lớp / Hoàn tiền (7 ngày)
+                      </button>
                     </div>
                   ) : cls.status === 'EXPIRED' ? (
                     <div style={{ color: '#991b1b', background: '#fee2e2', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, textAlign: 'center' }}>
                       ✕ Đã quá hạn đóng phí. Lớp học đã được chuyển trả lại hệ thống.
                     </div>
                   ) : isWaitingFee ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <button
-                        type="button"
-                        disabled={submitting}
-                        onClick={() => {
-                          if (walletBalance >= Number(cls.fee_amount || 0)) {
-                            setPendingPaymentClass(cls);
-                          } else {
-                            toast.error(`Số dư ví không đủ! Cần ${formatVND(Number(cls.fee_amount))} để đóng phí.`);
-                          }
-                        }}
-                        style={{
-                          width: '100%',
-                          padding: '10px',
-                          background: walletBalance >= Number(cls.fee_amount || 0) ? '#eab308' : '#cbd5e1',
-                          color: walletBalance >= Number(cls.fee_amount || 0) ? '#ffffff' : '#64748b',
-                          border: 'none',
-                          borderRadius: '8px',
-                          fontWeight: 700,
-                          fontSize: '0.85rem',
-                          cursor: walletBalance >= Number(cls.fee_amount || 0) ? 'pointer' : 'not-allowed',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '6px',
-                          boxShadow: walletBalance >= Number(cls.fee_amount || 0) ? '0 2px 6px rgba(234, 179, 8, 0.25)' : 'none'
-                        }}
-                      >
-                        {submitting ? 'Đang xử lý...' : (walletBalance >= Number(cls.fee_amount || 0) ? 'Thanh toán phí & Nhận lớp' : 'Số dư ví không đủ')}
-                      </button>
-
-                      <button
-                        type="button"
-                        disabled={submitting}
-                        onClick={() => handleCancelAssignment(cls.request_id)}
-                        style={{
-                          width: '100%',
-                          padding: '8px',
-                          background: '#ef4444',
-                          color: '#ffffff',
-                          border: 'none',
-                          borderRadius: '8px',
-                          fontWeight: 700,
-                          fontSize: '0.85rem',
-                          cursor: submitting ? 'not-allowed' : 'pointer',
-                          textAlign: 'center'
-                        }}
-                      >
-                        Hủy nhận lớp
-                      </button>
-
-                      {walletBalance < Number(cls.fee_amount || 0) && (
+                    isTutorPaid ? (
+                      <div style={{ color: '#166534', background: '#f0fdf4', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, textAlign: 'center' }}>
+                        ✓ Đã thanh toán phí nhận lớp — Đang chờ Học viên!
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <button
                           type="button"
+                          disabled={submitting}
                           onClick={() => {
-                            const walletTabBtn = document.getElementById('tab-btn-wallet');
-                            if (walletTabBtn) {
-                              walletTabBtn.click();
-                              setTimeout(() => {
-                                const depSec = document.getElementById('wallet-deposit-section');
-                                if (depSec) depSec.scrollIntoView({ behavior: 'smooth' });
-                              }, 200);
+                            if (walletBalance >= Number(cls.fee_amount || 0)) {
+                              setPendingPaymentClass(cls);
                             } else {
-                              toast.info('Vui lòng chuyển sang tab Ví tiền để nạp tiền.');
+                              toast.error(`Số dư ví không đủ! Cần ${formatVND(Number(cls.fee_amount))} để đóng phí.`);
                             }
                           }}
                           style={{
                             width: '100%',
-                            padding: '8px',
-                            background: '#f8fafc',
-                            color: '#2563eb',
-                            border: '1px dashed #2563eb',
+                            padding: '10px',
+                            background: walletBalance >= Number(cls.fee_amount || 0) ? '#eab308' : '#cbd5e1',
+                            color: walletBalance >= Number(cls.fee_amount || 0) ? '#ffffff' : '#64748b',
+                            border: 'none',
                             borderRadius: '8px',
-                            fontWeight: 600,
-                            fontSize: '0.8rem',
-                            cursor: 'pointer',
+                            fontWeight: 700,
+                            fontSize: '0.85rem',
+                            cursor: walletBalance >= Number(cls.fee_amount || 0) ? 'pointer' : 'not-allowed',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px',
+                            boxShadow: walletBalance >= Number(cls.fee_amount || 0) ? '0 2px 6px rgba(234, 179, 8, 0.25)' : 'none'
+                          }}
+                        >
+                          {submitting ? 'Đang xử lý...' : (walletBalance >= Number(cls.fee_amount || 0) ? 'Thanh toán phí & Nhận lớp' : 'Số dư ví không đủ')}
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={submitting}
+                          onClick={() => handleCancelAssignment(cls.request_id)}
+                          style={{
+                            width: '100%',
+                            padding: '8px',
+                            background: '#ef4444',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontWeight: 700,
+                            fontSize: '0.85rem',
+                            cursor: submitting ? 'not-allowed' : 'pointer',
                             textAlign: 'center'
                           }}
                         >
-                          Nạp tiền ngay →
+                          Hủy nhận lớp
                         </button>
-                      )}
-                    </div>
+
+                        {walletBalance < Number(cls.fee_amount || 0) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const walletTabBtn = document.getElementById('tab-btn-wallet');
+                              if (walletTabBtn) {
+                                walletTabBtn.click();
+                                setTimeout(() => {
+                                  const depSec = document.getElementById('wallet-deposit-section');
+                                  if (depSec) depSec.scrollIntoView({ behavior: 'smooth' });
+                                }, 200);
+                              } else {
+                                toast.info('Vui lòng chuyển sang tab Ví tiền để nạp tiền.');
+                              }
+                            }}
+                            style={{
+                              width: '100%',
+                              padding: '8px',
+                              background: '#f8fafc',
+                              color: '#2563eb',
+                              border: '1px dashed #2563eb',
+                              borderRadius: '8px',
+                              fontWeight: 600,
+                              fontSize: '0.8rem',
+                              cursor: 'pointer',
+                              textAlign: 'center'
+                            }}
+                          >
+                            Nạp tiền ngay →
+                          </button>
+                        )}
+                      </div>
+                    )
                   ) : isDirected && cls.status === 'WAITING_TUTOR_CONFIRM' && !cls.is_assigned_to_me ? (
                     <div style={{ display: 'flex', gap: '10px' }}>
                       <button
@@ -637,6 +806,75 @@ export const OfflineClassesTab: React.FC = () => {
                 }}
               >
                 {submitting ? 'Đang xử lý...' : 'Xác nhận thanh toán'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Gia sư Gửi Refund Ticket */}
+      {refundModalItem && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.6)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            padding: '24px',
+            maxWidth: '480px',
+            width: '90%',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.15)'
+          }}>
+            <h3 style={{ margin: '0 0 10px 0', fontSize: '1.15rem', fontWeight: 800, color: '#991b1b' }}>
+              Yêu Cầu Hủy Lớp & Hoàn Tiền (7 Ngày Đầu)
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: '#475569', margin: '0 0 14px 0', lineHeight: '1.4' }}>
+              Lớp: <strong>MS: {refundModalItem.code}</strong>.
+              <br />
+              Trường hợp có sự cố phát sinh trong 7 ngày đầu, vui lòng trình bày lý do rõ ràng để Admin đối soát căn cứ và chốt mức hoàn phí nhận lớp theo quy định (hoàn 100% nếu lỗi Học viên, hoàn 80%/phạt 20% nếu lỗi Gia sư).
+            </p>
+
+            <textarea
+              rows={4}
+              value={refundReason}
+              onChange={(e) => setRefundReason(e.target.value)}
+              placeholder="Nhập chi tiết lý do sự cố cần hủy lớp..."
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                borderRadius: '8px',
+                border: '1px solid #cbd5e1',
+                fontSize: '0.88rem',
+                outline: 'none',
+                boxSizing: 'border-box',
+                marginBottom: '16px'
+              }}
+            />
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => { setRefundModalItem(null); setRefundReason(''); }}
+                style={{ padding: '8px 16px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={handleSubmitRefundTicket}
+                style={{ padding: '8px 18px', background: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.85rem', cursor: submitting ? 'not-allowed' : 'pointer' }}
+              >
+                {submitting ? 'Đang gửi...' : 'Gửi yêu cầu hủy lớp'}
               </button>
             </div>
           </div>
