@@ -301,6 +301,7 @@ const TeacherDashboard: React.FC = () => {
           {/* VERIFICATION STATUS BANNER */}
           <VerificationBanner
             status={tutorProfile?.verified_status || 'pending'}
+            reason={tutorProfile?.admin_note}
             onGoToProfile={() => setActiveTab('profile')}
           />
 

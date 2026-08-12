@@ -5,6 +5,15 @@ import AdminLayout from '../../components/admin/AdminLayout';
 import { CheckCircle2, UserCheck, Eye, X, ClipboardList, Filter, Search, Edit3, RotateCcw, AlertTriangle } from 'lucide-react';
 import { formatGradeLevel } from '../../utils/formatters';
 
+interface TutorCertificate {
+  cert_id: string;
+  title: string;
+  file_url: string;
+  issued_by?: string;
+  issued_date?: string;
+  status: string;
+}
+
 interface Application {
   application_id: string;
   applicant_phone: string;
@@ -15,13 +24,23 @@ interface Application {
   created_at: string;
   tutor?: {
     tutor_id: string;
+    tutor_code?: string;
     full_name: string;
     avatar_url?: string;
+    phone?: string;
+    email?: string;
+    university?: string;
+    major?: string;
+    current_role?: string;
+    experience_years?: number;
+    rating?: number;
+    certificates?: TutorCertificate[];
   };
 }
 
 interface ClassRequest {
   request_id: string;
+  record_type?: 'class_request' | 'offline_class';
   code: string;
   student_name: string;
   phone: string;
@@ -75,6 +94,7 @@ const AdminClassRequests: React.FC = () => {
   const [selectedClass, setSelectedClass] = useState<ClassRequest | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedTutorDetail, setSelectedTutorDetail] = useState<any>(null);
   const commissionRate = 35;
 
   // Process Refund Ticket State
@@ -86,6 +106,7 @@ const AdminClassRequests: React.FC = () => {
   // Edit Modal State
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editFormData, setEditFormData] = useState<any>(null);
+  const [editReadOnly, setEditReadOnly] = useState(false);
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -190,7 +211,8 @@ const AdminClassRequests: React.FC = () => {
     }
   };
 
-  const handleOpenEditModal = (cls: ClassRequest) => {
+  const handleOpenEditModal = (cls: ClassRequest, readOnly = false) => {
+    const isReadOnly = readOnly || cls.record_type === 'offline_class';
     setEditFormData({
       request_id: cls.request_id,
       code: cls.code,
@@ -212,6 +234,7 @@ const AdminClassRequests: React.FC = () => {
       other_requirements: (cls as any).other_requirements || '',
       status: cls.status || 'PENDING_ADMIN',
     });
+    setEditReadOnly(isReadOnly);
     setEditModalOpen(true);
   };
 
@@ -238,8 +261,16 @@ const AdminClassRequests: React.FC = () => {
     return new Intl.NumberFormat('vi-VN').format(val) + ' đ';
   };
 
-  const renderStatusBadge = (status: string) => {
-    switch (status) {
+  const renderStatusBadge = (cls: ClassRequest) => {
+    if (cls.record_type === 'offline_class') {
+      if (cls.status === 'ACTIVE') {
+        return <span className="admin-badge success" style={{ background: '#10b981', color: '#ffffff' }}>ĐANG DẠY (ACTIVE)</span>;
+      }
+      if (cls.status === 'CANCELLED') {
+        return <span className="admin-badge danger" style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171' }}>ĐÃ HỦY (HOÀN TIỀN)</span>;
+      }
+    }
+    switch (cls.status) {
       case 'OPEN':
         return <span className="admin-badge success">LỚP CHƯA GIAO (OPEN)</span>;
       case 'WAITING_PAYMENT':
@@ -340,8 +371,10 @@ const AdminClassRequests: React.FC = () => {
                   { key: 'PENDING_ADMIN', label: 'Chờ Admin duyệt' },
                   { key: 'WAITING_PAYMENT', label: 'Chờ đóng phí escrow' },
                   { key: 'OPEN', label: 'Lớp chưa giao (OPEN)' },
+                  { key: 'OFFLINE_ACTIVE', label: 'Đang dạy (đã giao)' },
                   { key: 'EXPIRED', label: 'Hết hạn đóng phí' },
                   { key: 'CANCELLED', label: 'Đã hủy' },
+                  { key: 'OFFLINE_CANCELLED', label: 'Đã hủy (hoàn tiền)' },
                 ].map((tab) => (
                   <button
                     key={tab.key}
@@ -425,19 +458,27 @@ const AdminClassRequests: React.FC = () => {
                           </span>
                         </td>
                         <td>
-                          {renderStatusBadge(cls.status)}
+                          {renderStatusBadge(cls)}
                         </td>
                         <td>
                           <span style={{ fontWeight: 700, color: '#38bdf8', fontSize: '13px' }}>
-                            {cls._count?.applications || 0} đơn
+                            {cls.record_type === 'offline_class'
+                              ? cls.assigned_tutor ? `GS: ${cls.assigned_tutor.full_name}` : 'Đã giao'
+                              : `${cls._count?.applications || 0} đơn`}
                           </span>
                         </td>
                         <td>
                           <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                            {cls.status === 'CANCELLED' || cls.status === 'EXPIRED' ? (
-                              <span style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic' }}>
-                                Đã kết thúc
-                              </span>
+                            {cls.record_type === 'offline_class' || cls.status === 'CANCELLED' || cls.status === 'EXPIRED' ? (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditModal(cls, true)}
+                                className="admin-btn sm secondary"
+                                title="Xem thông tin chi tiết lớp"
+                              >
+                                <Eye size={14} />
+                                <span>Xem</span>
+                              </button>
                             ) : (
                               <>
                                 {cls.status === 'PENDING_ADMIN' && (
@@ -462,7 +503,7 @@ const AdminClassRequests: React.FC = () => {
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => handleOpenEditModal(cls)}
+                                  onClick={() => handleOpenEditModal(cls, false)}
                                   className="admin-btn sm secondary"
                                   title="Chỉnh sửa thông tin lớp"
                                 >
@@ -715,11 +756,30 @@ const AdminClassRequests: React.FC = () => {
                       <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--admin-text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <UserCheck size={16} color="#34d399" />
                         <span>Gia sư: {app.tutor?.full_name || 'Đăng ký nhanh'}</span>
-                        <span style={{ fontSize: '12px', color: 'var(--admin-text-muted)', fontWeight: 500 }}>(SĐT: {app.applicant_phone})</span>
+                        <span style={{ fontSize: '13px', color: '#34d399', fontWeight: 700 }}>
+                          (SĐT: {app.applicant_phone || app.tutor?.phone || 'Chưa cập nhật'})
+                        </span>
                       </div>
+                      {app.tutor?.university && (
+                        <div style={{ fontSize: '12px', color: 'var(--admin-text-muted)', marginTop: '4px', marginLeft: '24px' }}>
+                          Trường: {app.tutor.university} {app.tutor.major ? `• Ngành: ${app.tutor.major}` : ''}
+                        </div>
+                      )}
                     </div>
 
-                    <div>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      {app.tutor && (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedTutorDetail({ ...app.tutor, applicant_phone: app.applicant_phone || app.tutor?.phone, application_id: app.application_id })}
+                          className="admin-btn sm secondary"
+                          title="Xem thông tin chi tiết bằng cấp và hồ sơ gia sư"
+                        >
+                          <Eye size={14} />
+                          <span>Xem Bằng Cấp</span>
+                        </button>
+                      )}
+
                       {app.status === 'APPROVED' ? (
                         <span className="admin-badge success" style={{ padding: '6px 12px' }}>
                           ✓ Đã Duyệt Cho Lớp
@@ -743,14 +803,111 @@ const AdminClassRequests: React.FC = () => {
         </div>
       )}
 
+      {/* Modal Xem Chi Tiết Hồ Sơ & Bằng Cấp Gia Sư */}
+      {selectedTutorDetail && (
+        <div className="modal-overlay" style={{ zIndex: 1100 }}>
+          <div className="modal-card" style={{ maxWidth: '720px', width: '92%', background: '#111827', border: '1px solid var(--admin-border)', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--admin-border)', paddingBottom: '12px' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--admin-text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <UserCheck size={20} color="#34d399" />
+                <span>Hồ sơ & Bằng cấp Gia sư: {selectedTutorDetail.full_name}</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setSelectedTutorDetail(null)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--admin-text-muted)' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Thông tin cá nhân & Học vấn */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '16px', marginBottom: '20px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '16px', borderRadius: '10px' }}>
+              {selectedTutorDetail.avatar_url ? (
+                <img src={selectedTutorDetail.avatar_url} alt="Avatar" style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #6366f1' }} />
+              ) : (
+                <div style={{ width: '70px', height: '70px', borderRadius: '50%', background: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 700, color: '#9ca3af' }}>
+                  {selectedTutorDetail.full_name?.charAt(0) || 'G'}
+                </div>
+              )}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '13px' }}>
+                <div><strong style={{ color: '#94a3b8' }}>Mã gia sư:</strong> <span style={{ color: '#818cf8', fontWeight: 700 }}>{selectedTutorDetail.tutor_code || 'Chưa cấp'}</span></div>
+                <div><strong style={{ color: '#94a3b8' }}>Số điện thoại:</strong> <span style={{ color: '#34d399', fontWeight: 700 }}>{selectedTutorDetail.applicant_phone || selectedTutorDetail.phone || 'Chưa cập nhật'}</span></div>
+                <div><strong style={{ color: '#94a3b8' }}>Email:</strong> <span style={{ color: '#f8fafc', fontWeight: 500 }}>{selectedTutorDetail.email || 'Chưa cập nhật'}</span></div>
+                <div><strong style={{ color: '#94a3b8' }}>Trường ĐH:</strong> <span style={{ color: '#f8fafc', fontWeight: 500 }}>{selectedTutorDetail.university || 'Chưa cập nhật'}</span></div>
+                <div><strong style={{ color: '#94a3b8' }}>Chuyên ngành:</strong> <span style={{ color: '#f8fafc', fontWeight: 500 }}>{selectedTutorDetail.major || 'Chưa cập nhật'}</span></div>
+                <div><strong style={{ color: '#94a3b8' }}>Chức vụ:</strong> <span style={{ color: '#f8fafc', fontWeight: 500 }}>{selectedTutorDetail.current_role || 'Chưa cập nhật'}</span></div>
+                <div><strong style={{ color: '#94a3b8' }}>Kinh nghiệm:</strong> <span style={{ color: '#f8fafc', fontWeight: 500 }}>{selectedTutorDetail.experience_years ? `${selectedTutorDetail.experience_years} năm` : 'Chưa cập nhật'}</span></div>
+                <div><strong style={{ color: '#94a3b8' }}>Đánh giá:</strong> <span style={{ color: '#f59e0b', fontWeight: 700 }}>{selectedTutorDetail.rating ? `⭐ ${selectedTutorDetail.rating}` : 'Chưa có đánh giá'}</span></div>
+              </div>
+            </div>
+
+            {/* Danh sách Bằng cấp / Chứng chỉ */}
+            <div style={{ marginBottom: '20px' }}>
+              <h4 style={{ margin: '0 0 12px 0', fontSize: '15px', color: '#818cf8', fontWeight: 700 }}>
+                Danh sách Bằng cấp & Chứng chỉ đính kèm ({selectedTutorDetail.certificates?.length || 0})
+              </h4>
+              {!selectedTutorDetail.certificates || selectedTutorDetail.certificates.length === 0 ? (
+                <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.15)', fontSize: '13px' }}>
+                  Gia sư chưa tải lên bằng cấp hoặc chứng chỉ nào.
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  {selectedTutorDetail.certificates.map((cert: any) => (
+                    <div key={cert.cert_id} style={{ border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', padding: '12px', background: 'rgba(255,255,255,0.05)' }}>
+                      <div style={{ fontWeight: 700, fontSize: '14px', color: '#f8fafc', marginBottom: '4px' }}>{cert.title}</div>
+                      <div style={{ fontSize: '12px', color: '#cbd5e1', marginBottom: '8px' }}>Nơi cấp: <span style={{ color: '#f8fafc' }}>{cert.issued_by || 'Chưa rõ'}</span></div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span className={`admin-badge ${cert.status === 'approved' ? 'success' : cert.status === 'rejected' ? 'danger' : 'warning'}`} style={{ fontSize: '11px', fontWeight: 700 }}>
+                          {cert.status === 'approved' ? 'ĐÃ DUYỆT' : cert.status === 'rejected' ? 'TỪ CHỐI' : 'CHỜ DUYỆT'}
+                        </span>
+                        {cert.file_url && (
+                          <a href={cert.file_url} target="_blank" rel="noreferrer" style={{ fontSize: '12px', color: '#38bdf8', textDecoration: 'underline', fontWeight: 700 }}>
+                            Xem file scan ↗
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', borderTop: '1px solid var(--admin-border)', paddingTop: '12px' }}>
+              <button
+                type="button"
+                onClick={() => setSelectedTutorDetail(null)}
+                style={{ padding: '8px 16px', background: 'rgba(255,255,255,0.08)', color: 'var(--admin-text-main)', border: '1px solid var(--admin-border)', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' }}
+              >
+                Đóng
+              </button>
+              {selectedClass && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleAssignTutor(selectedClass.request_id, selectedTutorDetail.tutor_id, selectedTutorDetail.application_id);
+                    setSelectedTutorDetail(null);
+                  }}
+                  className="admin-btn sm success"
+                  style={{ fontWeight: 700, padding: '8px 20px' }}
+                >
+                  Giao Lớp cho Gia Sư này
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal Edit Class Request */}
       {editModalOpen && editFormData && (
         <div className="modal-overlay">
           <div className="modal-card" style={{ maxWidth: '780px', width: '92%', background: '#111827', border: '1px solid var(--admin-border)', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--admin-border)', paddingBottom: '12px' }}>
               <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--admin-text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Edit3 size={20} color="#818cf8" />
-                <span>Chỉnh sửa Lớp Offline MS: {editFormData.code}</span>
+                {editReadOnly ? <Eye size={20} color="#818cf8" /> : <Edit3 size={20} color="#818cf8" />}
+                <span>{editReadOnly ? `Xem thông tin Lớp Offline MS: ${editFormData.code}` : `Chỉnh sửa Lớp Offline MS: ${editFormData.code}`}</span>
               </h3>
               <button
                 type="button"
@@ -772,6 +929,7 @@ const AdminClassRequests: React.FC = () => {
                     name="student_name"
                     value={editFormData.student_name}
                     onChange={handleEditFormChange}
+                    disabled={editReadOnly}
                     required
                     style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
                   />
@@ -786,8 +944,199 @@ const AdminClassRequests: React.FC = () => {
                     name="phone"
                     value={editFormData.phone}
                     onChange={handleEditFormChange}
+                    disabled={editReadOnly}
                     required
                     style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                  />
+                </div>
+
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Email liên hệ
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={editFormData.email}
+                    onChange={handleEditFormChange}
+                    disabled={editReadOnly}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Môn học *
+                  </label>
+                  <input
+                    type="text"
+                    name="subject_name"
+                    value={editFormData.subject_name}
+                    onChange={handleEditFormChange}
+                    disabled={editReadOnly}
+                    required
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Lớp / Trình độ
+                  </label>
+                  <input
+                    type="text"
+                    name="grade_level"
+                    value={editFormData.grade_level}
+                    onChange={handleEditFormChange}
+                    disabled={editReadOnly}
+                    placeholder="VD: Lớp 1, Lớp 10..."
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Số lượng học viên
+                  </label>
+                  <input
+                    type="number"
+                    name="num_students"
+                    value={editFormData.num_students}
+                    onChange={handleEditFormChange}
+                    disabled={editReadOnly}
+                    min={1}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Học lực học viên
+                  </label>
+                  <input
+                    type="text"
+                    name="academic_level"
+                    value={editFormData.academic_level}
+                    onChange={handleEditFormChange}
+                    disabled={editReadOnly}
+                    placeholder="VD: Trung bình, Khá, Giỏi..."
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Số buổi / tuần
+                  </label>
+                  <input
+                    type="number"
+                    name="sessions_per_week"
+                    value={editFormData.sessions_per_week}
+                    onChange={handleEditFormChange}
+                    disabled={editReadOnly}
+                    min={1}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Thời gian học
+                  </label>
+                  <input
+                    type="text"
+                    name="study_time"
+                    value={editFormData.study_time}
+                    onChange={handleEditFormChange}
+                    disabled={editReadOnly}
+                    placeholder="VD: Tối Thứ 2, 4, 6"
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Yêu cầu Gia sư
+                  </label>
+                  <input
+                    type="text"
+                    name="tutor_requirement"
+                    value={editFormData.tutor_requirement}
+                    onChange={handleEditFormChange}
+                    disabled={editReadOnly}
+                    placeholder="VD: Sinh viên, Giáo viên, Cử nhân..."
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Mức lương mong muốn (VNĐ/tháng)
+                  </label>
+                  <input
+                    type="number"
+                    name="desired_price"
+                    value={editFormData.desired_price}
+                    onChange={handleEditFormChange}
+                    disabled={editReadOnly}
+                    step={50000}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                  />
+                </div>
+
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Địa chỉ chi tiết (Số nhà, đường...)
+                  </label>
+                  <input
+                    type="text"
+                    name="address_detail"
+                    value={editFormData.address_detail}
+                    onChange={handleEditFormChange}
+                    disabled={editReadOnly}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Quận / Huyện
+                  </label>
+                  <input
+                    type="text"
+                    name="district"
+                    value={editFormData.district}
+                    onChange={handleEditFormChange}
+                    disabled={editReadOnly}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Tỉnh / Thành phố
+                  </label>
+                  <input
+                    type="text"
+                    name="province"
+                    value={editFormData.province}
+                    onChange={handleEditFormChange}
+                    disabled={editReadOnly}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                  />
+                </div>
+
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                    Yêu cầu khác
+                  </label>
+                  <textarea
+                    name="other_requirements"
+                    value={editFormData.other_requirements}
+                    onChange={handleEditFormChange}
+                    disabled={editReadOnly}
+                    rows={3}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none', resize: 'vertical' }}
                   />
                 </div>
 
@@ -799,9 +1148,10 @@ const AdminClassRequests: React.FC = () => {
                     name="status"
                     value={editFormData.status}
                     onChange={handleEditFormChange}
+                    disabled={editReadOnly}
                     style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: '#1f2937', color: 'var(--admin-text-main)', fontWeight: 600, outline: 'none' }}
                   >
-                    <option value="PENDING_ADMIN">CHỜ ADMIM DUYỆT (PENDING_ADMIN)</option>
+                    <option value="PENDING_ADMIN">CHỜ ADMIN DUYỆT (PENDING_ADMIN)</option>
                     <option value="OPEN">LỚP CHƯA GIAO / CÔNG KHAI (OPEN)</option>
                     <option value="WAITING_PAYMENT">CHỜ ĐÓNG PHÍ ESCROW (WAITING_PAYMENT)</option>
                     <option value="CANCELLED">ĐÃ HỦY (CANCELLED)</option>
@@ -811,20 +1161,32 @@ const AdminClassRequests: React.FC = () => {
               </div>
 
               <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                <button
-                  type="button"
-                  onClick={() => setEditModalOpen(false)}
-                  className="admin-btn sm secondary"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  className="admin-btn sm primary"
-                  style={{ fontWeight: 700, padding: '8px 20px' }}
-                >
-                  Lưu thay đổi lớp
-                </button>
+                {editReadOnly ? (
+                  <button
+                    type="button"
+                    onClick={() => setEditModalOpen(false)}
+                    className="admin-btn sm secondary"
+                  >
+                    Đóng
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setEditModalOpen(false)}
+                      className="admin-btn sm secondary"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      type="submit"
+                      className="admin-btn sm primary"
+                      style={{ fontWeight: 700, padding: '8px 20px' }}
+                    >
+                      Lưu thay đổi lớp
+                    </button>
+                  </>
+                )}
               </div>
             </form>
           </div>
