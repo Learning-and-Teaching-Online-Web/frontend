@@ -13,6 +13,7 @@ import type {
   QuizAttempt
 } from '../../../data/mockStudentData';
 import { StatCard } from '../ui/StatCard';
+import { formatGradeLevel } from '../../../utils/formatters';
 import '../../../styles/student/OverviewTab.css';
 
 interface OverviewTabProps {
@@ -175,7 +176,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
           <div style={{ marginTop: '30px', padding: '16px', backgroundColor: 'var(--primary-light)', borderRadius: 'var(--radius)', border: '1px dashed var(--primary)' }}>
             <h4 style={{ color: 'var(--primary)', marginBottom: '8px', fontSize: '14px' }}>Thông tin học tập cá nhân</h4>
             <p style={{ fontSize: '12px', color: 'var(--text-main)', lineHeight: 1.5 }}>
-              <strong>Trình độ:</strong> {profile.grade_level || 'Chưa cập nhật'}<br />
+              <strong>Trình độ:</strong> {formatGradeLevel(profile.grade_level, 'Chưa cập nhật')}<br />
               <strong>Mục tiêu:</strong> {(profile as any).learning_goals ? (profile as any).learning_goals.substring(0, 70) + '...' : 'Chưa cập nhật'}<br />
               <strong>Phương thức:</strong> {(profile as any).preferred_mode === 'both' ? 'Online & Offline' : (profile as any).preferred_mode === 'online' ? 'Online' : 'Offline'}
             </p>

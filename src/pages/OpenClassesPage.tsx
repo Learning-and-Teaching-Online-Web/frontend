@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import axiosClient from '../services/axiosClient';
 import { Search, MapPin, Phone, Mail, Eye, BookOpen, Sparkles } from 'lucide-react';
 import ReferencePriceTable from '../components/ReferencePriceTable';
+import { formatGradeLevel } from '../utils/formatters';
 import '../styles/OpenClassesPage.css';
 
 interface ClassRequest {
@@ -157,7 +158,7 @@ const OpenClassesPage: React.FC = () => {
                     {/* Content Body */}
                     <div className="class-card-body">
                       <p className="class-info-row">
-                        <strong>Lớp dạy:</strong> <span>{cls.grade_level || 'Tất cả các lớp'}.</span>
+                        <strong>Lớp dạy:</strong> <span>{formatGradeLevel(cls.grade_level)}.</span>
                       </p>
                       <p className="class-info-row">
                         <strong>Môn dạy:</strong> <span style={{ fontWeight: 600, color: '#0f172a' }}>{cls.subject_name}.</span>

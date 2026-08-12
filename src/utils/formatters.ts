@@ -54,3 +54,19 @@ export function parseInputNumber(val: string | null | undefined): number {
   const digits = String(val).replace(/\D/g, '');
   return digits ? Number(digits) : 0;
 }
+
+/**
+ * Formats a grade level enum key or string (e.g. "grade_10" -> "Lớp 10", "grade_1" -> "Lớp 1")
+ */
+export function formatGradeLevel(val?: string | null, fallback: string = 'Tất cả các lớp'): string {
+  if (!val) return fallback;
+  const str = String(val).trim();
+  if (!str) return fallback;
+  const match = str.match(/^grade_(\d+)$/i);
+  if (match) {
+    return `Lớp ${match[1]}`;
+  }
+  return str;
+}
+
+

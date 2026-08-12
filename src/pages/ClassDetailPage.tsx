@@ -5,11 +5,12 @@ import authStorage from '../utils/authStorage';
 import tutorApi from '../services/tutorApi';
 import { toast } from 'react-toastify';
 import { MapPin, UserCheck, Send, ArrowLeft, ShieldAlert, LogIn, CheckCircle } from 'lucide-react';
+import { formatGradeLevel } from '../utils/formatters';
 
 interface Application {
   application_id: string;
   applicant_phone: string;
-  available_date?: string;
+  available_from?: string;
   notes?: string;
   status: string;
   created_at: string;
@@ -54,9 +55,15 @@ const ClassDetailPage: React.FC = () => {
   const isAuthenticated = authStorage.isAuthenticated();
   const userRole = authStorage.getUserRole();
 
-  const [timeOption, setTimeOption] = useState('Ngay lập tức');
-  const [availableDate, setAvailableDate] = useState('');
+  const [availableFrom, setAvailableFrom] = useState('');
   const [notes, setNotes] = useState('');
+
+  const formatDateTime = (val?: string | null) => {
+    if (!val) return 'Chưa cập nhật';
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return val;
+    return d.toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' });
+  };
 
   const fetchDetail = async () => {
     try {
@@ -103,18 +110,23 @@ const ClassDetailPage: React.FC = () => {
   const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!availableFrom) {
+      toast.error('Vui lòng chọn thời gian có thể nhận lớp!');
+      return;
+    }
+
     setSubmitting(true);
     try {
       const payload = {
         applicant_phone: tutorPhone || authStorage.getUserName() || 'Chưa cập nhật SĐT',
-        available_date: `${timeOption} - ${availableDate || 'Linh hoạt'}`,
+        available_from: new Date(availableFrom).toISOString(),
         notes,
       };
 
       const res = await axiosClient.post(`/class-requests/${id}/apply`, payload);
       toast.success(res.data.message || 'Xác nhận đăng ký nhận lớp thành công!');
 
-      setAvailableDate('');
+      setAvailableFrom('');
       setNotes('');
       fetchDetail();
     } catch (err: any) {
@@ -155,7 +167,7 @@ const ClassDetailPage: React.FC = () => {
 
         {/* Main Box Header */}
         <div style={{ background: '#0284c7', color: '#ffffff', padding: '14px 20px', borderRadius: '8px 8px 0 0', fontWeight: '700', fontSize: '1.1rem' }}>
-          MS: {classDetail.code} - Việc làm gia sư dạy môn {classDetail.subject_name} {classDetail.grade_level} {classDetail.district} {classDetail.province}
+          MS: {classDetail.code} - Việc làm gia sư dạy môn {classDetail.subject_name} {formatGradeLevel(classDetail.grade_level)} {classDetail.district} {classDetail.province}
         </div>
 
         {/* Main Content Layout (Grid 2 Columns) */}
@@ -167,7 +179,7 @@ const ClassDetailPage: React.FC = () => {
               <strong>Mã lớp:</strong> <span style={{ color: '#b45309', fontWeight: '700' }}>{classDetail.code}</span>
             </p>
             <p style={{ margin: '0 0 8px 0' }}>
-              <strong>Lớp dạy:</strong> {classDetail.grade_level || 'Tất cả các lớp'}
+              <strong>Lớp dạy:</strong> {formatGradeLevel(classDetail.grade_level)}
             </p>
             <p style={{ margin: '0 0 8px 0' }}>
               <strong>Môn dạy:</strong> {classDetail.subject_name}
@@ -271,7 +283,7 @@ const ClassDetailPage: React.FC = () => {
 
                 <div style={{ background: '#ffffff', borderRadius: '8px', padding: '12px', textAlign: 'left', fontSize: '0.84rem', border: '1px solid #bbf7d0', marginBottom: '16px' }}>
                   <div style={{ marginBottom: '6px' }}><strong>SĐT ứng tuyển:</strong> {myApplication.applicant_phone}</div>
-                  <div style={{ marginBottom: '6px' }}><strong>Thời gian nhận lớp:</strong> {myApplication.available_date || 'Linh hoạt'}</div>
+                  <div style={{ marginBottom: '6px' }}><strong>Thời gian nhận lớp:</strong> {formatDateTime(myApplication.available_from)}</div>
                   <div><strong>Trạng thái đơn:</strong> <span style={{ background: '#fef3c7', color: '#b45309', padding: '2px 8px', borderRadius: '10px', fontWeight: 700, fontSize: '0.78rem' }}>CHỜ ADMIN DUYỆT</span></div>
                 </div>
 
@@ -312,32 +324,17 @@ const ClassDetailPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div style={{ marginBottom: '12px' }}>
+                <div style={{ marginBottom: '14px' }}>
                   <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#155e75', marginBottom: '4px' }}>
-                    Thời gian có thể nhận lớp <span style={{ color: '#ef4444' }}>*</span>
-                  </label>
-                  <select
-                    value={timeOption}
-                    onChange={(e) => setTimeOption(e.target.value)}
-                    style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #67e8f9', fontSize: '0.9rem', background: '#fff', outline: 'none' }}
-                  >
-                    <option value="Ngay lập tức">Ngay lập tức</option>
-                    <option value="Trong 1-2 ngày">Trong 1-2 ngày tới</option>
-                    <option value="Trong tuần này">Trong tuần này</option>
-                    <option value="Thỏa thuận sau">Thỏa thuận sau</option>
-                  </select>
-                </div>
-
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#155e75', marginBottom: '4px' }}>
-                    Thời gian dạy cụ thể (Tùy chọn)
+                    Thời gian có thể nhận lớp (Ngày & Giờ) <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input
-                    type="text"
-                    value={availableDate}
-                    onChange={(e) => setAvailableDate(e.target.value)}
-                    placeholder="VD: Chiều T2 hoặc Ngày 10/08..."
-                    style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #67e8f9', fontSize: '0.9rem', outline: 'none' }}
+                    type="datetime-local"
+                    value={availableFrom}
+                    min={new Date().toISOString().slice(0, 16)}
+                    onChange={(e) => setAvailableFrom(e.target.value)}
+                    required
+                    style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #67e8f9', fontSize: '0.9rem', outline: 'none', background: '#fff' }}
                   />
                 </div>
 
@@ -411,13 +408,8 @@ const ClassDetailPage: React.FC = () => {
                       <td style={{ padding: '10px', fontWeight: '600' }}>{idx + 1}</td>
                       <td style={{ padding: '10px', color: '#0f172a', fontWeight: '600' }}>
                         {app.tutor?.full_name || 'Gia sư'}
-                        {app.applicant_phone && (
-                          <span style={{ fontSize: '0.82rem', color: '#2563eb', fontWeight: 'normal', marginLeft: '6px' }}>
-                            (SĐT: {app.applicant_phone})
-                          </span>
-                        )}
                       </td>
-                      <td style={{ padding: '10px', color: '#334155' }}>{app.available_date || 'N/A'}</td>
+                      <td style={{ padding: '10px', color: '#334155' }}>{formatDateTime(app.available_from)}</td>
                       <td style={{ padding: '10px', color: '#64748b' }}>{app.notes || 'Không có'}</td>
                       <td style={{ padding: '10px' }}>
                         <span

@@ -3,6 +3,7 @@ import axiosClient from '../../services/axiosClient';
 import { toast } from 'react-toastify';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { CheckCircle2, UserCheck, Eye, X, ClipboardList, Filter, Search, Edit3, RotateCcw, AlertTriangle } from 'lucide-react';
+import { formatGradeLevel } from '../../utils/formatters';
 
 interface Application {
   application_id: string;
@@ -403,7 +404,7 @@ const AdminClassRequests: React.FC = () => {
                         <td>
                           <div style={{ fontWeight: 600, color: 'var(--admin-text-main)' }}>{cls.subject_name}</div>
                           <div style={{ fontSize: '12px', color: 'var(--admin-text-muted)' }}>
-                            {cls.grade_level ? `${cls.grade_level} • ` : ''}{cls.sessions_per_week} buổi/tuần
+                            {cls.grade_level ? `${formatGradeLevel(cls.grade_level)} • ` : ''}{cls.sessions_per_week} buổi/tuần
                           </div>
                         </td>
                         <td style={{ maxWidth: '220px' }}>
