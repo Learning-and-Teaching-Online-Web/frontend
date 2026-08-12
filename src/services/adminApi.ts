@@ -29,8 +29,8 @@ export const adminApi = {
     return response.data;
   },
 
-  updateTutorVerification: async (tutorId: string, status: 'pending' | 'approved' | 'rejected') => {
-    const response = await axiosClient.patch(`/admin/tutors/${tutorId}/verify`, { status });
+  updateTutorVerification: async (tutorId: string, status: 'pending' | 'approved' | 'rejected', adminNote?: string) => {
+    const response = await axiosClient.patch(`/admin/tutors/${tutorId}/verify`, { status, adminNote });
     return response.data;
   },
 
