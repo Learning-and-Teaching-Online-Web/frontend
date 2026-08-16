@@ -443,13 +443,7 @@ const TutorVerification: React.FC = () => {
                 </div>
               </div>
 
-              {/* Group 4: Giới thiệu bản thân */}
-              <div>
-                <span style={{ fontSize: '11px', color: 'var(--admin-text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: 600, marginBottom: '2px' }}>Giới thiệu bản thân</span>
-                <div style={{ fontSize: '13px', background: 'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--admin-border)', whiteSpace: 'pre-line', lineHeight: 1.5 }}>
-                  {selectedTutor.bio || 'Chưa có thông tin giới thiệu.'}
-                </div>
-              </div>
+
 
               {/* Group 5: Ảnh CCCD Mặt trước */}
               <div>
