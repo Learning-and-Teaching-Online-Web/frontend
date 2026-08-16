@@ -192,7 +192,6 @@ const InstructorDetail: React.FC = () => {
         <div className="tutor-profile-box">
           {/* Action Buttons Top Right */}
           <div className="tutor-top-action-bar">
-            <button className="btn-tutor-status">Kết thúc</button>
             {!isTutorOrAdmin && (
               <button
                 className="btn-tutor-favorite"

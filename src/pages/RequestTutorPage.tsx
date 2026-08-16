@@ -252,7 +252,7 @@ const RequestTutorPage: React.FC = () => {
             ĐĂNG KÝ TÌM GIA SƯ
           </h1>
           <p style={{ margin: '8px 0 0 0', opacity: 0.9, fontSize: '0.95rem' }}>
-            Trung tâm Tư vấn Giáo dục & Dịch thuật Gia sư Thành Được - Cam kết gia sư uy tín chất lượng
+            Trung tâm Tư vấn kết nối Học Viên và Gia sư NovaLearn - Cam kết gia sư uy tín chất lượng
           </p>
         </div>
 
