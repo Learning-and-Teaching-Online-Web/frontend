@@ -657,7 +657,7 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
                         <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#059669' }}>
                           {formatCurrency(Number(item.desired_price))}
                         </span>
-                        {!item.is_active_offline_class && item.status !== 'CANCELLED' && item.status !== 'EXPIRED' && (
+                        {!item.is_active_offline_class && item.status !== 'CANCELLED' && item.status !== 'EXPIRED' && item.status !== 'REJECTED' && (
                           <button
                             type="button"
                             onClick={() => handleStartEditPrice(item)}
@@ -836,7 +836,7 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
                 ) : null}
 
                 {/* Cancel action if still open */}
-                {!item.is_active_offline_class && item.status !== 'CANCELLED' && item.status !== 'EXPIRED' && !isWaitingPayment && (
+                {!item.is_active_offline_class && item.status !== 'CANCELLED' && item.status !== 'EXPIRED' && item.status !== 'REJECTED' && !isWaitingPayment && (
                   <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
                     <button
                       type="button"
