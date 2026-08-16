@@ -101,6 +101,8 @@ const ClassDetailPage: React.FC = () => {
   const tutorName = profileData?.full_name || profileData?.user?.full_name || authStorage.getUserName() || 'Gia sư';
   const tutorPhone = profileData?.phone || profileData?.user?.phone || '';
   const tutorAvatar = profileData?.avatar_url || profileData?.user?.avatar_url || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80';
+  const verifiedStatus = profileData?.verified_status || 'pending';
+  const isApprovedTutor = verifiedStatus === 'approved';
 
   const myApplication = classDetail?.applications?.find((app: any) =>
     (profileData?.tutor_id && app.tutor?.tutor_id === profileData.tutor_id) ||
@@ -109,6 +111,11 @@ const ClassDetailPage: React.FC = () => {
 
   const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isApprovedTutor) {
+      toast.error('Hồ sơ Gia sư của bạn chưa được Admin phê duyệt. Vui lòng chờ Admin duyệt trước khi đăng ký nhận lớp!');
+      return;
+    }
 
     if (!availableFrom) {
       toast.error('Vui lòng chọn thời gian có thể nhận lớp!');
@@ -320,9 +327,23 @@ const ClassDetailPage: React.FC = () => {
                   <div>
                     <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0f172a' }}>{tutorName}</div>
                     <div style={{ fontSize: '0.8rem', color: '#64748b' }}>SĐT liên hệ: <strong>{tutorPhone || 'Chưa cập nhật'}</strong></div>
-                    <span style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600 }}>✓ Hồ sơ đã xác minh</span>
+                    {isApprovedTutor ? (
+                      <span style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600 }}>✓ Hồ sơ đã xác minh</span>
+                    ) : verifiedStatus === 'pending' ? (
+                      <span style={{ fontSize: '0.75rem', color: '#d97706', fontWeight: 600 }}>⏳ Hồ sơ chờ Admin xét duyệt</span>
+                    ) : verifiedStatus === 'rejected' ? (
+                      <span style={{ fontSize: '0.75rem', color: '#dc2626', fontWeight: 600 }}>❌ Hồ sơ bị từ chối</span>
+                    ) : (
+                      <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>⚠️ Hồ sơ chưa được duyệt</span>
+                    )}
                   </div>
                 </div>
+
+                {!isApprovedTutor && (
+                  <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '10px 12px', marginBottom: '14px', color: '#92400e', fontSize: '0.82rem', lineHeight: 1.5 }}>
+                    <strong>⚠️ Tài khoản chưa được duyệt:</strong> Hồ sơ của bạn đang ở trạng thái <strong>{verifiedStatus === 'pending' ? 'Chờ Admin duyệt (PENDING)' : verifiedStatus === 'rejected' ? 'Bị từ chối' : 'Chưa được duyệt'}</strong>. Vui lòng cập nhật đầy đủ thông tin/bằng cấp và chờ Admin phê duyệt tài khoản trước khi ứng tuyển nhận lớp.
+                  </div>
+                )}
 
                 <div style={{ marginBottom: '14px' }}>
                   <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#155e75', marginBottom: '4px' }}>
@@ -331,10 +352,20 @@ const ClassDetailPage: React.FC = () => {
                   <input
                     type="datetime-local"
                     value={availableFrom}
+                    disabled={!isApprovedTutor}
                     min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
                     onChange={(e) => setAvailableFrom(e.target.value)}
                     required
-                    style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #67e8f9', fontSize: '0.9rem', outline: 'none', background: '#fff' }}
+                    style={{
+                      width: '100%',
+                      padding: '8px 10px',
+                      borderRadius: '6px',
+                      border: '1px solid #67e8f9',
+                      fontSize: '0.9rem',
+                      outline: 'none',
+                      background: !isApprovedTutor ? '#f1f5f9' : '#fff',
+                      cursor: !isApprovedTutor ? 'not-allowed' : 'text'
+                    }}
                   />
                 </div>
 
@@ -344,35 +375,52 @@ const ClassDetailPage: React.FC = () => {
                   </label>
                   <textarea
                     value={notes}
+                    disabled={!isApprovedTutor}
                     onChange={(e) => setNotes(e.target.value)}
                     rows={2}
                     placeholder="Ghi chú thêm về lịch dạy / kinh nghiệm..."
-                    style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #67e8f9', fontSize: '0.9rem', outline: 'none', resize: 'none' }}
+                    style={{
+                      width: '100%',
+                      padding: '8px 10px',
+                      borderRadius: '6px',
+                      border: '1px solid #67e8f9',
+                      fontSize: '0.9rem',
+                      outline: 'none',
+                      resize: 'none',
+                      background: !isApprovedTutor ? '#f1f5f9' : '#fff',
+                      cursor: !isApprovedTutor ? 'not-allowed' : 'text'
+                    }}
                   />
                 </div>
 
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || !isApprovedTutor}
                   style={{
                     width: '100%',
-                    background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
-                    color: '#ffffff',
+                    background: !isApprovedTutor ? '#cbd5e1' : 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
+                    color: !isApprovedTutor ? '#64748b' : '#ffffff',
                     border: 'none',
                     padding: '12px',
                     borderRadius: '6px',
                     fontWeight: '700',
-                    fontSize: '0.95rem',
-                    cursor: submitting ? 'not-allowed' : 'pointer',
-                    boxShadow: '0 2px 8px rgba(22, 163, 74, 0.3)',
+                    fontSize: '0.92rem',
+                    cursor: submitting || !isApprovedTutor ? 'not-allowed' : 'pointer',
+                    boxShadow: !isApprovedTutor ? 'none' : '0 2px 8px rgba(22, 163, 74, 0.3)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '6px',
                   }}
+                  title={!isApprovedTutor ? 'Tài khoản chưa được Admin phê duyệt' : ''}
                 >
                   <Send size={16} />
-                  {submitting ? 'Đang gửi thông tin...' : 'XÁC NHẬN ĐĂNG KÝ NHẬN LỚP'}
+                  {submitting
+                    ? 'Đang gửi thông tin...'
+                    : !isApprovedTutor
+                    ? 'TÀI KHOẢN CHƯA ĐƯỢC DUYỆT'
+                    : 'XÁC NHẬN ĐĂNG KÝ NHẬN LỚP'
+                  }
                 </button>
               </form>
             )}
