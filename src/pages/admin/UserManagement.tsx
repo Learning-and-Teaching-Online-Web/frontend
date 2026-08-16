@@ -396,7 +396,7 @@ const UserManagement: React.FC = () => {
                 <div style={{ fontSize: '13px' }}>Học vấn: <strong>{selectedUser.tutor_profile.education || 'Chưa điền'}</strong></div>
                 <div style={{ fontSize: '13px' }}>Kinh nghiệm: <strong>{selectedUser.tutor_profile.experience_years ? `${selectedUser.tutor_profile.experience_years} năm` : 'Chưa điền'}</strong></div>
                 <div style={{ fontSize: '13px' }}>Học phí đề xuất: <strong>{selectedUser.tutor_profile.hourly_rate ? Number(selectedUser.tutor_profile.hourly_rate).toLocaleString('vi-VN') + 'đ/giờ' : 'Chưa thiết lập'}</strong></div>
-                <div style={{ fontSize: '13px' }}>Giới thiệu: <strong>{selectedUser.tutor_profile.bio || 'Chưa điền'}</strong></div>
+
                 {selectedUser.tutor_profile.certificates && selectedUser.tutor_profile.certificates.length > 0 && (
                   <div style={{ fontSize: '13px', marginTop: '6px' }}>
                     <strong style={{ display: 'block', marginBottom: '4px' }}>Chứng chỉ đính kèm ({selectedUser.tutor_profile.certificates.length}):</strong>
