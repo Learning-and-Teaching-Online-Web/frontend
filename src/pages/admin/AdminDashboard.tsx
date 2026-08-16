@@ -84,7 +84,7 @@ const AdminDashboard: React.FC = () => {
               </div>
               <div className="admin-stat-details">
                 <span className="admin-stat-value">{stats?.totalTutors || 0}</span>
-                <span className="admin-stat-label">Giảng viên</span>
+                <span className="admin-stat-label">Gia sư</span>
               </div>
             </div>
 

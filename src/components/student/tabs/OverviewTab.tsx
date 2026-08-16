@@ -85,7 +85,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
               <h3 className="live-title">{nextSession.courseTitle}</h3>
               <div className="live-tutor">
                 <img src={nextSession.tutorAvatar} alt={nextSession.tutorName} />
-                <span>Giảng viên: <strong>{nextSession.tutorName}</strong></span>
+                <span>Gia sư: <strong>{nextSession.tutorName}</strong></span>
               </div>
               <div className="live-time">
                 <Clock size={16} />

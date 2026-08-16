@@ -17,8 +17,8 @@ export const FavoritesTab: React.FC<FavoritesTabProps> = ({
   return (
     <div>
       <div className="content-header">
-        <h2>Giảng viên yêu thích</h2>
-        <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Danh sách những giáo viên bạn đã lưu để liên hệ và book lớp học</span>
+        <h2>Gia sư yêu thích</h2>
+        <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Danh sách những gia sư bạn đã lưu để liên hệ và đặt lớp học</span>
       </div>
 
       {favoriteTutors.length > 0 ? (
@@ -58,7 +58,7 @@ export const FavoritesTab: React.FC<FavoritesTabProps> = ({
                     className="btn-tutor-message"
                     style={{ background: 'var(--bg-light)', color: 'var(--text-main)', border: '1px solid var(--border)' }}
                     onClick={() => {
-                      toast.info(`Mở cửa sổ chat với Giảng viên ${tutor.name}. Tính năng nhắn tin đang được phát triển...`);
+                      toast.info(`Mở cửa sổ chat với Gia sư ${tutor.name}. Tính năng nhắn tin đang được phát triển...`);
                     }}
                   >
                     Gửi tin nhắn
@@ -71,7 +71,7 @@ export const FavoritesTab: React.FC<FavoritesTabProps> = ({
       ) : (
         <div style={{ textAlign: 'center', padding: '50px 0' }}>
           <Heart size={48} style={{ color: 'var(--text-light)', marginBottom: '16px' }} />
-          <p style={{ color: 'var(--text-muted)' }}>Chưa lưu giảng viên yêu thích nào.</p>
+          <p style={{ color: 'var(--text-muted)' }}>Chưa lưu gia sư yêu thích nào.</p>
         </div>
       )}
     </div>

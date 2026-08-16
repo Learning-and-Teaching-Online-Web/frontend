@@ -55,7 +55,7 @@ export const useStudentDashboard = () => {
       type: b.course?.type || 'online',
       title: b.course?.title || 'Khóa học',
       subject: b.course?.subject || 'Môn học',
-      instructor: b.course?.tutor?.user?.full_name || 'Giảng viên',
+      instructor: b.course?.tutor?.user?.full_name || 'Gia sư',
       thumbnail: b.course?.thumbnail_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500&auto=format&fit=crop&q=60',
       progress: b.status === 'completed' ? 100 : 50,
       completedLessons: b.status === 'completed' ? (b.course?.total_sessions || 1) : 0,
@@ -75,7 +75,7 @@ export const useStudentDashboard = () => {
       course_id: b.course?.course_id,
       type: b.course?.type || 'online',
       courseTitle: b.course?.title || 'Khóa học',
-      tutorName: b.course?.tutor?.user?.full_name || 'Giảng viên',
+      tutorName: b.course?.tutor?.user?.full_name || 'Gia sư',
       tutorAvatar: b.course?.tutor?.user?.avatar_url || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
       startTime: b.schedule?.start_time || new Date().toISOString(),
       endTime: b.schedule?.end_time || new Date().toISOString(),
@@ -197,7 +197,7 @@ export const useStudentDashboard = () => {
             }
             return {
               tutor_id: fav.tutor?.tutor_id || '',
-              name: fav.tutor?.user?.full_name || 'Giảng viên',
+              name: fav.tutor?.user?.full_name || 'Gia sư',
               avatar: fav.tutor?.user?.avatar_url || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
               subject: subjectStr,
               rating: Number(fav.tutor?.rating) || 5.0,
@@ -315,13 +315,13 @@ export const useStudentDashboard = () => {
       const res = await favoriteApi.toggleFavorite(tutorId);
       if (res && res.success) {
         setFavoriteTutors(prev => prev.filter(t => t.tutor_id !== tutorId));
-        toast.info('Đã xóa giảng viên khỏi danh sách yêu thích.');
+        toast.info('Đã xóa gia sư khỏi danh sách yêu thích.');
       } else {
-        toast.error(res?.error || 'Không thể xóa giảng viên khỏi danh sách yêu thích.');
+        toast.error(res?.error || 'Không thể xóa gia sư khỏi danh sách yêu thích.');
       }
     } catch (err: any) {
       console.error('Error removing favorite tutor:', err);
-      toast.error('Có lỗi xảy ra khi xóa giảng viên yêu thích.');
+      toast.error('Có lỗi xảy ra khi xóa gia sư yêu thích.');
     }
   };
 

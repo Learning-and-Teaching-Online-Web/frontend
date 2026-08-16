@@ -222,7 +222,7 @@ const TutorVerification: React.FC = () => {
   const totalPages = Math.ceil(total / 10);
 
   return (
-    <AdminLayout title="Quản lý & Duyệt hồ sơ Giảng viên">
+    <AdminLayout title="Quản lý & Duyệt hồ sơ Gia sư">
       <div style={{ display: 'grid', gridTemplateColumns: selectedTutor ? '1fr 1fr' : '1fr', gap: '24px', alignItems: 'start' }}>
         
         {/* Tutor list block */}
@@ -280,7 +280,7 @@ const TutorVerification: React.FC = () => {
                   {tutors && tutors.length > 0 ? (
                     tutors.map((t) => (
                       <tr key={t.tutor_id} className={selectedTutor?.tutor_id === t.tutor_id ? 'active-row' : ''} style={{ backgroundColor: selectedTutor?.tutor_id === t.tutor_id ? 'rgba(99, 102, 241, 0.05)' : '' }}>
-                        <td style={{ fontWeight: 600 }}>{t.user?.full_name || t.user?.email?.split('@')[0] || 'Giảng viên'}</td>
+                        <td style={{ fontWeight: 600 }}>{t.user?.full_name || t.user?.email?.split('@')[0] || 'Gia sư'}</td>
                         <td>{t.user?.email}</td>
                         <td>
                           <span className={`admin-badge ${t.verified_status === 'approved' ? 'success' : t.verified_status === 'rejected' ? 'danger' : 'warning'}`}>
@@ -300,7 +300,7 @@ const TutorVerification: React.FC = () => {
                   ) : (
                     <tr>
                       <td colSpan={4} style={{ textAlign: 'center', color: 'var(--admin-text-muted)', padding: '30px' }}>
-                        Không có hồ sơ giảng viên nào.
+                        Không có hồ sơ gia sư nào.
                       </td>
                     </tr>
                   )}
@@ -343,7 +343,7 @@ const TutorVerification: React.FC = () => {
               />
               <div style={{ flex: 1 }}>
                 <h3 style={{ fontSize: '17px', fontWeight: 700, margin: '0 0 4px 0', color: 'var(--admin-text-main)' }}>
-                  {selectedTutor.full_name || selectedTutor.user?.full_name || selectedTutor.user?.email?.split('@')[0] || 'Giảng viên'}
+                  {selectedTutor.full_name || selectedTutor.user?.full_name || selectedTutor.user?.email?.split('@')[0] || 'Gia sư'}
                 </h3>
                 <div style={{ fontSize: '13px', color: 'var(--admin-text-muted)', display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
                   <span>📧 Email: <strong style={{ color: 'var(--admin-text-main)' }}>{selectedTutor.user?.email}</strong></span>
@@ -659,7 +659,7 @@ const TutorVerification: React.FC = () => {
                   <FileText size={20} />
                   <span>{previewCert.title}</span>
                 </h3>
-                <span style={{ fontSize: '12px', color: '#9ca3af' }}>Giảng viên: {selectedTutor?.user?.full_name || selectedTutor?.user?.email?.split('@')[0] || 'Giảng viên'}</span>
+                <span style={{ fontSize: '12px', color: '#9ca3af' }}>Gia sư: {selectedTutor?.user?.full_name || selectedTutor?.user?.email?.split('@')[0] || 'Gia sư'}</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span className={`admin-badge ${previewCert.status === 'approved' ? 'success' : previewCert.status === 'rejected' ? 'danger' : 'warning'}`}>

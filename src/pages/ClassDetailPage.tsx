@@ -249,7 +249,7 @@ const ClassDetailPage: React.FC = () => {
                   Chỉ tài khoản <strong>Gia sư</strong> mới có thể đăng ký nhận lớp dạy này.
                 </p>
                 <p style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '16px' }}>
-                  Nếu bạn là Phụ huynh / Học viên, bạn có thể tạo yêu cầu tìm gia sư mới.
+                  Nếu bạn là Học viên, bạn có thể tạo yêu cầu tìm gia sư mới.
                 </p>
                 <Link
                   to="/tim-gia-su"
@@ -433,15 +433,7 @@ const ClassDetailPage: React.FC = () => {
           )}
         </div>
 
-        {/* Bottom Policy Guidance */}
-        <div style={{ marginTop: '24px', padding: '16px', background: '#eff6ff', borderRadius: '8px', borderLeft: '4px solid #2563eb', fontSize: '0.88rem', color: '#1e40af', lineHeight: 1.6 }}>
-          <p style={{ margin: '0 0 6px 0', fontWeight: '700' }}>
-            HỢP TÁC GIỚI THIỆU LỚP MỚI CHO TRUNG TÂM, BẠN SẼ NHẬN ĐƯỢC 60% LỆ PHÍ LỚP MỚI
-          </p>
-          <p style={{ margin: 0 }}>
-            Lưu ý: Trung tâm cam kết thu phí nhận lớp đúng quy định ({classDetail.commission_rate}%). Gia sư vui lòng đọc kĩ quy trình nhận lớp trước khi đăng ký nhận dạy.
-          </p>
-        </div>
+
 
       </div>
     </div>

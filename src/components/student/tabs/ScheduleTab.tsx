@@ -52,7 +52,7 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
                       </span>
                       <span>
                         <User size={14} />
-                        Giảng viên: {session.tutorName}
+                        Gia sư: {session.tutorName}
                       </span>
                       <span className={`status-badge ${session.status}`}>
                         {session.status === 'scheduled' ? 'Sắp diễn ra' : 

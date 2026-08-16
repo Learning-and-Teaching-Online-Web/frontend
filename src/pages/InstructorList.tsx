@@ -50,12 +50,12 @@ const InstructorList: React.FC = () => {
 
   const handleToggleFavorite = async (tutorId: string, tutorName: string) => {
     if (!isAuthenticated) {
-      toast.warning('Bạn cần đăng nhập với tài khoản Học viên để thêm giảng viên yêu thích.');
+      toast.warning('Bạn cần đăng nhập với tài khoản Học viên để thêm gia sư yêu thích.');
       return;
     }
 
     if (isTutorOrAdmin) {
-      toast.error('Chỉ tài khoản Học viên mới có thể lưu giảng viên yêu thích.');
+      toast.error('Chỉ tài khoản Học viên mới có thể lưu gia sư yêu thích.');
       return;
     }
 
@@ -68,14 +68,14 @@ const InstructorList: React.FC = () => {
           toast.info(`Đã xóa ${tutorName} khỏi danh sách yêu thích.`);
         } else {
           setFavoriteTutorIds(prev => [...prev, tutorId]);
-          toast.success(`Đã thêm ${tutorName} vào danh sách giảng viên yêu thích! ❤️`);
+          toast.success(`Đã thêm ${tutorName} vào danh sách gia sư yêu thích! ❤️`);
         }
       } else {
         toast.error(res?.error || 'Không thể thực hiện thao tác.');
       }
     } catch (err: any) {
       console.error('Error toggling favorite:', err);
-      toast.error(err.response?.data?.error || 'Có lỗi xảy ra khi lưu giảng viên yêu thích.');
+      toast.error(err.response?.data?.error || 'Có lỗi xảy ra khi lưu gia sư yêu thích.');
     }
   };
 
@@ -85,10 +85,10 @@ const InstructorList: React.FC = () => {
       <div className="instructor-hero">
         <div className="container">
           <div className="instructor-hero-content">
-            <span className="instructor-hero-badge">Đội ngũ giảng dạy</span>
-            <h1 className="instructor-hero-title">Giảng Viên Của Chúng Tôi</h1>
+            <span className="instructor-hero-badge">Đội ngũ gia sư</span>
+            <h1 className="instructor-hero-title">Gia Sư Của Chúng Tôi</h1>
             <p className="instructor-hero-desc">
-              Học cùng những chuyên gia hàng đầu với nhiều năm kinh nghiệm thực chiến trong ngành
+              Học cùng những gia sư hàng đầu với nhiều năm kinh nghiệm thực chiến trong ngành
             </p>
           </div>
         </div>
@@ -100,19 +100,19 @@ const InstructorList: React.FC = () => {
         {isLoading ? (
           <div className="instructor-loading">
             <div className="instructor-loading-spinner" />
-            <p>Đang tải danh sách giảng viên...</p>
+            <p>Đang tải danh sách gia sư...</p>
           </div>
         ) : tutors.length === 0 ? (
           <div className="instructor-empty">
             <BookOpen size={64} strokeWidth={1} />
-            <h3>Chưa có giảng viên nào</h3>
-            <p>Hệ thống đang cập nhật thêm giảng viên. Vui lòng quay lại sau.</p>
+            <h3>Chưa có gia sư nào</h3>
+            <p>Hệ thống đang cập nhật thêm gia sư. Vui lòng quay lại sau.</p>
             <Link to="/courses" className="instructor-back-btn">Xem Khóa Học</Link>
           </div>
         ) : (
           <div className="instructor-grid">
             {tutors.map((tutor) => {
-              const name = tutor.full_name || tutor.user?.full_name || tutor.user?.email?.split('@')[0] || 'Giảng viên';
+              const name = tutor.full_name || tutor.user?.full_name || tutor.user?.email?.split('@')[0] || 'Gia sư';
               const avatar = tutor.avatar_url || tutor.user?.avatar_url;
               const initials = name.charAt(0).toUpperCase();
               const isFav = favoriteTutorIds.includes(tutor.tutor_id);
@@ -124,7 +124,7 @@ const InstructorList: React.FC = () => {
                     {!isTutorOrAdmin && (
                       <button
                         onClick={() => handleToggleFavorite(tutor.tutor_id, name)}
-                        title={isFav ? "Bỏ yêu thích" : "Yêu thích giảng viên"}
+                        title={isFav ? "Bỏ yêu thích" : "Yêu thích gia sư"}
                         style={{
                           position: 'absolute',
                           top: '12px',

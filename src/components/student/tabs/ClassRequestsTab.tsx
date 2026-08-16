@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   ClipboardList, 
@@ -12,7 +12,9 @@ import {
   Calendar,
   Check,
   CreditCard,
-  RotateCcw
+  RotateCcw,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import axiosClient from '../../../services/axiosClient';
@@ -137,6 +139,85 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
   const [refundModalItem, setRefundModalItem] = useState<StudentClassRequest | null>(null);
   const [refundReason, setRefundReason] = useState<string>('');
 
+  // Tab filter state: 'ALL' | 'ASSIGNED' | 'OPEN' | 'CANCELLED'
+  const [activeSubTab, setActiveSubTab] = useState<'ALL' | 'ASSIGNED' | 'OPEN' | 'CANCELLED'>('ALL');
+
+  // Count items by category for tab badges
+  const counts = useMemo(() => {
+    let all = classRequests.length;
+    let assigned = 0;
+    let open = 0;
+    let cancelled = 0;
+
+    classRequests.forEach((item) => {
+      const refundTickets = item.refund_tickets || (item as any).refundTickets || [];
+      const hasPendingRefund = refundTickets.some((t: any) => t.status === 'PENDING') || (item as any).has_pending_refund;
+
+      const isAssigned =
+        (item.is_active_offline_class && item.status === 'ACTIVE') ||
+        item.status === 'WAITING_PAYMENT' ||
+        item.status === 'WAITING_TUTOR_CONFIRM';
+
+      const isOpen =
+        !item.is_active_offline_class &&
+        (item.status === 'OPEN' || item.status === 'PENDING_ADMIN');
+
+      const isCancelled =
+        item.status === 'CANCELLED' ||
+        item.status === 'EXPIRED' ||
+        item.status === 'REJECTED' ||
+        hasPendingRefund;
+
+      if (isAssigned) assigned++;
+      if (isOpen) open++;
+      if (isCancelled) cancelled++;
+    });
+
+    return { all, assigned, open, cancelled };
+  }, [classRequests]);
+
+  // Filter requests based on selected sub-tab
+  const filteredRequests = useMemo(() => {
+    return classRequests.filter((item) => {
+      if (activeSubTab === 'ALL') return true;
+
+      const refundTickets = item.refund_tickets || (item as any).refundTickets || [];
+      const hasPendingRefund = refundTickets.some((t: any) => t.status === 'PENDING') || (item as any).has_pending_refund;
+
+      const isAssigned =
+        (item.is_active_offline_class && item.status === 'ACTIVE') ||
+        item.status === 'WAITING_PAYMENT' ||
+        item.status === 'WAITING_TUTOR_CONFIRM';
+
+      const isOpen =
+        !item.is_active_offline_class &&
+        (item.status === 'OPEN' || item.status === 'PENDING_ADMIN');
+
+      const isCancelled =
+        item.status === 'CANCELLED' ||
+        item.status === 'EXPIRED' ||
+        item.status === 'REJECTED' ||
+        hasPendingRefund;
+
+      if (activeSubTab === 'ASSIGNED') return isAssigned;
+      if (activeSubTab === 'OPEN') return isOpen;
+      if (activeSubTab === 'CANCELLED') return isCancelled;
+
+      return true;
+    });
+  }, [classRequests, activeSubTab]);
+
+  // Pagination states (3 items per page)
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const ITEMS_PER_PAGE = 3;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [classRequests, activeSubTab]);
+
+  const totalPages = Math.ceil(filteredRequests.length / ITEMS_PER_PAGE);
+  const paginatedList = filteredRequests.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('vi-VN').format(val) + ' VNĐ/tháng';
   };
@@ -151,6 +232,18 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
   };
 
   const renderStatusBadge = (item: StudentClassRequest) => {
+    const refundTickets = item.refund_tickets || (item as any).refundTickets || [];
+    const hasPendingRefund = refundTickets.some((t: any) => t.status === 'PENDING') || (item as any).has_pending_refund;
+
+    if (hasPendingRefund) {
+      return (
+        <span className="badge badge-warning" style={{ background: '#fffbeb', color: '#b45309', border: '1px solid #fcd34d', padding: '4px 12px', borderRadius: '20px', fontWeight: 600, fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+          <Clock size={14} color="#d97706" />
+          CHỜ ADMIN XỬ LÝ HỦY LỚP
+        </span>
+      );
+    }
+
     if (item.is_active_offline_class) {
       if (item.status === 'CANCELLED') {
         return (
@@ -321,7 +414,7 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
 
   return (
     <div className="tab-content-container">
-      <div className="tab-header" style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="tab-header" style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h2 style={{ fontSize: '1.4rem', fontWeight: 700, margin: 0, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <ClipboardList className="tab-title-icon" size={24} style={{ color: 'var(--primary)' }} />
@@ -331,6 +424,144 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
             Quản lý các lớp yêu cầu, hoàn tất nộp học phí tháng đầu (escrow) và gửi yêu cầu hoàn tiền trong 7 ngày đầu nếu gặp sự cố.
           </p>
         </div>
+      </div>
+
+      {/* SUB-TABS FILTER BAR */}
+      <div style={{
+        display: 'flex',
+        gap: '8px',
+        flexWrap: 'wrap',
+        marginBottom: '20px',
+        borderBottom: '1px solid #e2e8f0',
+        paddingBottom: '12px'
+      }}>
+        <button
+          type="button"
+          onClick={() => setActiveSubTab('ALL')}
+          style={{
+            padding: '8px 16px',
+            borderRadius: '20px',
+            border: activeSubTab === 'ALL' ? 'none' : '1px solid #cbd5e1',
+            background: activeSubTab === 'ALL' ? 'var(--primary, #2563eb)' : '#ffffff',
+            color: activeSubTab === 'ALL' ? '#ffffff' : '#475569',
+            fontWeight: activeSubTab === 'ALL' ? 700 : 600,
+            fontSize: '0.88rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'all 0.15s ease',
+            boxShadow: activeSubTab === 'ALL' ? '0 2px 6px rgba(37, 99, 235, 0.25)' : 'none'
+          }}
+        >
+          <span>Tất cả</span>
+          <span style={{
+            background: activeSubTab === 'ALL' ? 'rgba(255,255,255,0.25)' : '#f1f5f9',
+            color: activeSubTab === 'ALL' ? '#ffffff' : '#64748b',
+            borderRadius: '10px',
+            padding: '2px 8px',
+            fontSize: '0.78rem',
+            fontWeight: 700
+          }}>
+            {counts.all}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveSubTab('ASSIGNED')}
+          style={{
+            padding: '8px 16px',
+            borderRadius: '20px',
+            border: activeSubTab === 'ASSIGNED' ? 'none' : '1px solid #cbd5e1',
+            background: activeSubTab === 'ASSIGNED' ? '#16a34a' : '#ffffff',
+            color: activeSubTab === 'ASSIGNED' ? '#ffffff' : '#475569',
+            fontWeight: activeSubTab === 'ASSIGNED' ? 700 : 600,
+            fontSize: '0.88rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'all 0.15s ease',
+            boxShadow: activeSubTab === 'ASSIGNED' ? '0 2px 6px rgba(22, 163, 74, 0.25)' : 'none'
+          }}
+        >
+          <span>Lớp đã giao</span>
+          <span style={{
+            background: activeSubTab === 'ASSIGNED' ? 'rgba(255,255,255,0.25)' : '#f1f5f9',
+            color: activeSubTab === 'ASSIGNED' ? '#ffffff' : '#64748b',
+            borderRadius: '10px',
+            padding: '2px 8px',
+            fontSize: '0.78rem',
+            fontWeight: 700
+          }}>
+            {counts.assigned}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveSubTab('OPEN')}
+          style={{
+            padding: '8px 16px',
+            borderRadius: '20px',
+            border: activeSubTab === 'OPEN' ? 'none' : '1px solid #cbd5e1',
+            background: activeSubTab === 'OPEN' ? '#2563eb' : '#ffffff',
+            color: activeSubTab === 'OPEN' ? '#ffffff' : '#475569',
+            fontWeight: activeSubTab === 'OPEN' ? 700 : 600,
+            fontSize: '0.88rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'all 0.15s ease',
+            boxShadow: activeSubTab === 'OPEN' ? '0 2px 6px rgba(37, 99, 235, 0.25)' : 'none'
+          }}
+        >
+          <span>Lớp đang đăng công khai</span>
+          <span style={{
+            background: activeSubTab === 'OPEN' ? 'rgba(255,255,255,0.25)' : '#f1f5f9',
+            color: activeSubTab === 'OPEN' ? '#ffffff' : '#64748b',
+            borderRadius: '10px',
+            padding: '2px 8px',
+            fontSize: '0.78rem',
+            fontWeight: 700
+          }}>
+            {counts.open}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveSubTab('CANCELLED')}
+          style={{
+            padding: '8px 16px',
+            borderRadius: '20px',
+            border: activeSubTab === 'CANCELLED' ? 'none' : '1px solid #cbd5e1',
+            background: activeSubTab === 'CANCELLED' ? '#dc2626' : '#ffffff',
+            color: activeSubTab === 'CANCELLED' ? '#ffffff' : '#475569',
+            fontWeight: activeSubTab === 'CANCELLED' ? 700 : 600,
+            fontSize: '0.88rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'all 0.15s ease',
+            boxShadow: activeSubTab === 'CANCELLED' ? '0 2px 6px rgba(220, 38, 38, 0.25)' : 'none'
+          }}
+        >
+          <span>Lớp đã hủy / Hết hạn</span>
+          <span style={{
+            background: activeSubTab === 'CANCELLED' ? 'rgba(255,255,255,0.25)' : '#f1f5f9',
+            color: activeSubTab === 'CANCELLED' ? '#ffffff' : '#64748b',
+            borderRadius: '10px',
+            padding: '2px 8px',
+            fontSize: '0.78rem',
+            fontWeight: 700
+          }}>
+            {counts.cancelled}
+          </span>
+        </button>
       </div>
 
       {classRequests.length === 0 ? (
@@ -347,14 +578,25 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
             + Đăng ký tìm gia sư ngay
           </Link>
         </div>
+      ) : filteredRequests.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '40px 24px', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
+          <ClipboardList size={40} style={{ color: '#94a3b8', marginBottom: '12px' }} />
+          <h3 style={{ color: '#334155', margin: '0 0 8px 0', fontSize: '1.05rem' }}>Không có bài đăng / lớp học nào trong danh mục này</h3>
+          <p style={{ color: '#64748b', fontSize: '0.88rem', margin: 0 }}>
+            Vui lòng chọn danh mục khác để xem chi tiết các lớp yêu cầu của bạn.
+          </p>
+        </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {classRequests.map((item) => {
+          {paginatedList.map((item) => {
             const reqId = item.request_id || item.class_id || '';
             const isWaitingPayment = item.status === 'WAITING_PAYMENT';
             const isActiveClass = item.is_active_offline_class && item.status === 'ACTIVE';
             const studentPayment = (item.payments || []).find((p: any) => p.type === 'STUDENT_TUITION');
             const isStudentPaid = studentPayment?.status === 'PAID';
+
+            const refundTickets = item.refund_tickets || (item as any).refundTickets || [];
+            const hasPendingRefund = refundTickets.some((t: any) => t.status === 'PENDING') || (item as any).has_pending_refund;
 
             return (
               <div 
@@ -362,7 +604,7 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
                 style={{
                   background: '#ffffff',
                   borderRadius: '12px',
-                  border: isWaitingPayment ? '2px solid #eab308' : isActiveClass ? '2px solid #22c55e' : '1px solid #e2e8f0',
+                  border: isWaitingPayment ? '2px solid #eab308' : hasPendingRefund ? '2px solid #f59e0b' : isActiveClass ? '2px solid #22c55e' : '1px solid #e2e8f0',
                   boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
                   padding: '20px',
                   transition: 'all 0.2s ease',
@@ -546,8 +788,18 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
                   </div>
                 )}
 
-                {/* ACTIVE CLASS 7-DAY REFUND ACTION */}
-                {isActiveClass && (
+                {/* PENDING REFUND TICKET NOTICE */}
+                {hasPendingRefund ? (
+                  <div style={{ background: '#fffbeb', border: '1px solid #fde68a', padding: '14px', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ color: '#b45309', fontWeight: 700, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Clock size={18} color="#d97706" />
+                      <span>⏳ Đã gửi yêu cầu Hủy lớp & Hoàn tiền!</span>
+                    </div>
+                    <p style={{ color: '#78350f', fontSize: '0.83rem', margin: 0, lineHeight: '1.4' }}>
+                      Hệ thống đã tiếp nhận đơn yêu cầu của bạn. Admin đang tiến hành xem xét minh chứng và chốt quyết định đền bù hoàn tiền trong thời gian sớm nhất.
+                    </p>
+                  </div>
+                ) : isActiveClass ? (
                   <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '12px 14px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                     <div>
                       <span style={{ color: '#166534', fontWeight: 700, fontSize: '0.88rem' }}>
@@ -581,7 +833,7 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
                       Yêu cầu hủy lớp / Hoàn tiền
                     </button>
                   </div>
-                )}
+                ) : null}
 
                 {/* Cancel action if still open */}
                 {!item.is_active_offline_class && item.status !== 'CANCELLED' && item.status !== 'EXPIRED' && !isWaitingPayment && (
@@ -613,6 +865,79 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
               </div>
             );
           })}
+
+          {/* PAGINATION CONTROLS */}
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginTop: '20px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px',
+                  padding: '8px 14px',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  background: currentPage === 1 ? '#f1f5f9' : '#ffffff',
+                  color: currentPage === 1 ? '#94a3b8' : '#334155',
+                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  fontWeight: 600,
+                  fontSize: '0.88rem',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <ChevronLeft size={16} /> Trang trước
+              </button>
+
+              {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((page) => (
+                <button
+                  key={page}
+                  type="button"
+                  onClick={() => setCurrentPage(page)}
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '8px',
+                    border: page === currentPage ? 'none' : '1px solid #cbd5e1',
+                    background: page === currentPage ? '#2563eb' : '#ffffff',
+                    color: page === currentPage ? '#ffffff' : '#334155',
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button
+                type="button"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px',
+                  padding: '8px 14px',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  background: currentPage === totalPages ? '#f1f5f9' : '#ffffff',
+                  color: currentPage === totalPages ? '#94a3b8' : '#334155',
+                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                  fontWeight: 600,
+                  fontSize: '0.88rem',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                Trang sau <ChevronRight size={16} />
+              </button>
+            </div>
+          )}
         </div>
       )}
 

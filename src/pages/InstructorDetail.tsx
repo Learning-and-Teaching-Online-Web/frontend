@@ -129,16 +129,16 @@ const InstructorDetail: React.FC = () => {
           <h2>Không tìm thấy thông tin Gia sư</h2>
           <p>Gia sư có thể đã bị ngưng hoạt động hoặc đường dẫn không tồn tại.</p>
           <Link to="/instructors" className="tutor-back-btn">
-            <ChevronLeft size={18} /> Quay lại danh sách Giảng viên
+            <ChevronLeft size={18} /> Quay lại danh sách Gia sư
           </Link>
         </div>
       </div>
     );
   }
 
-  const name = tutor.full_name || tutor.user?.full_name || tutor.user?.email?.split('@')[0] || 'Giảng viên';
+  const name = tutor.full_name || tutor.user?.full_name || tutor.user?.email?.split('@')[0] || 'Gia sư';
   const avatar = tutor.avatar_url || tutor.user?.avatar_url;
-  const tutorCode = tutor.tutor_code || `${tutor.tutor_id.substring(0, 5).toUpperCase()}`;
+  const tutorCode = tutor.tutor_code || `${tutor.tutor_id.substring(0, 6).toUpperCase()}`;
 
   // Process Date of Birth
   let formattedDob = '';
@@ -182,7 +182,7 @@ const InstructorDetail: React.FC = () => {
       <div className="tutor-detail-top-nav">
         <div className="container">
           <button onClick={() => navigate('/instructors')} className="tutor-nav-back">
-            <ChevronLeft size={18} /> Danh sách Giảng viên / Gia sư
+            <ChevronLeft size={18} /> Danh sách Gia sư
           </button>
         </div>
       </div>
@@ -377,7 +377,7 @@ const InstructorDetail: React.FC = () => {
 
           {coursesList.length === 0 ? (
             <div className="online-courses-empty">
-              <p>Giảng viên chưa phát hành khóa học trực tuyến/video nào. Bạn có thể chọn thuê gia sư dạy kèm trực tiếp ở trên!</p>
+              <p>Gia sư chưa phát hành khóa học trực tuyến/video nào. Bạn có thể chọn thuê gia sư dạy kèm trực tiếp ở trên!</p>
             </div>
           ) : (
             <div className="online-courses-grid">
@@ -417,7 +417,7 @@ const InstructorDetail: React.FC = () => {
               <p className="text-center text-muted">Đang cập nhật danh sách gia sư khác...</p>
             ) : (
               otherTutors.map((other) => {
-                const otherName = other.full_name || other.user?.full_name || 'Giảng viên';
+                const otherName = other.full_name || other.user?.full_name || 'Gia sư';
                 const otherAvatar = other.avatar_url || other.user?.avatar_url;
                 const otherCode = other.tutor_code || `${other.tutor_id.substring(0, 5).toUpperCase()}`;
 

@@ -177,7 +177,7 @@ const UserManagement: React.FC = () => {
           >
             <option value="">Tất cả vai trò</option>
             <option value="student">Học viên</option>
-            <option value="tutor">Giảng viên</option>
+            <option value="tutor">Gia sư</option>
             <option value="admin">Quản trị viên</option>
           </select>
 
@@ -244,7 +244,7 @@ const UserManagement: React.FC = () => {
                             }}
                           >
                             <option value="student">Học viên</option>
-                            <option value="tutor">Giảng viên</option>
+                            <option value="tutor">Gia sư</option>
                           </select>
                         )}
                       </td>
@@ -354,7 +354,7 @@ const UserManagement: React.FC = () => {
                 <h4 style={{ margin: '0 0 4px 0', fontSize: '18px', color: '#0f172a' }}>{selectedUser.full_name || selectedUser.email?.split('@')[0] || 'Người dùng'}</h4>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <span className="admin-badge primary" style={{ textTransform: 'capitalize' }}>
-                    {selectedUser.role === 'tutor' ? 'Giảng viên' : selectedUser.role === 'admin' ? 'Quản trị viên' : 'Học viên'}
+                    {selectedUser.role === 'tutor' ? 'Gia sư' : selectedUser.role === 'admin' ? 'Quản trị viên' : 'Học viên'}
                   </span>
                   <span className={`admin-badge ${selectedUser.status === 'active' ? 'success' : 'danger'}`}>
                     {selectedUser.status === 'active' ? 'Hoạt động' : 'Đang khóa'}
@@ -392,7 +392,7 @@ const UserManagement: React.FC = () => {
 
             {selectedUser.role === 'tutor' && selectedUser.tutor_profile && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px', background: '#f8fafc', padding: '14px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                <h5 style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#4f46e5' }}>Thông tin Hồ sơ Giảng viên</h5>
+                <h5 style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#4f46e5' }}>Thông tin Hồ sơ Gia sư</h5>
                 <div style={{ fontSize: '13px' }}>Học vấn: <strong>{selectedUser.tutor_profile.education || 'Chưa điền'}</strong></div>
                 <div style={{ fontSize: '13px' }}>Kinh nghiệm: <strong>{selectedUser.tutor_profile.experience_years ? `${selectedUser.tutor_profile.experience_years} năm` : 'Chưa điền'}</strong></div>
                 <div style={{ fontSize: '13px' }}>Học phí đề xuất: <strong>{selectedUser.tutor_profile.hourly_rate ? Number(selectedUser.tutor_profile.hourly_rate).toLocaleString('vi-VN') + 'đ/giờ' : 'Chưa thiết lập'}</strong></div>
