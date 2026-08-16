@@ -21,7 +21,7 @@ export const VerificationBanner: React.FC<VerificationBannerProps> = ({
           </div>
           <div>
             <div className="banner-title approved">
-              Tài khoản Giảng viên Đối tác Đã Xác Thực
+              Tài khoản Gia sư Đối tác Đã Xác Thực
               <span className="banner-tag approved">CHÍNH THỨC</span>
             </div>
             <div className="banner-desc approved">

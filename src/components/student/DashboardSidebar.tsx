@@ -1,12 +1,12 @@
 import React, { useRef } from 'react';
-import { 
-  User, 
-  BookOpen, 
-  Calendar, 
-  Award, 
-  Heart, 
+import {
+  User,
+  BookOpen,
+  Calendar,
+  Award,
+  Heart,
   ClipboardList,
-  Settings, 
+  Settings,
   LogOut,
   Camera,
   Wallet
@@ -77,24 +77,24 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     <aside className="dashboard-sidebar">
       <div className="sidebar-profile">
         {/* Hidden File Input for Avatar Selection */}
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          accept="image/*" 
-          style={{ display: 'none' }} 
+        <input
+          type="file"
+          ref={fileInputRef}
+          accept="image/*"
+          style={{ display: 'none' }}
           onChange={handleFileSelect}
         />
 
         {/* Clickable Avatar Container */}
-        <div 
+        <div
           className="sidebar-avatar-wrapper"
           onClick={handleAvatarClick}
           title="Nhấp vào đây để đổi ảnh đại diện"
         >
           <div className="avatar-circle">
-            <img 
-              src={profile.avatar} 
-              alt={displayName} 
+            <img
+              src={profile.avatar}
+              alt={displayName}
               className="sidebar-avatar-img"
             />
             <div className="sidebar-avatar-overlay">
@@ -110,7 +110,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
 
       <ul className="sidebar-menu">
         <li>
-          <button 
+          <button
             className={`menu-item-btn ${activeTab === 'overview' ? 'active' : ''}`}
             onClick={() => onTabChange('overview')}
           >
@@ -119,7 +119,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           </button>
         </li>
         <li>
-          <button 
+          <button
             className={`menu-item-btn ${activeTab === 'courses' ? 'active' : ''}`}
             onClick={() => onTabChange('courses')}
           >
@@ -128,7 +128,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           </button>
         </li>
         <li>
-          <button 
+          <button
             className={`menu-item-btn ${activeTab === 'schedule' ? 'active' : ''}`}
             onClick={() => onTabChange('schedule')}
           >
@@ -137,16 +137,16 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           </button>
         </li>
         <li>
-          <button 
+          <button
             className={`menu-item-btn ${activeTab === 'class-requests' ? 'active' : ''}`}
             onClick={() => onTabChange('class-requests')}
           >
             <ClipboardList size={18} />
-            Lớp gia sư đã yêu cầu {classRequestCount > 0 ? `(${classRequestCount})` : ''}
+            Lớp học Offline {classRequestCount > 0 ? `(${classRequestCount})` : ''}
           </button>
         </li>
         <li>
-          <button 
+          <button
             className={`menu-item-btn ${activeTab === 'quizzes' ? 'active' : ''}`}
             onClick={() => onTabChange('quizzes')}
           >
@@ -155,16 +155,16 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           </button>
         </li>
         <li>
-          <button 
+          <button
             className={`menu-item-btn ${activeTab === 'favorites' ? 'active' : ''}`}
             onClick={() => onTabChange('favorites')}
           >
             <Heart size={18} />
-            Giảng viên yêu thích ({favoriteCount})
+            Gia sư yêu thích ({favoriteCount})
           </button>
         </li>
         <li>
-          <button 
+          <button
             className={`menu-item-btn ${activeTab === 'wallet' ? 'active' : ''}`}
             onClick={() => onTabChange('wallet')}
           >
@@ -173,7 +173,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           </button>
         </li>
         <li>
-          <button 
+          <button
             className={`menu-item-btn ${activeTab === 'profile' ? 'active' : ''}`}
             onClick={() => onTabChange('profile')}
           >
@@ -182,8 +182,8 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           </button>
         </li>
         <li style={{ marginTop: '20px', borderTop: '1px solid var(--border-light)', paddingTop: '16px' }}>
-          <button 
-            className="menu-item-btn" 
+          <button
+            className="menu-item-btn"
             onClick={onLogout}
             style={{ color: '#ef4444' }}
           >

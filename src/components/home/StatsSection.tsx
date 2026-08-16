@@ -4,7 +4,7 @@ const StatsSection: React.FC = () => {
   const statsList = [
     { number: '25K+', label: 'Học viên đang học' },
     { number: '899', label: 'Tổng số khóa học' },
-    { number: '158', label: 'Giảng viên' },
+    { number: '158', label: 'Gia sư' },
     { number: '100%', label: 'Mức độ hài lòng' }
   ];
 

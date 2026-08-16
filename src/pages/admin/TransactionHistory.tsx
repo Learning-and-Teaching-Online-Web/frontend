@@ -203,8 +203,8 @@ const TransactionHistory: React.FC = () => {
                         </td>
                         <td style={{ textTransform: 'uppercase', fontSize: '12px' }}>{tx.payment_method}</td>
                         <td>
-                          <span className={`admin-badge ${tx.status === 'success' ? 'success' : tx.status === 'failed' ? 'danger' : 'warning'}`}>
-                            {tx.status === 'success' ? 'Thành công' : tx.status === 'failed' ? 'Thất bại' : 'Chờ xử lý'}
+                          <span className={`admin-badge ${(tx.status === 'success' || tx.status === 'refunded') ? 'success' : tx.status === 'failed' ? 'danger' : 'warning'}`}>
+                            {(tx.status === 'success' || tx.status === 'refunded') ? 'Thành công' : tx.status === 'failed' ? 'Thất bại' : 'Chờ xử lý'}
                           </span>
                         </td>
                         <td style={{ color: 'var(--admin-text-muted)', fontSize: '13px' }}>
@@ -278,7 +278,7 @@ const TransactionHistory: React.FC = () => {
                     payouts.map((po) => (
                       <tr key={po.payout_id}>
                         <td>
-                          <span style={{ fontWeight: 600 }}>{po.tutor?.user?.full_name || po.tutor?.user?.email?.split('@')[0] || 'Giảng viên'}</span>
+                          <span style={{ fontWeight: 600 }}>{po.tutor?.user?.full_name || po.tutor?.user?.email?.split('@')[0] || 'Gia sư'}</span>
                           <span style={{ display: 'block', fontSize: '11px', color: 'var(--admin-text-muted)' }}>{po.tutor?.user?.email}</span>
                         </td>
                         <td>

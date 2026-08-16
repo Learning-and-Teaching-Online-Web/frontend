@@ -292,7 +292,7 @@ const RequestTutorPage: React.FC = () => {
               Tài khoản Gia sư không thể tạo bài tìm gia sư
             </h2>
             <p style={{ color: '#64748b', fontSize: '0.95rem', maxWidth: '500px', margin: '0 auto 24px auto', lineHeight: 1.6 }}>
-              Tính năng này dành riêng cho Học viên / Phụ huynh. Bạn có thể xem danh sách các lớp học mới chưa giao để đăng ký nhận lớp dạy.
+              Tính năng này dành riêng cho Học viên. Bạn có thể xem danh sách các lớp học mới chưa giao để đăng ký nhận lớp dạy.
             </p>
             <Link
               to="/lop-hoc-moi"
@@ -319,7 +319,7 @@ const RequestTutorPage: React.FC = () => {
               {/* Họ tên */}
               <div>
                 <label style={{ display: 'block', fontWeight: '600', marginBottom: '6px', color: '#334155', fontSize: '0.9rem' }}>
-                  Họ tên học viên / phụ huynh <span style={{ color: '#ef4444' }}>*</span>
+                  Họ tên học viên <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <div style={{ position: 'relative' }}>
                   <input

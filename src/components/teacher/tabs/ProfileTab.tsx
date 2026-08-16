@@ -167,7 +167,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
               <div style={{ position: 'relative', flexShrink: 0 }}>
                 <img
                   src={avatarBase64 || tutorProfile?.avatar_url || tutorProfile?.user?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'}
-                  alt={fullName || 'Giảng viên'}
+                  alt={fullName || 'Gia sư'}
                   style={{ width: '75px', height: '75px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #4f46e5' }}
                 />
               </div>
@@ -414,7 +414,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
               <BookOpen size={16} style={{ color: '#4f46e5' }} /> Khối lớp nhận dạy
             </label>
             <p style={{ margin: '0 0 10px 0', fontSize: '12px', color: 'var(--text-light)' }}>
-              Tích chọn các khối lớp bạn có khả năng giảng dạy tốt nhất để học sinh và phụ huynh dễ dàng tìm thấy bạn.
+              Tích chọn các khối lớp bạn có khả năng giảng dạy tốt nhất để học sinh dễ dàng tìm thấy bạn.
             </p>
             <div style={{
               display: 'grid',

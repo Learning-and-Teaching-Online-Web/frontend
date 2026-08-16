@@ -22,7 +22,7 @@ export const mapBackendCourseToFrontend = (beCourse: any) => {
     reviewCount: beCourse.tutor?.review_count || 0,
     level: beCourse.level || 'Beginner',
     categories: Array.isArray(beCourse.tags) ? beCourse.tags : (beCourse.tags ? JSON.parse(JSON.stringify(beCourse.tags)) : []),
-    instructor: beCourse.tutor?.user?.full_name || 'Giảng viên',
+    instructor: beCourse.tutor?.user?.full_name || 'Gia sư',
     instructorAvatar: beCourse.tutor?.user?.avatar_url || null,
     instructorBio: beCourse.tutor?.bio || null,
     instructorSpecialization: beCourse.tutor?.specialization || null,

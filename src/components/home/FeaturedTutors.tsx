@@ -50,7 +50,7 @@ const FeaturedTutors: React.FC = () => {
           <div>
             <span className="section-subtitle">Đội Ngũ Chất Lượng</span>
             <h2 className="section-title">
-              Gia Sư & Giảng Viên <span>Tiêu Biểu</span>
+              Đội Ngũ Gia Sư <span>Tiêu Biểu</span>
             </h2>
             <p className="section-description">
               100% Gia sư được xác minh bằng cấp, lý lịch rõ ràng và có nhiều kinh nghiệm giảng dạy nhiệt tình.
@@ -100,7 +100,7 @@ const FeaturedTutors: React.FC = () => {
 
                 <div className="tutor-home-info">
                   <h3 className="tutor-name">{tutor.full_name}</h3>
-                  <p className="tutor-edu">{tutor.education || 'Giảng viên / Gia sư giỏi'}</p>
+                  <p className="tutor-edu">{tutor.education || 'Gia sư giỏi'}</p>
 
                   <div className="tutor-rating-row">
                     <div className="stars-group">

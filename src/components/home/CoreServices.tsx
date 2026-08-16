@@ -29,7 +29,7 @@ const CoreServices: React.FC = () => {
       icon: <Video size={32} className="service-icon text-emerald" />,
       badge: 'Học mọi lúc mọi nơi',
       title: 'Khóa Học Trực Tuyến',
-      description: 'Hệ thống khóa học video bài giảng đa dạng từ các giảng viên hàng đầu, tự luyện bài tập và kiểm tra.',
+      description: 'Hệ thống khóa học video bài giảng đa dạng từ các gia sư hàng đầu, tự luyện bài tập và kiểm tra.',
       link: '/courses',
       btnText: 'Khám phá khóa học',
       colorClass: 'service-card-emerald',
@@ -55,7 +55,7 @@ const CoreServices: React.FC = () => {
             Giải Pháp Học Tập & Giảng Dạy <span>Toàn Diện</span>
           </h2>
           <p className="section-description">
-            NovaLearn kết nối trực tiếp Học viên & Phụ huynh với Đội ngũ Gia sư chất lượng cao, đồng thời cung cấp khóa học online chuẩn hóa.
+            NovaLearn kết nối trực tiếp Học viên với Đội ngũ Gia sư chất lượng cao, đồng thời cung cấp khóa học online chuẩn hóa.
           </p>
         </div>
 

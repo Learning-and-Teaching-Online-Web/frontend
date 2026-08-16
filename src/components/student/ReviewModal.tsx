@@ -147,7 +147,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
               Đánh giá chất lượng giảng dạy ⭐
             </h3>
             <p style={{ margin: 0, fontSize: '13px', color: '#94a3b8' }}>
-              Giảng viên: <strong style={{ color: '#818cf8' }}>{tutorName}</strong> | Khóa học: <span style={{ color: '#cbd5e1' }}>{courseTitle}</span>
+              Gia sư: <strong style={{ color: '#818cf8' }}>{tutorName}</strong> | Khóa học: <span style={{ color: '#cbd5e1' }}>{courseTitle}</span>
             </p>
           </div>
           <button

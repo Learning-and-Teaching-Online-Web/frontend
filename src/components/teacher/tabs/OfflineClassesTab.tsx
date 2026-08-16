@@ -11,7 +11,9 @@ import {
   Star, 
   User, 
   Layers,
-  RotateCcw
+  RotateCcw,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import axiosClient from '../../../services/axiosClient';
@@ -42,6 +44,7 @@ interface ClassRequestItem {
   fee_amount?: number;
   assigned_tutor_id?: string;
   my_application_status?: string | null;
+  tutor_payment_status?: string;
   payments?: any[];
   refund_tickets?: any[];
   _count?: { applications: number };
@@ -118,7 +121,7 @@ const PaymentCountdown: React.FC<{ deadline?: string }> = ({ deadline }) => {
 };
 
 export const OfflineClassesTab: React.FC = () => {
-  const [subTab, setSubTab] = useState<'all' | 'directed'>('all');
+  const [subTab, setSubTab] = useState<'all' | 'directed' | 'assigned' | 'refund'>('all');
   
   // Data States
   const [myClasses, setMyClasses] = useState<ClassRequestItem[]>([]);
@@ -130,6 +133,10 @@ export const OfflineClassesTab: React.FC = () => {
   const [pendingPaymentClass, setPendingPaymentClass] = useState<ClassRequestItem | null>(null);
   const [refundModalItem, setRefundModalItem] = useState<ClassRequestItem | null>(null);
   const [refundReason, setRefundReason] = useState<string>('');
+
+  // Pagination states (4 items per page)
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const ITEMS_PER_PAGE = 4;
 
   // Fetch wallet balance
   const fetchWalletBalance = async () => {
@@ -262,9 +269,18 @@ export const OfflineClassesTab: React.FC = () => {
 
   // Filter lists
   const directedClasses = myClasses.filter(c => c.is_directed_to_me);
+  const assignedClasses = myClasses.filter(c => c.is_assigned_to_me || c.status === 'ACTIVE' || (c as any).is_active_offline_class || c.status === 'WAITING_PAYMENT');
+  const refundClasses = myClasses.filter(c => (c.refund_tickets && c.refund_tickets.length > 0) || c.refund_deadline || c.status === 'REFUNDED' || c.status === 'CANCELLED');
 
   // Filter displayedList based on subTab
-  let displayedList: ClassRequestItem[] = subTab === 'directed' ? directedClasses : myClasses;
+  let displayedList: ClassRequestItem[] = myClasses;
+  if (subTab === 'directed') {
+    displayedList = directedClasses;
+  } else if (subTab === 'assigned') {
+    displayedList = assignedClasses;
+  } else if (subTab === 'refund') {
+    displayedList = refundClasses;
+  }
 
   // Filter displayedList by province if selected
   if (province && province !== '--Tất cả Tỉnh/Thành--') {
@@ -281,6 +297,14 @@ export const OfflineClassesTab: React.FC = () => {
       c.district?.toLowerCase().includes(q)
     );
   }
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, province, subTab]);
+
+  const totalPages = Math.ceil(displayedList.length / ITEMS_PER_PAGE);
+  const paginatedList = displayedList.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
     <div className="section-card">
@@ -344,6 +368,52 @@ export const OfflineClassesTab: React.FC = () => {
           <Star size={16} color={subTab === 'directed' ? '#ffd700' : '#64748b'} />
           Lớp được chỉ định ({directedClasses.length})
         </button>
+
+        {/* Tab Lớp đã giao */}
+        <button
+          type="button"
+          onClick={() => setSubTab('assigned')}
+          style={{
+            padding: '8px 16px',
+            borderRadius: '8px',
+            border: 'none',
+            background: subTab === 'assigned' ? '#6366f1' : '#f1f5f9',
+            color: subTab === 'assigned' ? '#ffffff' : '#475569',
+            fontWeight: 700,
+            fontSize: '0.9rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <CheckCircle2 size={16} color={subTab === 'assigned' ? '#ffffff' : '#22c55e'} />
+          Lớp đã giao ({assignedClasses.length})
+        </button>
+
+        {/* Tab Hủy & Hoàn tiền */}
+        <button
+          type="button"
+          onClick={() => setSubTab('refund')}
+          style={{
+            padding: '8px 16px',
+            borderRadius: '8px',
+            border: 'none',
+            background: subTab === 'refund' ? '#6366f1' : '#f1f5f9',
+            color: subTab === 'refund' ? '#ffffff' : '#475569',
+            fontWeight: 700,
+            fontSize: '0.9rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <RotateCcw size={16} color={subTab === 'refund' ? '#ffffff' : '#ef4444'} />
+          Hủy & Hoàn tiền ({refundClasses.length})
+        </button>
       </div>
 
       {/* SEARCH AND FILTER BAR */}
@@ -401,22 +471,34 @@ export const OfflineClassesTab: React.FC = () => {
           <h4 style={{ color: '#334155', margin: '0 0 4px 0' }}>
             {subTab === 'directed'
               ? 'Hiện chưa có lớp nào học viên điền đúng mã gia sư chỉ định bạn'
+              : subTab === 'assigned'
+              ? 'Chưa có lớp học nào được Admin duyệt giao cho bạn'
+              : subTab === 'refund'
+              ? 'Chưa có lớp nào có yêu cầu Hủy hoặc Hoàn tiền'
               : 'Chưa có lớp học nào trong danh sách này'}
           </h4>
           <p style={{ color: '#64748b', fontSize: '13px', margin: 0 }}>
             {subTab === 'directed'
               ? 'Khi học viên đăng ký tìm gia sư và điền đúng Mã gia sư của bạn, lớp học sẽ lập tức hiển thị tại đây.'
+              : subTab === 'assigned'
+              ? 'Các lớp bạn đã được duyệt nhận và đang trong quá trình nộp phí hoặc đang hoạt động sẽ hiển thị tại đây.'
+              : subTab === 'refund'
+              ? 'Các lớp đang trong thời gian bảo hộ 7 ngày hoặc có yêu cầu hủy/hoàn tiền sẽ hiển thị tại đây.'
               : 'Vui lòng thử lại với từ khóa tìm kiếm hoặc lọc theo Tỉnh/Thành khác.'}
           </p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px' }}>
-          {displayedList.map((cls) => {
-            const isDirected = cls.is_directed_to_me;
-            const isWaitingFee = cls.status === 'WAITING_PAYMENT' && cls.is_assigned_to_me;
-            const isActiveClass = (cls as any).is_active_offline_class || cls.status === 'ACTIVE';
-            const tutorPayment = (cls.payments || []).find((p: any) => p.type === 'TUTOR_PLACEMENT_FEE');
-            const isTutorPaid = tutorPayment?.status === 'PAID';
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px' }}>
+            {paginatedList.map((cls) => {
+              const isDirected = cls.is_directed_to_me;
+              const isTutorPaid = (cls.payments || []).some((p: any) => p.type === 'TUTOR_PLACEMENT_FEE' && p.status === 'PAID') || cls.tutor_payment_status === 'PAID';
+              const isDeadlineExpired = cls.payment_deadline ? new Date(cls.payment_deadline).getTime() < Date.now() : false;
+              const isApplicationExpired = cls.my_application_status === 'EXPIRED' || cls.status === 'EXPIRED' || (cls.status === 'WAITING_PAYMENT' && isDeadlineExpired && !isTutorPaid);
+              const isWaitingFee = cls.status === 'WAITING_PAYMENT' && cls.is_assigned_to_me && !isApplicationExpired;
+              const isActiveClass = (cls as any).is_active_offline_class || cls.status === 'ACTIVE';
+              const refundTickets = cls.refund_tickets || (cls as any).refundTickets || [];
+              const hasPendingRefund = refundTickets.some((t: any) => t.status === 'PENDING') || (cls as any).has_pending_refund;
 
             return (
               <div
@@ -426,11 +508,13 @@ export const OfflineClassesTab: React.FC = () => {
                   borderRadius: '16px',
                   border: isWaitingFee
                     ? '2px solid #eab308'
-                    : cls.status === 'EXPIRED'
+                    : isApplicationExpired
                       ? '2px solid #ef4444'
-                      : isActiveClass
-                        ? '2px solid #22c55e'
-                        : '1px solid #e2e8f0',
+                      : hasPendingRefund
+                        ? '2px solid #f59e0b'
+                        : isActiveClass
+                          ? '2px solid #22c55e'
+                          : '1px solid #e2e8f0',
                   boxShadow: isWaitingFee
                     ? '0 4px 14px rgba(234,179,8,0.1)'
                     : isDirected ? '0 4px 14px rgba(99,102,241,0.08)' : '0 4px 12px rgba(0,0,0,0.03)',
@@ -460,15 +544,25 @@ export const OfflineClassesTab: React.FC = () => {
                           CHỜ ĐÓNG PHÍ ESCROW
                         </span>
                       )
-                    ) : cls.status === 'EXPIRED' ? (
+                    ) : isApplicationExpired ? (
                       <span style={{ background: '#fee2e2', color: '#991b1b', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <XCircle size={14} />
-                        HẾT HẠN ĐÓNG PHÍ
+                        HẾT HẠN ĐÓNG PHÍ / ĐÃ HỦY
+                      </span>
+                    ) : hasPendingRefund ? (
+                      <span style={{ background: '#fffbeb', color: '#b45309', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Clock size={14} />
+                        CHỜ ADMIN XỬ LÝ HỦY LỚP
                       </span>
                     ) : isActiveClass ? (
                       <span style={{ background: '#dcfce7', color: '#15803d', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <CheckCircle2 size={14} />
                         LỚP ĐANG HOẠT ĐỘNG (ACTIVE)
+                      </span>
+                    ) : cls.my_application_status === 'REJECTED' ? (
+                      <span style={{ background: '#fee2e2', color: '#991b1b', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <XCircle size={14} />
+                        ĐƠN BỊ TỪ CHỐI
                       </span>
                     ) : (
                       <span style={{ background: '#e0e7ff', color: '#4338ca', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -554,7 +648,17 @@ export const OfflineClassesTab: React.FC = () => {
 
                 {/* Footer / Actions */}
                 <div style={{ marginTop: '18px', paddingTop: '14px', borderTop: '1px solid #f1f5f9' }}>
-                  {isActiveClass ? (
+                  {hasPendingRefund ? (
+                    <div style={{ background: '#fffbeb', border: '1px solid #fde68a', padding: '12px 14px', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <div style={{ color: '#b45309', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Clock size={16} color="#d97706" />
+                        <span>⏳ Đã gửi yêu cầu Hủy lớp & Hoàn tiền!</span>
+                      </div>
+                      <div style={{ color: '#78350f', fontSize: '0.8rem', lineHeight: '1.4' }}>
+                        Hệ thống đã tiếp nhận yêu cầu. Admin đang tiến hành đối soát minh chứng và sẽ chốt quyết định đền bù hoàn tiền sớm nhất.
+                      </div>
+                    </div>
+                  ) : isActiveClass ? (
                     <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '12px 14px', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       <div style={{ color: '#166534', fontWeight: 600, fontSize: '0.85rem' }}>
                         ✓ Bạn đã nhận lớp dạy thành công (Phí đã thanh toán)!
@@ -588,9 +692,19 @@ export const OfflineClassesTab: React.FC = () => {
                         Yêu cầu hủy lớp / Hoàn tiền (7 ngày)
                       </button>
                     </div>
-                  ) : cls.status === 'EXPIRED' ? (
+                  ) : isApplicationExpired ? (
                     <div style={{ color: '#991b1b', background: '#fee2e2', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, textAlign: 'center' }}>
-                      ✕ Đã quá hạn đóng phí. Lớp học đã được chuyển trả lại hệ thống.
+                      ✕ Đã quá hạn đóng phí hoặc Gia sư đã hủy nhận lớp. Lớp học đã được chuyển trả lại hệ thống.
+                    </div>
+                  ) : cls.my_application_status === 'REJECTED' ? (
+                    <div style={{ background: '#fee2e2', border: '1px solid #fca5a5', padding: '12px 14px', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div style={{ color: '#991b1b', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <XCircle size={16} />
+                        Đơn ứng tuyển đã bị từ chối
+                      </div>
+                      <div style={{ color: '#7f1d1d', fontSize: '0.8rem', lineHeight: '1.5' }}>
+                        Lớp học này đã được giao cho gia sư khác và chính thức bắt đầu hoạt động.
+                      </div>
                     </div>
                   ) : isWaitingFee ? (
                     isTutorPaid ? (
@@ -735,6 +849,80 @@ export const OfflineClassesTab: React.FC = () => {
             );
           })}
         </div>
+
+        {/* PAGINATION CONTROLS */}
+        {totalPages > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginTop: '24px', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '4px',
+                padding: '8px 14px',
+                borderRadius: '8px',
+                border: '1px solid #cbd5e1',
+                background: currentPage === 1 ? '#f1f5f9' : '#ffffff',
+                color: currentPage === 1 ? '#94a3b8' : '#334155',
+                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                fontWeight: 600,
+                fontSize: '0.88rem',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              <ChevronLeft size={16} /> Trang trước
+            </button>
+
+            {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((page) => (
+              <button
+                key={page}
+                type="button"
+                onClick={() => setCurrentPage(page)}
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '8px',
+                  border: page === currentPage ? 'none' : '1px solid #cbd5e1',
+                  background: page === currentPage ? '#6366f1' : '#ffffff',
+                  color: page === currentPage ? '#ffffff' : '#334155',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                {page}
+              </button>
+            ))}
+
+            <button
+              type="button"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '4px',
+                padding: '8px 14px',
+                borderRadius: '8px',
+                border: '1px solid #cbd5e1',
+                background: currentPage === totalPages ? '#f1f5f9' : '#ffffff',
+                color: currentPage === totalPages ? '#94a3b8' : '#334155',
+                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                fontWeight: 600,
+                fontSize: '0.88rem',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              Trang sau <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
+      </>
       )}
 
       {/* Custom Payment Confirmation Modal */}

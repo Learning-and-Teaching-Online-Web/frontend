@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axiosClient from '../../services/axiosClient';
 import { toast } from 'react-toastify';
 import AdminLayout from '../../components/admin/AdminLayout';
-import { CheckCircle2, UserCheck, Eye, X, ClipboardList, Filter, Search, Edit3, RotateCcw, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, UserCheck, Eye, X, ClipboardList, Filter, Search, Edit3, RotateCcw, AlertTriangle, ChevronLeft, ChevronRight, Award } from 'lucide-react';
 import { formatGradeLevel } from '../../utils/formatters';
 
 interface TutorCertificate {
@@ -96,6 +96,20 @@ const AdminClassRequests: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTutorDetail, setSelectedTutorDetail] = useState<any>(null);
   const commissionRate = 35;
+
+  // Pagination states (5 items per page)
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const ITEMS_PER_PAGE = 5;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [mainTab, statusFilter, searchQuery]);
+
+  const totalPages = Math.ceil(requests.length / ITEMS_PER_PAGE);
+  const paginatedRequests = requests.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  const refundTotalPages = Math.ceil(refundTickets.length / ITEMS_PER_PAGE);
+  const paginatedRefundTickets = refundTickets.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   // Process Refund Ticket State
   const [selectedTicket, setSelectedTicket] = useState<RefundTicketItem | null>(null);
@@ -264,6 +278,8 @@ const AdminClassRequests: React.FC = () => {
       commission_rate: cls.commission_rate || 35,
       other_requirements: (cls as any).other_requirements || '',
       status: cls.status || 'PENDING_ADMIN',
+      refund_tickets: (cls as any).refund_tickets || (cls as any).refundTickets || [],
+      has_pending_refund: (cls as any).has_pending_refund,
     });
     setEditReadOnly(isReadOnly);
     setEditModalOpen(true);
@@ -294,11 +310,14 @@ const AdminClassRequests: React.FC = () => {
 
   const renderStatusBadge = (cls: ClassRequest) => {
     if (cls.record_type === 'offline_class') {
+      if ((cls as any).has_pending_refund || (cls.payments && (cls as any).refund_tickets?.some((t: any) => t.status === 'PENDING'))) {
+        return <span className="admin-badge warning" style={{ background: '#f59e0b', color: '#ffffff' }}>CHỜ XỬ LÝ HỦY LỚP</span>;
+      }
       if (cls.status === 'ACTIVE') {
-        return <span className="admin-badge success" style={{ background: '#10b981', color: '#ffffff' }}>ĐANG DẠY (ACTIVE)</span>;
+        return <span className="admin-badge success" style={{ background: '#16a34a', color: '#ffffff' }}>ĐANG DẠY (ACTIVE)</span>;
       }
       if (cls.status === 'CANCELLED') {
-        return <span className="admin-badge danger" style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171' }}>ĐÃ HỦY (HOÀN TIỀN)</span>;
+        return <span className="admin-badge danger" style={{ background: '#fee2e2', color: '#b91c1c' }}>ĐÃ HỦY (HOÀN TIỀN)</span>;
       }
     }
     switch (cls.status) {
@@ -307,9 +326,9 @@ const AdminClassRequests: React.FC = () => {
       case 'WAITING_PAYMENT':
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <span className="admin-badge warning" style={{ background: '#f59e0b', color: '#ffffff' }}>CHỜ ĐÓNG PHÍ ESCROW</span>
+            <span className="admin-badge warning" style={{ background: '#d97706', color: '#ffffff' }}>CHỜ ĐÓNG PHÍ ESCROW</span>
             {cls.payment_deadline && (
-              <span style={{ fontSize: '11px', color: '#fbbf24' }}>
+              <span style={{ fontSize: '11px', color: '#b45309', fontWeight: 600 }}>
                 Hạn: {new Date(cls.payment_deadline).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
               </span>
             )}
@@ -318,11 +337,11 @@ const AdminClassRequests: React.FC = () => {
       case 'WAITING_TUTOR_CONFIRM':
         return <span className="admin-badge warning" style={{ background: '#0284c7', color: '#ffffff' }}>CHỜ GS CHỈ ĐỊNH XÁC NHẬN</span>;
       case 'EXPIRED':
-        return <span className="admin-badge danger" style={{ background: '#ef4444', color: '#ffffff' }}>HẾT HẠN ĐÓNG PHÍ (EXPIRED)</span>;
+        return <span className="admin-badge danger" style={{ background: '#dc2626', color: '#ffffff' }}>HẾT HẠN ĐÓNG PHÍ (EXPIRED)</span>;
       case 'CANCELLED':
-        return <span className="admin-badge muted" style={{ background: 'rgba(148, 163, 184, 0.2)', color: '#94a3b8', border: '1px solid #475569' }}>ĐÃ HỦY (CANCELLED)</span>;
+        return <span className="admin-badge muted" style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>ĐÃ HỦY (CANCELLED)</span>;
       case 'REJECTED':
-        return <span className="admin-badge danger" style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171' }}>ADMIN TỪ CHỐI</span>;
+        return <span className="admin-badge danger" style={{ background: '#fee2e2', color: '#b91c1c' }}>ADMIN TỪ CHỐI</span>;
       case 'PENDING_ADMIN':
       default:
         return <span className="admin-badge danger">CHỜ DUYỆT (PENDING)</span>;
@@ -334,7 +353,7 @@ const AdminClassRequests: React.FC = () => {
       <div className="admin-card">
         
         {/* TAB CHÍNH SWITCHER */}
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', borderBottom: '1px solid var(--admin-border)', paddingBottom: '12px' }}>
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', borderBottom: '1px solid #cbd5e1', paddingBottom: '12px' }}>
           <button
             type="button"
             onClick={() => setMainTab('requests')}
@@ -342,8 +361,8 @@ const AdminClassRequests: React.FC = () => {
               padding: '10px 20px',
               borderRadius: '8px',
               border: 'none',
-              background: mainTab === 'requests' ? '#6366f1' : 'rgba(255, 255, 255, 0.04)',
-              color: mainTab === 'requests' ? '#ffffff' : 'var(--admin-text-muted)',
+              background: mainTab === 'requests' ? '#4f46e5' : '#f1f5f9',
+              color: mainTab === 'requests' ? '#ffffff' : '#475569',
               fontWeight: 700,
               fontSize: '14px',
               cursor: 'pointer',
@@ -363,8 +382,8 @@ const AdminClassRequests: React.FC = () => {
               padding: '10px 20px',
               borderRadius: '8px',
               border: 'none',
-              background: mainTab === 'refund_tickets' ? '#dc2626' : 'rgba(255, 255, 255, 0.04)',
-              color: mainTab === 'refund_tickets' ? '#ffffff' : 'var(--admin-text-muted)',
+              background: mainTab === 'refund_tickets' ? '#dc2626' : '#f1f5f9',
+              color: mainTab === 'refund_tickets' ? '#ffffff' : '#475569',
               fontWeight: 700,
               fontSize: '14px',
               cursor: 'pointer',
@@ -383,7 +402,7 @@ const AdminClassRequests: React.FC = () => {
             {/* Controls: Search Bar & Status Filter Tabs */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' }}>
               <div style={{ position: 'relative', maxWidth: '420px', width: '100%' }}>
-                <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--admin-text-muted)' }} />
+                <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
                 <input
                   type="text"
                   placeholder="Tìm kiếm theo Mã lớp (VD: 90414), Họ tên, SĐT..."
@@ -393,9 +412,9 @@ const AdminClassRequests: React.FC = () => {
                     width: '100%',
                     padding: '10px 14px 10px 38px',
                     borderRadius: '10px',
-                    border: '1px solid var(--admin-border)',
-                    background: 'rgba(255, 255, 255, 0.04)',
-                    color: 'var(--admin-text-main)',
+                    border: '1px solid #cbd5e1',
+                    background: '#ffffff',
+                    color: '#0f172a',
                     fontSize: '14px',
                     outline: 'none',
                     boxSizing: 'border-box',
@@ -404,7 +423,7 @@ const AdminClassRequests: React.FC = () => {
               </div>
 
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--admin-text-muted)', fontSize: '14px', marginRight: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#475569', fontSize: '14px', marginRight: '4px', fontWeight: 600 }}>
                   <Filter size={16} />
                   <span>Lọc trạng thái:</span>
                 </div>
@@ -427,9 +446,9 @@ const AdminClassRequests: React.FC = () => {
                     style={{
                       padding: '7px 14px',
                       borderRadius: '8px',
-                      border: statusFilter === tab.key ? '1px solid #6366f1' : '1px solid var(--admin-border)',
-                      background: statusFilter === tab.key ? 'rgba(99, 102, 241, 0.2)' : 'rgba(255, 255, 255, 0.03)',
-                      color: statusFilter === tab.key ? '#818cf8' : 'var(--admin-text-muted)',
+                      border: statusFilter === tab.key ? 'none' : '1px solid #cbd5e1',
+                      background: statusFilter === tab.key ? '#4f46e5' : '#ffffff',
+                      color: statusFilter === tab.key ? '#ffffff' : '#334155',
                       fontWeight: statusFilter === tab.key ? '700' : '500',
                       fontSize: '13px',
                       cursor: 'pointer',
@@ -467,7 +486,7 @@ const AdminClassRequests: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {requests.map((cls) => (
+                    {paginatedRequests.map((cls) => (
                       <tr key={cls.request_id}>
                         <td>
                           <span style={{ color: '#f97316', fontWeight: 700, fontSize: '14px' }}>
@@ -492,12 +511,12 @@ const AdminClassRequests: React.FC = () => {
                           </div>
                         </td>
                         <td>
-                          <span style={{ fontWeight: 700, color: '#34d399', fontSize: '14px' }}>
+                          <span style={{ fontWeight: 700, color: '#059669', fontSize: '14px' }}>
                             {formatCurrency(Number(cls.desired_price))}
                           </span>
                         </td>
                         <td>
-                          <span style={{ fontWeight: 600, color: '#f87171' }}>
+                          <span style={{ fontWeight: 600, color: '#dc2626' }}>
                             35%
                           </span>
                         </td>
@@ -505,7 +524,7 @@ const AdminClassRequests: React.FC = () => {
                           {renderStatusBadge(cls)}
                         </td>
                         <td>
-                          <span style={{ fontWeight: 700, color: '#38bdf8', fontSize: '13px' }}>
+                          <span style={{ fontWeight: 700, color: '#0284c7', fontSize: '13px' }}>
                             {cls.record_type === 'offline_class'
                               ? cls.assigned_tutor ? `GS: ${cls.assigned_tutor.full_name}` : 'Đã giao'
                               : `${cls._count?.applications || 0} đơn`}
@@ -514,15 +533,37 @@ const AdminClassRequests: React.FC = () => {
                         <td>
                           <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                             {cls.record_type === 'offline_class' || cls.status === 'CANCELLED' || cls.status === 'EXPIRED' ? (
-                              <button
-                                type="button"
-                                onClick={() => handleOpenEditModal(cls, true)}
-                                className="admin-btn sm secondary"
-                                title="Xem thông tin chi tiết lớp"
-                              >
-                                <Eye size={14} />
-                                <span>Xem</span>
-                              </button>
+                              <>
+                                {((cls as any).has_pending_refund || (cls.payments && (cls as any).refund_tickets?.some((t: any) => t.status === 'PENDING'))) && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const pendingTicket = (cls as any).refund_tickets?.find((t: any) => t.status === 'PENDING');
+                                      if (pendingTicket) {
+                                        setSelectedTicket(pendingTicket);
+                                        setTicketFaultType('STUDENT_FAULT');
+                                      } else {
+                                        setMainTab('refund_tickets');
+                                      }
+                                    }}
+                                    className="admin-btn sm danger"
+                                    style={{ background: '#dc2626', borderColor: '#dc2626' }}
+                                    title="Xử lý Yêu cầu Hủy lớp & Hoàn tiền"
+                                  >
+                                    <AlertTriangle size={14} />
+                                    <span>Duyệt Hủy</span>
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenEditModal(cls, true)}
+                                  className="admin-btn sm secondary"
+                                  title="Xem thông tin chi tiết lớp"
+                                >
+                                  <Eye size={14} />
+                                  <span>Xem</span>
+                                </button>
+                              </>
                             ) : (
                               <>
                                 {cls.status === 'PENDING_ADMIN' && (
@@ -577,6 +618,79 @@ const AdminClassRequests: React.FC = () => {
                 </table>
               </div>
             )}
+
+            {/* PAGINATION CONTROLS FOR CLASS REQUESTS */}
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginTop: '20px', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px',
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--admin-border)',
+                    background: currentPage === 1 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.06)',
+                    color: currentPage === 1 ? 'var(--admin-text-muted)' : 'var(--admin-text-main)',
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    fontWeight: 600,
+                    fontSize: '13px',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <ChevronLeft size={16} /> Trang trước
+                </button>
+
+                {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((page) => (
+                  <button
+                    key={page}
+                    type="button"
+                    onClick={() => setCurrentPage(page)}
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '6px',
+                      border: page === currentPage ? 'none' : '1px solid var(--admin-border)',
+                      background: page === currentPage ? '#6366f1' : 'rgba(255,255,255,0.04)',
+                      color: page === currentPage ? '#ffffff' : 'var(--admin-text-main)',
+                      fontWeight: 700,
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {page}
+                  </button>
+                ))}
+
+                <button
+                  type="button"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px',
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--admin-border)',
+                    background: currentPage === totalPages ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.06)',
+                    color: currentPage === totalPages ? 'var(--admin-text-muted)' : 'var(--admin-text-main)',
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                    fontWeight: 600,
+                    fontSize: '13px',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  Trang sau <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
           </>
         ) : (
           /* TAB 2: QUẢN LÝ TICKET HOÀN TIỀN 7 NGÀY */
@@ -605,7 +719,7 @@ const AdminClassRequests: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {refundTickets.map((t) => (
+                    {paginatedRefundTickets.map((t) => (
                       <tr key={t.ticket_id}>
                         <td>
                           <span style={{ color: '#f97316', fontWeight: 700 }}>
@@ -664,6 +778,79 @@ const AdminClassRequests: React.FC = () => {
                 </table>
               </div>
             )}
+
+            {/* PAGINATION CONTROLS FOR REFUND TICKETS */}
+            {refundTotalPages > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginTop: '20px', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px',
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--admin-border)',
+                    background: currentPage === 1 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.06)',
+                    color: currentPage === 1 ? 'var(--admin-text-muted)' : 'var(--admin-text-main)',
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    fontWeight: 600,
+                    fontSize: '13px',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <ChevronLeft size={16} /> Trang trước
+                </button>
+
+                {Array.from({ length: refundTotalPages }, (_, idx) => idx + 1).map((page) => (
+                  <button
+                    key={page}
+                    type="button"
+                    onClick={() => setCurrentPage(page)}
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '6px',
+                      border: page === currentPage ? 'none' : '1px solid var(--admin-border)',
+                      background: page === currentPage ? '#dc2626' : 'rgba(255,255,255,0.04)',
+                      color: page === currentPage ? '#ffffff' : 'var(--admin-text-main)',
+                      fontWeight: 700,
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {page}
+                  </button>
+                ))}
+
+                <button
+                  type="button"
+                  disabled={currentPage === refundTotalPages}
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, refundTotalPages))}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px',
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--admin-border)',
+                    background: currentPage === refundTotalPages ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.06)',
+                    color: currentPage === refundTotalPages ? 'var(--admin-text-muted)' : 'var(--admin-text-main)',
+                    cursor: currentPage === refundTotalPages ? 'not-allowed' : 'pointer',
+                    fontWeight: 600,
+                    fontSize: '13px',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  Trang sau <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -671,35 +858,35 @@ const AdminClassRequests: React.FC = () => {
       {/* Modal Xử lý Refund Ticket */}
       {selectedTicket && (
         <div className="modal-overlay">
-          <div className="modal-card" style={{ maxWidth: '560px', width: '92%', background: '#111827', border: '1px solid var(--admin-border)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--admin-border)', paddingBottom: '12px' }}>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#f87171', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="modal-card" style={{ maxWidth: '560px', width: '92%', background: '#ffffff', border: '1px solid #cbd5e1' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#dc2626', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <AlertTriangle size={20} />
                 <span>Xử lý Yêu cầu Hoàn tiền 7 ngày</span>
               </h3>
               <button
                 type="button"
                 onClick={() => setSelectedTicket(null)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--admin-text-muted)' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
               >
                 <X size={20} />
               </button>
             </div>
 
-            <div style={{ fontSize: '13px', color: 'var(--admin-text-main)', marginBottom: '16px', background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px' }}>
+            <div style={{ fontSize: '13px', color: '#0f172a', marginBottom: '16px', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '12px 14px', borderRadius: '8px', lineHeight: '1.6' }}>
               <strong>Mã lớp:</strong> MS: {selectedTicket.offline_class?.class_offline_code || selectedTicket.class_id.slice(0, 8)}
               <br />
               <strong>Lý do gửi:</strong> {selectedTicket.reason}
               <br />
-              <strong>Học phí HV đã đóng:</strong> {formatCurrency(Number(selectedTicket.student_tuition_amount))} | <strong>Phí GS đã đóng:</strong> {formatCurrency(Number(selectedTicket.tutor_fee_amount))}
+              <strong>Học phí HV đã đóng:</strong> <span style={{ color: '#059669', fontWeight: 700 }}>{formatCurrency(Number(selectedTicket.student_tuition_amount))}</span> | <strong>Phí GS đã đóng:</strong> <span style={{ color: '#dc2626', fontWeight: 700 }}>{formatCurrency(Number(selectedTicket.tutor_fee_amount))}</span>
             </div>
 
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontWeight: 700, color: 'var(--admin-text-main)', marginBottom: '6px', fontSize: '14px' }}>
+              <label style={{ display: 'block', fontWeight: 700, color: '#0f172a', marginBottom: '8px', fontSize: '14px' }}>
                 Chọn Bên Gây Lỗi (Fault Type) *
               </label>
               <div style={{ display: 'flex', gap: '12px' }}>
-                <label style={{ flex: 1, padding: '10px', borderRadius: '8px', border: ticketFaultType === 'STUDENT_FAULT' ? '2px solid #f59e0b' : '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.02)', cursor: 'pointer' }}>
+                <label style={{ flex: 1, padding: '12px', borderRadius: '8px', border: ticketFaultType === 'STUDENT_FAULT' ? '2px solid #f59e0b' : '1px solid #cbd5e1', background: ticketFaultType === 'STUDENT_FAULT' ? '#fffbeb' : '#ffffff', cursor: 'pointer', transition: 'all 0.15s ease' }}>
                   <input
                     type="radio"
                     name="fault_type"
@@ -708,15 +895,15 @@ const AdminClassRequests: React.FC = () => {
                     onChange={() => setTicketFaultType('STUDENT_FAULT')}
                     style={{ marginRight: '6px' }}
                   />
-                  <strong style={{ color: '#f59e0b' }}>STUDENT_FAULT (Lỗi Học viên)</strong>
-                  <div style={{ fontSize: '12px', color: 'var(--admin-text-muted)', marginTop: '4px' }}>
+                  <strong style={{ color: '#d97706' }}>STUDENT_FAULT (Lỗi Học viên)</strong>
+                  <div style={{ fontSize: '12px', color: '#475569', marginTop: '6px', lineHeight: '1.4' }}>
                     • Học viên bị phạt 10% ({formatCurrency(Number(selectedTicket.student_tuition_amount) * 0.1)}), hoàn 90%.
                     <br />
                     • Gia sư hoàn 100% phí ({formatCurrency(Number(selectedTicket.tutor_fee_amount))}).
                   </div>
                 </label>
 
-                <label style={{ flex: 1, padding: '10px', borderRadius: '8px', border: ticketFaultType === 'TUTOR_FAULT' ? '2px solid #ef4444' : '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.02)', cursor: 'pointer' }}>
+                <label style={{ flex: 1, padding: '12px', borderRadius: '8px', border: ticketFaultType === 'TUTOR_FAULT' ? '2px solid #ef4444' : '1px solid #cbd5e1', background: ticketFaultType === 'TUTOR_FAULT' ? '#fef2f2' : '#ffffff', cursor: 'pointer', transition: 'all 0.15s ease' }}>
                   <input
                     type="radio"
                     name="fault_type"
@@ -725,8 +912,8 @@ const AdminClassRequests: React.FC = () => {
                     onChange={() => setTicketFaultType('TUTOR_FAULT')}
                     style={{ marginRight: '6px' }}
                   />
-                  <strong style={{ color: '#ef4444' }}>TUTOR_FAULT (Lỗi Gia sư)</strong>
-                  <div style={{ fontSize: '12px', color: 'var(--admin-text-muted)', marginTop: '4px' }}>
+                  <strong style={{ color: '#dc2626' }}>TUTOR_FAULT (Lỗi Gia sư)</strong>
+                  <div style={{ fontSize: '12px', color: '#475569', marginTop: '6px', lineHeight: '1.4' }}>
                     • Gia sư bị phạt 20% ({formatCurrency(Number(selectedTicket.tutor_fee_amount) * 0.2)}), hoàn 80%.
                     <br />
                     • Học viên hoàn 100% học phí ({formatCurrency(Number(selectedTicket.student_tuition_amount))}).
@@ -736,7 +923,7 @@ const AdminClassRequests: React.FC = () => {
             </div>
 
             <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '6px', fontSize: '13px' }}>
+              <label style={{ display: 'block', fontWeight: 600, color: '#0f172a', marginBottom: '6px', fontSize: '13px' }}>
                 Ghi chú căn cứ kết luận của Admin
               </label>
               <textarea
@@ -744,7 +931,7 @@ const AdminClassRequests: React.FC = () => {
                 value={ticketAdminNote}
                 onChange={(e) => setTicketAdminNote(e.target.value)}
                 placeholder="Nhập lý do kết luận căn cứ phạt/hoàn tiền..."
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', outline: 'none', boxSizing: 'border-box' }}
               />
             </div>
 
@@ -753,7 +940,7 @@ const AdminClassRequests: React.FC = () => {
                 type="button"
                 disabled={ticketSubmitting}
                 onClick={() => handleProcessRefundTicket('REJECTED')}
-                style={{ padding: '8px 16px', background: 'rgba(255,255,255,0.08)', color: 'var(--admin-text-main)', border: '1px solid var(--admin-border)', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' }}
+                className="admin-btn secondary"
               >
                 Từ chối Ticket
               </button>
@@ -762,7 +949,8 @@ const AdminClassRequests: React.FC = () => {
                 type="button"
                 disabled={ticketSubmitting}
                 onClick={() => handleProcessRefundTicket('APPROVED')}
-                style={{ padding: '8px 20px', background: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: ticketSubmitting ? 'not-allowed' : 'pointer' }}
+                className="admin-btn danger"
+                style={{ background: '#dc2626', color: '#ffffff', fontWeight: 700, padding: '8px 20px' }}
               >
                 {ticketSubmitting ? 'Đang xử lý...' : 'Chốt Hoàn Tiền & Hủy Lớp'}
               </button>
@@ -774,51 +962,66 @@ const AdminClassRequests: React.FC = () => {
       {/* Modal Xem Danh Sách Gia Sư Ứng Tuyển */}
       {modalOpen && selectedClass && (
         <div className="modal-overlay">
-          <div className="modal-card" style={{ maxWidth: '680px', width: '90%', background: '#111827', border: '1px solid var(--admin-border)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--admin-border)', paddingBottom: '12px' }}>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--admin-text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <ClipboardList size={20} color="#818cf8" />
+          <div className="modal-card" style={{ maxWidth: '680px', width: '90%', background: '#ffffff', border: '1px solid #cbd5e1' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ClipboardList size={20} color="#4f46e5" />
                 <span>Gia sư ứng tuyển Lớp MS: {selectedClass.code}</span>
               </h3>
               <button
                 type="button"
                 onClick={() => setModalOpen(false)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--admin-text-muted)' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
               >
                 <X size={20} />
               </button>
             </div>
 
             {applications.length === 0 ? (
-              <div style={{ padding: '30px', textAlign: 'center', color: 'var(--admin-text-muted)', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px dashed var(--admin-border)' }}>
+              <div style={{ padding: '30px', textAlign: 'center', color: '#64748b', background: '#f8fafc', borderRadius: '8px', border: '1px dashed #cbd5e1' }}>
                 Chưa có gia sư nào gửi đơn đăng ký nhận lớp này.
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '50vh', overflowY: 'auto' }}>
-                {applications.map((app) => (
-                  <div
-                    key={app.application_id}
-                    style={{
-                      border: '1px solid var(--admin-border)',
-                      borderRadius: '8px',
-                      padding: '14px',
-                      background: 'rgba(255, 255, 255, 0.02)',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      gap: '12px',
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--admin-text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <UserCheck size={16} color="#34d399" />
-                        <span>Gia sư: {app.tutor?.full_name || 'Đăng ký nhanh'}</span>
-                        <span style={{ fontSize: '13px', color: '#34d399', fontWeight: 700 }}>
-                          (SĐT: {app.applicant_phone || app.tutor?.phone || 'Chưa cập nhật'})
-                        </span>
-                      </div>
+                {([...applications].sort((a: any, b: any) => {
+                  if (a.status === 'APPROVED' && b.status !== 'APPROVED') return -1;
+                  if (b.status === 'APPROVED' && a.status !== 'APPROVED') return 1;
+                  if (a.status === 'PENDING' && b.status === 'PENDING') {
+                    return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+                  }
+                  return 0;
+                })).map((app) => {
+                  const isReturningApplicant =
+                    selectedClass?.status === 'OPEN' &&
+                    app.status === 'PENDING' &&
+                    (Date.now() - new Date(app.created_at).getTime()) > 60 * 60 * 1000;
+
+                  return (
+                    <div
+                      key={app.application_id}
+                      style={{
+                        border: isReturningApplicant ? '2px solid #f59e0b' : '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        padding: '14px',
+                        background: isReturningApplicant ? '#fffdf5' : '#f8fafc',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: '12px',
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: '14px', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                          <UserCheck size={16} color="#16a34a" />
+                          <span>Gia sư: {app.tutor?.full_name || 'Đăng ký nhanh'}</span>
+                          {isReturningApplicant && (
+                            <span style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a', borderRadius: '4px', padding: '2px 8px', fontSize: '12px', fontWeight: 600 }}>
+                              ⏳ Đã ứng tuyển trước
+                            </span>
+                          )}
+                        </div>
                       {app.tutor?.university && (
-                        <div style={{ fontSize: '12px', color: 'var(--admin-text-muted)', marginTop: '4px', marginLeft: '24px' }}>
+                        <div style={{ fontSize: '12px', color: '#475569', marginTop: '4px', marginLeft: '24px' }}>
                           Trường: {app.tutor.university} {app.tutor.major ? `• Ngành: ${app.tutor.major}` : ''}
                         </div>
                       )}
@@ -828,7 +1031,7 @@ const AdminClassRequests: React.FC = () => {
                       {app.tutor && (
                         <button
                           type="button"
-                          onClick={() => setSelectedTutorDetail({ ...app.tutor, applicant_phone: app.applicant_phone || app.tutor?.phone, application_id: app.application_id })}
+                          onClick={() => setSelectedTutorDetail({ ...app.tutor, applicant_phone: app.applicant_phone || app.tutor?.phone, application_id: app.application_id, status: app.status })}
                           className="admin-btn sm secondary"
                           title="Xem thông tin chi tiết bằng cấp và hồ sơ gia sư"
                         >
@@ -840,6 +1043,18 @@ const AdminClassRequests: React.FC = () => {
                       {app.status === 'APPROVED' ? (
                         <span className="admin-badge success" style={{ padding: '6px 12px' }}>
                           ✓ Đã Duyệt Cho Lớp
+                        </span>
+                      ) : app.status === 'APPROVED_WAITING_FEE' ? (
+                        <span className="admin-badge warning" style={{ padding: '6px 12px' }}>
+                          ⏳ Chờ Đóng Phí Escrow
+                        </span>
+                      ) : app.status === 'EXPIRED' ? (
+                        <span className="admin-badge warning" style={{ padding: '6px 12px', background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a' }}>
+                          ⏱ Hết Hạn Đóng Phí
+                        </span>
+                      ) : app.status === 'REJECTED' ? (
+                        <span className="admin-badge danger" style={{ padding: '6px 12px' }}>
+                          ✕ Đã Từ Chối
                         </span>
                       ) : (
                         <button
@@ -853,7 +1068,8 @@ const AdminClassRequests: React.FC = () => {
                       )}
                     </div>
                   </div>
-                ))}
+                );
+              })}
               </div>
             )}
           </div>
@@ -863,63 +1079,64 @@ const AdminClassRequests: React.FC = () => {
       {/* Modal Xem Chi Tiết Hồ Sơ & Bằng Cấp Gia Sư */}
       {selectedTutorDetail && (
         <div className="modal-overlay" style={{ zIndex: 1100 }}>
-          <div className="modal-card" style={{ maxWidth: '720px', width: '92%', background: '#111827', border: '1px solid var(--admin-border)', maxHeight: '90vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--admin-border)', paddingBottom: '12px' }}>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--admin-text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <UserCheck size={20} color="#34d399" />
+          <div className="modal-card" style={{ maxWidth: '720px', width: '92%', background: '#ffffff', border: '1px solid #cbd5e1', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <UserCheck size={22} color="#4f46e5" />
                 <span>Hồ sơ & Bằng cấp Gia sư: {selectedTutorDetail.full_name}</span>
               </h3>
               <button
                 type="button"
                 onClick={() => setSelectedTutorDetail(null)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--admin-text-muted)' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '4px' }}
               >
                 <X size={20} />
               </button>
             </div>
 
             {/* Thông tin cá nhân & Học vấn */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '16px', marginBottom: '20px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '16px', borderRadius: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '20px', marginBottom: '24px', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '18px', borderRadius: '12px' }}>
               {selectedTutorDetail.avatar_url ? (
-                <img src={selectedTutorDetail.avatar_url} alt="Avatar" style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #6366f1' }} />
+                <img src={selectedTutorDetail.avatar_url} alt="Avatar" style={{ width: '76px', height: '76px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #6366f1', boxShadow: '0 4px 10px rgba(99, 102, 241, 0.2)' }} />
               ) : (
-                <div style={{ width: '70px', height: '70px', borderRadius: '50%', background: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 700, color: '#9ca3af' }}>
+                <div style={{ width: '76px', height: '76px', borderRadius: '50%', background: '#e0e7ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px', fontWeight: 800, color: '#4338ca', border: '2px solid #c7d2fe' }}>
                   {selectedTutorDetail.full_name?.charAt(0) || 'G'}
                 </div>
               )}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '13px' }}>
-                <div><strong style={{ color: '#94a3b8' }}>Mã gia sư:</strong> <span style={{ color: '#818cf8', fontWeight: 700 }}>{selectedTutorDetail.tutor_code || 'Chưa cấp'}</span></div>
-                <div><strong style={{ color: '#94a3b8' }}>Số điện thoại:</strong> <span style={{ color: '#34d399', fontWeight: 700 }}>{selectedTutorDetail.applicant_phone || selectedTutorDetail.phone || 'Chưa cập nhật'}</span></div>
-                <div><strong style={{ color: '#94a3b8' }}>Email:</strong> <span style={{ color: '#f8fafc', fontWeight: 500 }}>{selectedTutorDetail.email || 'Chưa cập nhật'}</span></div>
-                <div><strong style={{ color: '#94a3b8' }}>Trường ĐH:</strong> <span style={{ color: '#f8fafc', fontWeight: 500 }}>{selectedTutorDetail.university || 'Chưa cập nhật'}</span></div>
-                <div><strong style={{ color: '#94a3b8' }}>Chuyên ngành:</strong> <span style={{ color: '#f8fafc', fontWeight: 500 }}>{selectedTutorDetail.major || 'Chưa cập nhật'}</span></div>
-                <div><strong style={{ color: '#94a3b8' }}>Chức vụ:</strong> <span style={{ color: '#f8fafc', fontWeight: 500 }}>{selectedTutorDetail.current_role || 'Chưa cập nhật'}</span></div>
-                <div><strong style={{ color: '#94a3b8' }}>Kinh nghiệm:</strong> <span style={{ color: '#f8fafc', fontWeight: 500 }}>{selectedTutorDetail.experience_years ? `${selectedTutorDetail.experience_years} năm` : 'Chưa cập nhật'}</span></div>
-                <div><strong style={{ color: '#94a3b8' }}>Đánh giá:</strong> <span style={{ color: '#f59e0b', fontWeight: 700 }}>{selectedTutorDetail.rating ? `⭐ ${selectedTutorDetail.rating}` : 'Chưa có đánh giá'}</span></div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '13px' }}>
+                <div><strong style={{ color: '#475569', fontWeight: 600 }}>Mã gia sư:</strong> <span style={{ color: '#4f46e5', fontWeight: 800, background: '#e0e7ff', padding: '2px 8px', borderRadius: '4px' }}>{selectedTutorDetail.tutor_code || 'Chưa cấp'}</span></div>
+                <div><strong style={{ color: '#475569', fontWeight: 600 }}>Số điện thoại:</strong> <span style={{ color: '#16a34a', fontWeight: 800 }}>{selectedTutorDetail.applicant_phone || selectedTutorDetail.phone || 'Chưa cập nhật'}</span></div>
+                <div><strong style={{ color: '#475569', fontWeight: 600 }}>Email:</strong> <span style={{ color: '#0f172a', fontWeight: 600 }}>{selectedTutorDetail.email || 'Chưa cập nhật'}</span></div>
+                <div><strong style={{ color: '#475569', fontWeight: 600 }}>Trường ĐH:</strong> <span style={{ color: '#0f172a', fontWeight: 600 }}>{selectedTutorDetail.university || 'Chưa cập nhật'}</span></div>
+                <div><strong style={{ color: '#475569', fontWeight: 600 }}>Chuyên ngành:</strong> <span style={{ color: '#0f172a', fontWeight: 600 }}>{selectedTutorDetail.major || 'Chưa cập nhật'}</span></div>
+                <div><strong style={{ color: '#475569', fontWeight: 600 }}>Chức vụ:</strong> <span style={{ color: '#0f172a', fontWeight: 600 }}>{selectedTutorDetail.current_role || 'Chưa cập nhật'}</span></div>
+                <div><strong style={{ color: '#475569', fontWeight: 600 }}>Kinh nghiệm:</strong> <span style={{ color: '#0f172a', fontWeight: 600 }}>{selectedTutorDetail.experience_years ? `${selectedTutorDetail.experience_years} năm` : 'Chưa cập nhật'}</span></div>
+                <div><strong style={{ color: '#475569', fontWeight: 600 }}>Đánh giá:</strong> <span style={{ color: '#d97706', fontWeight: 800 }}>{selectedTutorDetail.rating ? `⭐ ${selectedTutorDetail.rating}` : 'Chưa có đánh giá'}</span></div>
               </div>
             </div>
 
             {/* Danh sách Bằng cấp / Chứng chỉ */}
-            <div style={{ marginBottom: '20px' }}>
-              <h4 style={{ margin: '0 0 12px 0', fontSize: '15px', color: '#818cf8', fontWeight: 700 }}>
-                Danh sách Bằng cấp & Chứng chỉ đính kèm ({selectedTutorDetail.certificates?.length || 0})
+            <div style={{ marginBottom: '24px' }}>
+              <h4 style={{ margin: '0 0 14px 0', fontSize: '15px', color: '#4338ca', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Award size={18} color="#4338ca" />
+                <span>Danh sách Bằng cấp & Chứng chỉ đính kèm ({selectedTutorDetail.certificates?.length || 0})</span>
               </h4>
               {!selectedTutorDetail.certificates || selectedTutorDetail.certificates.length === 0 ? (
-                <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.15)', fontSize: '13px' }}>
+                <div style={{ padding: '24px', textAlign: 'center', color: '#64748b', background: '#f8fafc', borderRadius: '10px', border: '1px dashed #cbd5e1', fontSize: '13px' }}>
                   Gia sư chưa tải lên bằng cấp hoặc chứng chỉ nào.
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                   {selectedTutorDetail.certificates.map((cert: any) => (
-                    <div key={cert.cert_id} style={{ border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', padding: '12px', background: 'rgba(255,255,255,0.05)' }}>
-                      <div style={{ fontWeight: 700, fontSize: '14px', color: '#f8fafc', marginBottom: '4px' }}>{cert.title}</div>
-                      <div style={{ fontSize: '12px', color: '#cbd5e1', marginBottom: '8px' }}>Nơi cấp: <span style={{ color: '#f8fafc' }}>{cert.issued_by || 'Chưa rõ'}</span></div>
+                    <div key={cert.cert_id} style={{ border: '1px solid #e2e8f0', borderRadius: '10px', padding: '14px', background: '#f8fafc', transition: 'all 0.15s ease', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+                      <div style={{ fontWeight: 800, fontSize: '14px', color: '#0f172a', marginBottom: '6px' }}>{cert.title}</div>
+                      <div style={{ fontSize: '12px', color: '#475569', marginBottom: '10px' }}>Nơi cấp: <span style={{ color: '#0f172a', fontWeight: 600 }}>{cert.issued_by || 'Chưa rõ'}</span></div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span className={`admin-badge ${cert.status === 'approved' ? 'success' : cert.status === 'rejected' ? 'danger' : 'warning'}`} style={{ fontSize: '11px', fontWeight: 700 }}>
+                        <span className={`admin-badge ${cert.status === 'approved' ? 'success' : cert.status === 'rejected' ? 'danger' : 'warning'}`} style={{ fontSize: '11px', fontWeight: 800 }}>
                           {cert.status === 'approved' ? 'ĐÃ DUYỆT' : cert.status === 'rejected' ? 'TỪ CHỐI' : 'CHỜ DUYỆT'}
                         </span>
                         {cert.file_url && (
-                          <a href={cert.file_url} target="_blank" rel="noreferrer" style={{ fontSize: '12px', color: '#38bdf8', textDecoration: 'underline', fontWeight: 700 }}>
+                          <a href={cert.file_url} target="_blank" rel="noreferrer" style={{ fontSize: '12px', color: '#2563eb', textDecoration: 'none', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#eff6ff', padding: '4px 10px', borderRadius: '6px', border: '1px solid #bfdbfe' }}>
                             Xem file scan ↗
                           </a>
                         )}
@@ -931,26 +1148,74 @@ const AdminClassRequests: React.FC = () => {
             </div>
 
             {/* Action Buttons */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', borderTop: '1px solid var(--admin-border)', paddingTop: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
               <button
                 type="button"
                 onClick={() => setSelectedTutorDetail(null)}
-                style={{ padding: '8px 16px', background: 'rgba(255,255,255,0.08)', color: 'var(--admin-text-main)', border: '1px solid var(--admin-border)', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' }}
+                style={{ padding: '8px 18px', background: '#f1f5f9', color: '#334155', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
               >
                 Đóng
               </button>
               {selectedClass && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleAssignTutor(selectedClass.request_id, selectedTutorDetail.tutor_id, selectedTutorDetail.application_id);
-                    setSelectedTutorDetail(null);
-                  }}
-                  className="admin-btn sm success"
-                  style={{ fontWeight: 700, padding: '8px 20px' }}
-                >
-                  Giao Lớp cho Gia Sư này
-                </button>
+                selectedTutorDetail.status === 'APPROVED' ? (
+                  <span className="admin-badge success" style={{ padding: '8px 16px', fontSize: '13px' }}>
+                    ✓ Đã Duyệt Cho Lớp
+                  </span>
+                ) : selectedTutorDetail.status === 'EXPIRED' ? (
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <span className="admin-badge warning" style={{ padding: '8px 16px', fontSize: '13px', background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a' }}>
+                      ⏱ Hết Hạn Đóng Phí
+                    </span>
+                    {selectedClass.status === 'OPEN' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm(`Gia sư ${selectedTutorDetail.full_name} đã từng HẾT HẠN đóng phí. Bạn có chắc chắn muốn GIAO LẠI LỚP cho gia sư này không?`)) {
+                            handleAssignTutor(selectedClass.request_id, selectedTutorDetail.tutor_id, selectedTutorDetail.application_id);
+                            setSelectedTutorDetail(null);
+                          }
+                        }}
+                        className="admin-btn secondary"
+                        style={{ fontWeight: 700, padding: '8px 20px', color: '#d97706', borderColor: '#d97706' }}
+                      >
+                        Giao Lại Lớp
+                      </button>
+                    )}
+                  </div>
+                ) : selectedTutorDetail.status === 'REJECTED' ? (
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <span className="admin-badge danger" style={{ padding: '8px 16px', fontSize: '13px' }}>
+                      ✕ Đã Từ Chối
+                    </span>
+                    {selectedClass.status === 'OPEN' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm(`Đơn của gia sư ${selectedTutorDetail.full_name} đã từng BỊ TỪ CHỐI. Bạn có chắc chắn muốn GIAO LẠI LỚP cho gia sư này không?`)) {
+                            handleAssignTutor(selectedClass.request_id, selectedTutorDetail.tutor_id, selectedTutorDetail.application_id);
+                            setSelectedTutorDetail(null);
+                          }
+                        }}
+                        className="admin-btn secondary"
+                        style={{ fontWeight: 700, padding: '8px 20px', color: '#dc2626', borderColor: '#dc2626' }}
+                      >
+                        Giao Lại Lớp
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleAssignTutor(selectedClass.request_id, selectedTutorDetail.tutor_id, selectedTutorDetail.application_id);
+                      setSelectedTutorDetail(null);
+                    }}
+                    className="admin-btn success"
+                    style={{ fontWeight: 800, padding: '8px 22px', background: '#16a34a', color: '#ffffff', borderRadius: '8px', border: 'none', cursor: 'pointer' }}
+                  >
+                    Giao Lớp cho Gia Sư này
+                  </button>
+                )
               )}
             </div>
           </div>
@@ -960,25 +1225,78 @@ const AdminClassRequests: React.FC = () => {
       {/* Modal Edit Class Request */}
       {editModalOpen && editFormData && (
         <div className="modal-overlay">
-          <div className="modal-card" style={{ maxWidth: '780px', width: '92%', background: '#111827', border: '1px solid var(--admin-border)', maxHeight: '90vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--admin-border)', paddingBottom: '12px' }}>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--admin-text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                {editReadOnly ? <Eye size={20} color="#818cf8" /> : <Edit3 size={20} color="#818cf8" />}
+          <div className="modal-card" style={{ maxWidth: '780px', width: '92%', background: '#ffffff', border: '1px solid #cbd5e1', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {editReadOnly ? <Eye size={20} color="#4f46e5" /> : <Edit3 size={20} color="#4f46e5" />}
                 <span>{editReadOnly ? `Xem thông tin Lớp Offline MS: ${editFormData.code}` : `Chỉnh sửa Lớp Offline MS: ${editFormData.code}`}</span>
               </h3>
               <button
                 type="button"
                 onClick={() => setEditModalOpen(false)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--admin-text-muted)' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
               >
                 <X size={20} />
               </button>
             </div>
 
             <form onSubmit={handleSaveEdit}>
+              {/* Cảnh báo Ticket Hủy Lớp nếu có */}
+              {editFormData.refund_tickets && editFormData.refund_tickets.length > 0 && (
+                <div style={{
+                  background: '#fef2f2',
+                  border: '1px solid #fca5a5',
+                  borderRadius: '10px',
+                  padding: '16px',
+                  marginBottom: '20px'
+                }}>
+                  <h4 style={{ color: '#dc2626', margin: '0 0 10px 0', fontSize: '0.95rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <AlertTriangle size={18} color="#dc2626" />
+                    Thông Tin Yêu Cầu Hủy Lớp & Hoàn Tiền (7 Ngày)
+                  </h4>
+                  {editFormData.refund_tickets.map((t: any) => (
+                    <div key={t.ticket_id || t.created_at} style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.88rem', color: '#7f1d1d', lineHeight: '1.5' }}>
+                      <div>• <strong>Người gửi yêu cầu:</strong> <span style={{ color: '#0f172a', fontWeight: 600 }}>{t.requester?.email || t.requested_by || 'N/A'}</span> ({t.requester?.role === 'tutor' ? 'Gia sư' : 'Học viên'})</div>
+                      <div>• <strong>Thời gian gửi:</strong> <span style={{ color: '#0f172a' }}>{new Date(t.requested_at || t.created_at).toLocaleString('vi-VN')}</span></div>
+                      <div>• <strong>Lý do hủy lớp:</strong> <span style={{ color: '#0f172a', fontStyle: 'italic', fontWeight: 600 }}>"{t.reason}"</span></div>
+                      <div>• <strong>Trạng thái ticket:</strong> <span style={{ fontWeight: 700, color: t.status === 'PENDING' ? '#d97706' : t.status === 'COMPLETED' ? '#16a34a' : '#dc2626' }}>{t.status === 'PENDING' ? '⏳ ĐANG CHỜ ADMIN XỬ LÝ' : t.status}</span></div>
+                      
+                      {t.status === 'PENDING' && (
+                        <div style={{ marginTop: '10px' }}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditModalOpen(false);
+                              setSelectedTicket(t);
+                              setTicketFaultType('STUDENT_FAULT');
+                            }}
+                            style={{
+                              background: '#dc2626',
+                              color: '#ffffff',
+                              border: 'none',
+                              padding: '8px 16px',
+                              borderRadius: '8px',
+                              fontWeight: 700,
+                              fontSize: '0.84rem',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px'
+                            }}
+                          >
+                            <AlertTriangle size={15} />
+                            Xử lý Duyệt Hủy & Hoàn tiền ngay
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', fontSize: '13px' }}>
                 <div>
-                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>
                     Họ tên học viên *
                   </label>
                   <input
@@ -988,12 +1306,12 @@ const AdminClassRequests: React.FC = () => {
                     onChange={handleEditFormChange}
                     disabled={editReadOnly}
                     required
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', outline: 'none' }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>
                     Điện thoại liên hệ *
                   </label>
                   <input
@@ -1003,12 +1321,12 @@ const AdminClassRequests: React.FC = () => {
                     onChange={handleEditFormChange}
                     disabled={editReadOnly}
                     required
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', outline: 'none' }}
                   />
                 </div>
 
                 <div style={{ gridColumn: 'span 2' }}>
-                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>
                     Email liên hệ
                   </label>
                   <input
@@ -1017,12 +1335,12 @@ const AdminClassRequests: React.FC = () => {
                     value={editFormData.email}
                     onChange={handleEditFormChange}
                     disabled={editReadOnly}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', outline: 'none' }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>
                     Môn học *
                   </label>
                   <input
@@ -1032,12 +1350,12 @@ const AdminClassRequests: React.FC = () => {
                     onChange={handleEditFormChange}
                     disabled={editReadOnly}
                     required
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', outline: 'none' }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>
                     Lớp / Trình độ
                   </label>
                   <input
@@ -1047,12 +1365,12 @@ const AdminClassRequests: React.FC = () => {
                     onChange={handleEditFormChange}
                     disabled={editReadOnly}
                     placeholder="VD: Lớp 1, Lớp 10..."
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', outline: 'none' }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>
                     Số lượng học viên
                   </label>
                   <input
@@ -1062,12 +1380,12 @@ const AdminClassRequests: React.FC = () => {
                     onChange={handleEditFormChange}
                     disabled={editReadOnly}
                     min={1}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', outline: 'none' }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>
                     Học lực học viên
                   </label>
                   <input
@@ -1077,12 +1395,12 @@ const AdminClassRequests: React.FC = () => {
                     onChange={handleEditFormChange}
                     disabled={editReadOnly}
                     placeholder="VD: Trung bình, Khá, Giỏi..."
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', outline: 'none' }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>
                     Số buổi / tuần
                   </label>
                   <input
@@ -1092,12 +1410,12 @@ const AdminClassRequests: React.FC = () => {
                     onChange={handleEditFormChange}
                     disabled={editReadOnly}
                     min={1}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', outline: 'none' }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>
                     Thời gian học
                   </label>
                   <input
@@ -1107,12 +1425,12 @@ const AdminClassRequests: React.FC = () => {
                     onChange={handleEditFormChange}
                     disabled={editReadOnly}
                     placeholder="VD: Tối Thứ 2, 4, 6"
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', outline: 'none' }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>
                     Yêu cầu Gia sư
                   </label>
                   <input
@@ -1122,12 +1440,12 @@ const AdminClassRequests: React.FC = () => {
                     onChange={handleEditFormChange}
                     disabled={editReadOnly}
                     placeholder="VD: Sinh viên, Giáo viên, Cử nhân..."
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', outline: 'none' }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>
                     Mức lương mong muốn (VNĐ/tháng)
                   </label>
                   <input
@@ -1137,12 +1455,12 @@ const AdminClassRequests: React.FC = () => {
                     onChange={handleEditFormChange}
                     disabled={editReadOnly}
                     step={50000}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', outline: 'none' }}
                   />
                 </div>
 
                 <div style={{ gridColumn: 'span 2' }}>
-                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>
                     Địa chỉ chi tiết (Số nhà, đường...)
                   </label>
                   <input
@@ -1151,12 +1469,12 @@ const AdminClassRequests: React.FC = () => {
                     value={editFormData.address_detail}
                     onChange={handleEditFormChange}
                     disabled={editReadOnly}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', outline: 'none' }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>
                     Quận / Huyện
                   </label>
                   <input
@@ -1165,12 +1483,12 @@ const AdminClassRequests: React.FC = () => {
                     value={editFormData.district}
                     onChange={handleEditFormChange}
                     disabled={editReadOnly}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', outline: 'none' }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>
                     Tỉnh / Thành phố
                   </label>
                   <input
@@ -1179,12 +1497,12 @@ const AdminClassRequests: React.FC = () => {
                     value={editFormData.province}
                     onChange={handleEditFormChange}
                     disabled={editReadOnly}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none' }}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', outline: 'none' }}
                   />
                 </div>
 
                 <div style={{ gridColumn: 'span 2' }}>
-                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>
                     Yêu cầu khác
                   </label>
                   <textarea
@@ -1193,12 +1511,12 @@ const AdminClassRequests: React.FC = () => {
                     onChange={handleEditFormChange}
                     disabled={editReadOnly}
                     rows={3}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none', resize: 'vertical' }}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', outline: 'none', resize: 'vertical' }}
                   />
                 </div>
 
                 <div style={{ gridColumn: 'span 2' }}>
-                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>
                     Trạng thái Lớp *
                   </label>
                   <select
@@ -1206,7 +1524,7 @@ const AdminClassRequests: React.FC = () => {
                     value={editFormData.status}
                     onChange={handleEditFormChange}
                     disabled={editReadOnly}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: '#1f2937', color: 'var(--admin-text-main)', fontWeight: 600, outline: 'none' }}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontWeight: 600, outline: 'none' }}
                   >
                     <option value="PENDING_ADMIN">CHỜ ADMIN DUYỆT (PENDING_ADMIN)</option>
                     <option value="OPEN">LỚP CHƯA GIAO / CÔNG KHAI (OPEN)</option>
@@ -1249,25 +1567,26 @@ const AdminClassRequests: React.FC = () => {
           </div>
         </div>
       )}
+
       {/* Modal Từ Chối Bài Đăng Tìm Gia Sư */}
       {rejectModalOpen && rejectingClass && (
         <div className="modal-overlay">
-          <div className="modal-card" style={{ maxWidth: '480px', width: '90%', background: '#111827', border: '1px solid var(--admin-border)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--admin-border)', paddingBottom: '12px' }}>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#f87171', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="modal-card" style={{ maxWidth: '480px', width: '90%', background: '#ffffff', border: '1px solid #cbd5e1' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#dc2626', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <X size={20} />
                 <span>Từ Chối Bài Đăng Tìm Gia Sư</span>
               </h3>
               <button
                 type="button"
                 onClick={() => setRejectModalOpen(false)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--admin-text-muted)' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
               >
                 <X size={20} />
               </button>
             </div>
 
-            <div style={{ fontSize: '13px', color: 'var(--admin-text-main)', marginBottom: '16px', background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px' }}>
+            <div style={{ fontSize: '13px', color: '#0f172a', marginBottom: '16px', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '12px', borderRadius: '8px' }}>
               <strong>Mã lớp:</strong> MS: {rejectingClass.code}
               <br />
               <strong>Học viên:</strong> {rejectingClass.student_name} ({rejectingClass.phone})
@@ -1276,7 +1595,7 @@ const AdminClassRequests: React.FC = () => {
             </div>
 
             <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontWeight: 600, color: 'var(--admin-text-main)', marginBottom: '6px', fontSize: '13px' }}>
+              <label style={{ display: 'block', fontWeight: 600, color: '#0f172a', marginBottom: '6px', fontSize: '13px' }}>
                 Lý do từ chối bài đăng *
               </label>
               <textarea
@@ -1284,7 +1603,7 @@ const AdminClassRequests: React.FC = () => {
                 value={rejectNote}
                 onChange={(e) => setRejectNote(e.target.value)}
                 placeholder="Nhập ghi chú lý do từ chối (VD: Thông tin địa chỉ không rõ ràng, yêu cầu không phù hợp...)"
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--admin-border)', background: 'rgba(255,255,255,0.04)', color: 'var(--admin-text-main)', outline: 'none', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', outline: 'none', boxSizing: 'border-box' }}
               />
             </div>
 
@@ -1316,3 +1635,4 @@ const AdminClassRequests: React.FC = () => {
 };
 
 export default AdminClassRequests;
+

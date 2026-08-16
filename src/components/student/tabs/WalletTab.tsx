@@ -168,7 +168,8 @@ export const WalletTab: React.FC<WalletTabProps> = ({
             <tbody>
               {transactions && transactions.length > 0 ? (
                 transactions.map((tx: any) => {
-                  const isExpense = tx.type === 'expense';
+                  const isExpense = tx.type === 'expense' && !tx.description?.toLowerCase().includes('hoàn');
+                  const isSuccessful = tx.status === 'success' || tx.status === 'refunded';
                   return (
                     <tr key={tx.transaction_id}>
                       <td style={{ fontSize: '12px', color: 'var(--text-light)', fontFamily: 'monospace' }}>
@@ -187,8 +188,8 @@ export const WalletTab: React.FC<WalletTabProps> = ({
                         {isExpense ? '-' : '+'}{formatPrice(tx.amount)}
                       </td>
                       <td>
-                        <span className={tx.status === 'success' ? 'badge-pass' : 'badge-fail'}>
-                          {tx.status === 'success' ? 'Thành công' : tx.status === 'failed' ? 'Thất bại' : 'Chờ xử lý'}
+                        <span className={isSuccessful ? 'badge-pass' : tx.status === 'failed' ? 'badge-fail' : 'badge-pending'}>
+                          {isSuccessful ? 'Thành công' : tx.status === 'failed' ? 'Thất bại' : 'Chờ xử lý'}
                         </span>
                       </td>
                     </tr>

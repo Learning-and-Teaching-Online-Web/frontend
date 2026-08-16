@@ -352,7 +352,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                     <input
                       type="email"
                       className="form-input"
-                      placeholder="Nhập Email của bạn*"
+                      placeholder="Nhập Email của bạn"
                       value={forgotEmail}
                       onChange={(e) => setForgotEmail(e.target.value)}
                       required
@@ -404,7 +404,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="Email hoặc Tên đăng nhập*"
+                    placeholder="Email"
                     value={loginIdentifier}
                     onChange={(e) => setLoginIdentifier(e.target.value)}
                     required
@@ -416,7 +416,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                     <input
                       type={showLoginPassword ? 'text' : 'password'}
                       className="form-input"
-                      placeholder="Mật khẩu*"
+                      placeholder="Mật khẩu"
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
                       required
@@ -495,7 +495,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                   <input
                     type="email"
                     className="form-input"
-                    placeholder="Email*"
+                    placeholder="Email"
                     value={registerEmail}
                     onChange={(e) => setRegisterEmail(e.target.value)}
                     required
@@ -506,7 +506,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="Họ và tên*"
+                    placeholder="Họ và tên"
                     value={registerFullName}
                     onChange={(e) => setRegisterFullName(e.target.value)}
                     required
@@ -517,7 +517,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                   <input
                     type="tel"
                     className="form-input"
-                    placeholder="Số điện thoại*"
+                    placeholder="Số điện thoại"
                     value={registerPhone}
                     onChange={(e) => setRegisterPhone(e.target.value)}
                     required
@@ -537,7 +537,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                   <input
                     type="date"
                     className="form-input"
-                    placeholder="Ngày sinh*"
+                    placeholder="Ngày sinh"
                     value={registerDateOfBirth}
                     onChange={(e) => setRegisterDateOfBirth(e.target.value)}
                     required
@@ -551,7 +551,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                     onChange={(e) => setRegisterRole(e.target.value as Role)}
                   >
                     <option value="student">Học viên</option>
-                    <option value="tutor">Giảng viên</option>
+                    <option value="tutor">Gia sư</option>
                   </select>
                 </div>
 
@@ -560,7 +560,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                     <input
                       type={showRegisterPassword ? 'text' : 'password'}
                       className="form-input"
-                      placeholder="Mật khẩu*"
+                      placeholder="Mật khẩu"
                       value={registerPassword}
                       onChange={(e) => setRegisterPassword(e.target.value)}
                       required
@@ -581,7 +581,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                     <input
                       type={showRegisterConfirmPassword ? 'text' : 'password'}
                       className="form-input"
-                      placeholder="Xác nhận mật khẩu*"
+                      placeholder="Xác nhận mật khẩu"
                       value={registerConfirmPassword}
                       onChange={(e) => setRegisterConfirmPassword(e.target.value)}
                       required

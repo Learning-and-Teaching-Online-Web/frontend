@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import axiosClient from '../../../services/axiosClient';
-import { DollarSign, RefreshCw } from 'lucide-react';
+import { DollarSign, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface WalletTabProps {
   walletBalance: number;
@@ -20,6 +20,13 @@ export const WalletTab: React.FC<WalletTabProps> = ({
 }) => {
   const [depositAmount, setDepositAmount] = useState<string>('2000000');
   const [isDepositing, setIsDepositing] = useState<boolean>(false);
+
+  // Pagination states (5 items per page)
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const ITEMS_PER_PAGE = 5;
+
+  const totalPages = Math.ceil((transactions?.length || 0) / ITEMS_PER_PAGE);
+  const paginatedTransactions = (transactions || []).slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   const handleDeposit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,8 +180,9 @@ export const WalletTab: React.FC<WalletTabProps> = ({
               </tr>
             </thead>
             <tbody>
-              {transactions.map((tx: any) => {
-                const isDeposit = tx.type === 'earning' || tx.description?.toLowerCase().includes('nạp tiền');
+              {paginatedTransactions.map((tx: any) => {
+                const isDeposit = tx.type === 'earning' || tx.description?.toLowerCase().includes('nạp tiền') || tx.description?.toLowerCase().includes('hoàn');
+                const isSuccessful = tx.status === 'success' || tx.status === 'refunded';
                 return (
                   <tr key={tx.transaction_id}>
                     <td style={{ fontFamily: 'monospace', fontWeight: 600 }}>{tx.transaction_id.slice(0, 10)}</td>
@@ -192,8 +200,8 @@ export const WalletTab: React.FC<WalletTabProps> = ({
                     <td>{tx.description}</td>
                     <td>{new Date(tx.created_at).toLocaleDateString('vi-VN')}</td>
                     <td>
-                      <span className={`badge badge-${tx.status === 'success' ? 'confirmed' : (tx.status === 'pending' ? 'pending' : 'draft')}`}>
-                        {tx.status === 'success' ? 'Thành công' : (tx.status === 'pending' ? 'Đang xử lý' : 'Thất bại')}
+                      <span className={`badge badge-${isSuccessful ? 'confirmed' : (tx.status === 'pending' ? 'pending' : 'draft')}`}>
+                        {isSuccessful ? 'Thành công' : (tx.status === 'pending' ? 'Đang xử lý' : 'Thất bại')}
                       </span>
                     </td>
                   </tr>
@@ -209,6 +217,79 @@ export const WalletTab: React.FC<WalletTabProps> = ({
             </tbody>
           </table>
         </div>
+
+        {/* PAGINATION CONTROLS */}
+        {totalPages > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginTop: '20px', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '4px',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                border: '1px solid #cbd5e1',
+                background: currentPage === 1 ? '#f1f5f9' : '#ffffff',
+                color: currentPage === 1 ? '#94a3b8' : '#334155',
+                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                fontWeight: 600,
+                fontSize: '0.85rem',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              <ChevronLeft size={16} /> Trang trước
+            </button>
+
+            {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((page) => (
+              <button
+                key={page}
+                type="button"
+                onClick={() => setCurrentPage(page)}
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '6px',
+                  border: page === currentPage ? 'none' : '1px solid #cbd5e1',
+                  background: page === currentPage ? '#6366f1' : '#ffffff',
+                  color: page === currentPage ? '#ffffff' : '#334155',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                {page}
+              </button>
+            ))}
+
+            <button
+              type="button"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '4px',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                border: '1px solid #cbd5e1',
+                background: currentPage === totalPages ? '#f1f5f9' : '#ffffff',
+                color: currentPage === totalPages ? '#94a3b8' : '#334155',
+                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                fontWeight: 600,
+                fontSize: '0.85rem',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              Trang sau <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

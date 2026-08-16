@@ -55,7 +55,7 @@ const HotOpenClasses: React.FC = () => {
               Lớp Học Mới <span>Đang Cần Gia Sư</span>
             </h2>
             <p className="section-description">
-              Cập nhật liên tục các suất dạy mới từ học viên & phụ huynh. Nhận lớp nhanh chóng với chi phí minh bạch.
+              Cập nhật liên tục các suất dạy mới từ học viên. Nhận lớp nhanh chóng với chi phí minh bạch.
             </p>
           </div>
           <Link to="/lop-hoc-moi" className="view-all-link-btn">
