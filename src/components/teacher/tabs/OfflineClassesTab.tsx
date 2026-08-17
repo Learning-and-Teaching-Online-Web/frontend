@@ -268,9 +268,9 @@ export const OfflineClassesTab: React.FC = () => {
   };
 
   // Filter lists
-  const directedClasses = myClasses.filter(c => c.is_directed_to_me);
-  const assignedClasses = myClasses.filter(c => c.is_assigned_to_me || c.status === 'ACTIVE' || (c as any).is_active_offline_class || c.status === 'WAITING_PAYMENT');
-  const refundClasses = myClasses.filter(c => (c.refund_tickets && c.refund_tickets.length > 0) || c.refund_deadline || c.status === 'REFUNDED' || c.status === 'CANCELLED');
+  const directedClasses = myClasses.filter(c => c.is_directed_to_me && c.status !== 'CANCELLED');
+  const assignedClasses = myClasses.filter(c => c.status !== 'CANCELLED' && (c.is_assigned_to_me || c.status === 'ACTIVE' || c.status === 'WAITING_PAYMENT'));
+  const refundClasses = myClasses.filter(c => c.status === 'CANCELLED' || c.status === 'REFUNDED' || (c.refund_tickets && c.refund_tickets.length > 0) || (c as any).has_pending_refund || (c.payments || []).some((p: any) => p.status === 'REFUNDED'));
 
   // Filter displayedList based on subTab
   let displayedList: ClassRequestItem[] = myClasses;
@@ -491,12 +491,14 @@ export const OfflineClassesTab: React.FC = () => {
         <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px' }}>
             {paginatedList.map((cls) => {
+              const isCancelledClass = cls.status === 'CANCELLED';
               const isDirected = cls.is_directed_to_me;
               const isTutorPaid = (cls.payments || []).some((p: any) => p.type === 'TUTOR_PLACEMENT_FEE' && p.status === 'PAID') || cls.tutor_payment_status === 'PAID';
+              const isTutorRefunded = (cls.payments || []).some((p: any) => p.type === 'TUTOR_PLACEMENT_FEE' && p.status === 'REFUNDED');
               const isDeadlineExpired = cls.payment_deadline ? new Date(cls.payment_deadline).getTime() < Date.now() : false;
-              const isApplicationExpired = cls.my_application_status === 'EXPIRED' || cls.status === 'EXPIRED' || (cls.status === 'WAITING_PAYMENT' && isDeadlineExpired && !isTutorPaid);
-              const isWaitingFee = cls.status === 'WAITING_PAYMENT' && cls.is_assigned_to_me && !isApplicationExpired;
-              const isActiveClass = (cls as any).is_active_offline_class || cls.status === 'ACTIVE';
+              const isApplicationExpired = (cls.my_application_status === 'EXPIRED' || cls.status === 'EXPIRED' || (cls.status === 'WAITING_PAYMENT' && isDeadlineExpired && !isTutorPaid)) && !isTutorRefunded && !isCancelledClass;
+              const isWaitingFee = cls.status === 'WAITING_PAYMENT' && cls.is_assigned_to_me && !isApplicationExpired && !isTutorRefunded && !isCancelledClass;
+              const isActiveClass = !isCancelledClass && ((cls as any).is_active_offline_class || cls.status === 'ACTIVE') && cls.status !== 'CANCELLED';
               const refundTickets = cls.refund_tickets || (cls as any).refundTickets || [];
               const hasPendingRefund = refundTickets.some((t: any) => t.status === 'PENDING') || (cls as any).has_pending_refund;
 
@@ -506,15 +508,19 @@ export const OfflineClassesTab: React.FC = () => {
                 style={{
                   background: '#ffffff',
                   borderRadius: '16px',
-                  border: isWaitingFee
-                    ? '2px solid #eab308'
-                    : isApplicationExpired
-                      ? '2px solid #ef4444'
-                      : hasPendingRefund
-                        ? '2px solid #f59e0b'
-                        : isActiveClass
-                          ? '2px solid #22c55e'
-                          : '1px solid #e2e8f0',
+                  border: isCancelledClass
+                    ? '2px solid #ef4444'
+                    : isWaitingFee
+                      ? '2px solid #eab308'
+                      : isTutorRefunded
+                        ? '2px solid #3b82f6'
+                        : isApplicationExpired
+                          ? '2px solid #ef4444'
+                          : hasPendingRefund
+                            ? '2px solid #f59e0b'
+                            : isActiveClass
+                              ? '2px solid #22c55e'
+                              : '1px solid #e2e8f0',
                   boxShadow: isWaitingFee
                     ? '0 4px 14px rgba(234,179,8,0.1)'
                     : isDirected ? '0 4px 14px rgba(99,102,241,0.08)' : '0 4px 12px rgba(0,0,0,0.03)',
@@ -532,7 +538,12 @@ export const OfflineClassesTab: React.FC = () => {
                       MS: {cls.code || (cls as any).class_offline_code}
                     </span>
 
-                    {isWaitingFee ? (
+                    {isCancelledClass ? (
+                      <span style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <XCircle size={14} />
+                        LỚP ĐÃ HỦY (CANCELLED)
+                      </span>
+                    ) : isWaitingFee ? (
                       isTutorPaid ? (
                         <span style={{ background: '#dcfce7', color: '#15803d', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <CheckCircle2 size={14} />
@@ -544,6 +555,11 @@ export const OfflineClassesTab: React.FC = () => {
                           CHỜ ĐÓNG PHÍ ESCROW
                         </span>
                       )
+                    ) : isTutorRefunded ? (
+                      <span style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <RotateCcw size={14} />
+                        ĐÃ HOÀN 100% PHÍ (HỌC VIÊN QUÁ HẠN)
+                      </span>
                     ) : isApplicationExpired ? (
                       <span style={{ background: '#fee2e2', color: '#991b1b', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <XCircle size={14} />
@@ -648,7 +664,17 @@ export const OfflineClassesTab: React.FC = () => {
 
                 {/* Footer / Actions */}
                 <div style={{ marginTop: '18px', paddingTop: '14px', borderTop: '1px solid #f1f5f9' }}>
-                  {hasPendingRefund ? (
+                  {isCancelledClass ? (
+                    <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', padding: '12px 14px', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <div style={{ color: '#991b1b', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <XCircle size={16} color="#dc2626" />
+                        <span>✓ Lớp học đã được Hủy & Hoàn tiền thành công!</span>
+                      </div>
+                      <div style={{ color: '#7f1d1d', fontSize: '0.82rem', lineHeight: '1.4' }}>
+                        Admin đã xử lý chốt đơn hủy và hoàn tiền tương ứng vào ví của các bên theo quy định.
+                      </div>
+                    </div>
+                  ) : hasPendingRefund ? (
                     <div style={{ background: '#fffbeb', border: '1px solid #fde68a', padding: '12px 14px', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       <div style={{ color: '#b45309', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <Clock size={16} color="#d97706" />
@@ -691,6 +717,16 @@ export const OfflineClassesTab: React.FC = () => {
                         <RotateCcw size={14} />
                         Yêu cầu hủy lớp / Hoàn tiền (7 ngày)
                       </button>
+                    </div>
+                  ) : isTutorRefunded ? (
+                    <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', padding: '12px 14px', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <div style={{ color: '#1e40af', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <CheckCircle2 size={16} color="#2563eb" />
+                        <span>✓ Học viên không nộp học phí đúng hạn 48h!</span>
+                      </div>
+                      <div style={{ color: '#1e3a8a', fontSize: '0.82rem', lineHeight: '1.4' }}>
+                        Hệ thống đã tự động hoàn trả 100% phí nhận lớp ({formatVND(Number(cls.fee_amount || (Number((cls as any).class_salary || 0) * 0.35)))}) về Ví cá nhân của bạn.
+                      </div>
                     </div>
                   ) : isApplicationExpired ? (
                     <div style={{ color: '#991b1b', background: '#fee2e2', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, textAlign: 'center' }}>

@@ -45,6 +45,7 @@ export interface StudentClassRequest {
   is_active_offline_class?: boolean;
   tutor_name?: string;
   tutor_phone?: string;
+  selected_tutor_code?: string | null;
   selected_tutor?: { full_name: string; phone?: string | null; avatar_url?: string | null } | null;
   assigned_tutor?: { full_name: string; phone?: string | null; avatar_url?: string | null } | null;
   payment_deadline?: string;
@@ -263,8 +264,7 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
 
     switch (item.status) {
       case 'WAITING_PAYMENT': {
-        const studentPayment = (item.payments || []).find((p: any) => p.type === 'STUDENT_TUITION');
-        const isStudentPaid = studentPayment?.status === 'PAID';
+        const isStudentPaid = (item.payments || []).some((p: any) => p.type === 'STUDENT_TUITION' && p.status === 'PAID');
         if (isStudentPaid) {
           return (
             <span className="badge badge-success" style={{ background: '#dcfce7', color: '#15803d', padding: '4px 12px', borderRadius: '20px', fontWeight: 600, fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
@@ -592,8 +592,7 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
             const reqId = item.request_id || item.class_id || '';
             const isWaitingPayment = item.status === 'WAITING_PAYMENT';
             const isActiveClass = item.is_active_offline_class && item.status === 'ACTIVE';
-            const studentPayment = (item.payments || []).find((p: any) => p.type === 'STUDENT_TUITION');
-            const isStudentPaid = studentPayment?.status === 'PAID';
+            const isStudentPaid = (item.payments || []).some((p: any) => p.type === 'STUDENT_TUITION' && p.status === 'PAID');
 
             const refundTickets = item.refund_tickets || (item as any).refundTickets || [];
             const hasPendingRefund = refundTickets.some((t: any) => t.status === 'PENDING') || (item as any).has_pending_refund;
@@ -612,11 +611,16 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '16px', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                       <span style={{ fontWeight: 800, color: '#f97316', fontSize: '1.05rem' }}>
                         MS: {item.code || item.class_code || reqId.slice(0, 8).toUpperCase()}
                       </span>
                       {renderStatusBadge(item)}
+                      {item.selected_tutor_code && (
+                        <span className="badge" style={{ background: '#ede9fe', color: '#6d28d9', border: '1px solid #ddd6fe', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          🎯 GS CHỈ ĐỊNH: {item.selected_tutor?.full_name ? `${item.selected_tutor.full_name} (${item.selected_tutor_code})` : item.selected_tutor_code}
+                        </span>
+                      )}
                     </div>
                     <div style={{ fontSize: '0.83rem', color: '#94a3b8', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <Calendar size={14} />
@@ -699,13 +703,25 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
                   </div>
 
                   <div>
-                    <span style={{ color: '#64748b', fontSize: '0.83rem', display: 'block' }}>Gia sư đảm nhận:</span>
+                    <span style={{ color: '#64748b', fontSize: '0.83rem', display: 'block' }}>
+                      {item.tutor_name || item.assigned_tutor?.full_name ? 'Gia sư đảm nhận:' : item.selected_tutor_code ? 'Gia sư chỉ định:' : 'Yêu cầu gia sư:'}
+                    </span>
                     <span style={{ color: '#1e293b', marginTop: '2px', display: 'block', fontWeight: 600 }}>
-                      {item.tutor_name || item.assigned_tutor?.full_name || item.selected_tutor?.full_name || item.tutor_requirement || 'Chưa phân công'}
-                      {(item.tutor_phone || item.assigned_tutor?.phone) && (
-                        <span style={{ color: '#2563eb', marginLeft: '6px' }}>
-                          • SĐT: {item.tutor_phone || item.assigned_tutor?.phone}
+                      {item.tutor_name || item.assigned_tutor?.full_name ? (
+                        <>
+                          {item.tutor_name || item.assigned_tutor?.full_name}
+                          {(item.tutor_phone || item.assigned_tutor?.phone) && (
+                            <span style={{ color: '#2563eb', marginLeft: '6px' }}>
+                              • SĐT: {item.tutor_phone || item.assigned_tutor?.phone}
+                            </span>
+                          )}
+                        </>
+                      ) : item.selected_tutor_code ? (
+                        <span style={{ color: '#4338ca', fontWeight: 700 }}>
+                          🎯 {item.selected_tutor?.full_name ? `${item.selected_tutor.full_name} (${item.selected_tutor_code})` : item.selected_tutor_code}
                         </span>
+                      ) : (
+                        item.tutor_requirement || 'Chưa phân công'
                       )}
                     </span>
                   </div>
