@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import type { 
   StudentProfile, 
@@ -19,10 +19,28 @@ import { quizApi } from '../services/quizApi';
 import axiosClient from '../services/axiosClient';
 import type { StudentClassRequest } from '../components/student/tabs/ClassRequestsTab';
 
+const VALID_STUDENT_TABS = [
+  'overview',
+  'courses',
+  'schedule',
+  'class-requests',
+  'quizzes',
+  'favorites',
+  'profile',
+  'wallet'
+];
+
 export const useStudentDashboard = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
-  const [activeTab, setActiveTab] = useState<string>('overview');
+
+  const tabFromUrl = searchParams.get('tab');
+  const activeTab = tabFromUrl && VALID_STUDENT_TABS.includes(tabFromUrl) ? tabFromUrl : 'overview';
+
+  const setActiveTab = (tab: string) => {
+    setSearchParams({ tab });
+  };
 
   // Dashboard states
   const [profile, setProfile] = useState<StudentProfile>(initialStudentProfile);

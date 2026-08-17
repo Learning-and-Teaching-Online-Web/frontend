@@ -278,6 +278,8 @@ const AdminClassRequests: React.FC = () => {
       commission_rate: cls.commission_rate || 35,
       other_requirements: (cls as any).other_requirements || '',
       status: cls.status || 'PENDING_ADMIN',
+      selected_tutor_code: (cls as any).selected_tutor_code || '',
+      selected_tutor: (cls as any).selected_tutor || null,
       refund_tickets: (cls as any).refund_tickets || (cls as any).refundTickets || [],
       has_pending_refund: (cls as any).has_pending_refund,
     });
@@ -336,8 +338,19 @@ const AdminClassRequests: React.FC = () => {
         );
       case 'WAITING_TUTOR_CONFIRM':
         return <span className="admin-badge warning" style={{ background: '#0284c7', color: '#ffffff' }}>CHỜ GS CHỈ ĐỊNH XÁC NHẬN</span>;
-      case 'EXPIRED':
-        return <span className="admin-badge danger" style={{ background: '#dc2626', color: '#ffffff' }}>HẾT HẠN ĐÓNG PHÍ (EXPIRED)</span>;
+      case 'EXPIRED': {
+        const hasRefund = (cls.payments || (cls as any).payments || []).some((p: any) => p.status === 'REFUNDED');
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <span className="admin-badge danger" style={{ background: '#dc2626', color: '#ffffff' }}>HẾT HẠN ĐÓNG PHÍ (EXPIRED)</span>
+            {hasRefund && (
+              <span style={{ fontSize: '11px', color: '#166534', fontWeight: 700 }}>
+                ✓ Đã hoàn 100% tiền giữ chỗ
+              </span>
+            )}
+          </div>
+        );
+      }
       case 'CANCELLED':
         return <span className="admin-badge muted" style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>ĐÃ HỦY (CANCELLED)</span>;
       case 'REJECTED':
@@ -346,6 +359,21 @@ const AdminClassRequests: React.FC = () => {
       default:
         return <span className="admin-badge danger">CHỜ DUYỆT (PENDING)</span>;
     }
+  };
+
+  const getRequesterDisplayName = (t: any) => {
+    if (!t) return 'N/A';
+    const req = t.requester;
+    if (req?.student_profile?.full_name) return req.student_profile.full_name;
+    if (req?.tutor_profile?.full_name) {
+      const code = req.tutor_profile.tutor_code ? ` (${req.tutor_profile.tutor_code})` : '';
+      return `${req.tutor_profile.full_name}${code}`;
+    }
+    if (req?.admin_profile?.full_name) return req.admin_profile.full_name;
+    if (req?.full_name) return req.full_name;
+    if (t.requester_name) return t.requester_name;
+    if (req?.email) return req.email;
+    return t.requested_by || 'N/A';
   };
 
   return (
@@ -492,6 +520,11 @@ const AdminClassRequests: React.FC = () => {
                           <span style={{ color: '#f97316', fontWeight: 700, fontSize: '14px' }}>
                             MS: {cls.code}
                           </span>
+                          {(cls as any).selected_tutor_code && (
+                            <div style={{ marginTop: '4px', fontSize: '11px', fontWeight: 700, color: '#4338ca', background: '#e0e7ff', border: '1px solid #c7d2fe', padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
+                              🎯 GS chỉ định: {(cls as any).selected_tutor?.full_name ? `${(cls as any).selected_tutor.full_name} (${(cls as any).selected_tutor_code})` : (cls as any).selected_tutor_code}
+                            </div>
+                          )}
                         </td>
                         <td>
                           <div style={{ fontWeight: 600, color: 'var(--admin-text-main)' }}>{cls.student_name}</div>
@@ -727,7 +760,7 @@ const AdminClassRequests: React.FC = () => {
                           </span>
                         </td>
                         <td>
-                          <div style={{ fontWeight: 600 }}>{t.requester?.email || 'N/A'}</div>
+                          <div style={{ fontWeight: 600 }}>{getRequesterDisplayName(t)}</div>
                           <div style={{ fontSize: '11px', color: '#94a3b8' }}>{new Date(t.requested_at).toLocaleString('vi-VN')}</div>
                         </td>
                         <td style={{ maxWidth: '240px', fontSize: '13px' }}>
@@ -1256,7 +1289,7 @@ const AdminClassRequests: React.FC = () => {
                   </h4>
                   {editFormData.refund_tickets.map((t: any) => (
                     <div key={t.ticket_id || t.created_at} style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.88rem', color: '#7f1d1d', lineHeight: '1.5' }}>
-                      <div>• <strong>Người gửi yêu cầu:</strong> <span style={{ color: '#0f172a', fontWeight: 600 }}>{t.requester?.email || t.requested_by || 'N/A'}</span> ({t.requester?.role === 'tutor' ? 'Gia sư' : 'Học viên'})</div>
+                      <div>• <strong>Người gửi yêu cầu:</strong> <span style={{ color: '#0f172a', fontWeight: 600 }}>{getRequesterDisplayName(t)}</span> ({t.requester?.role === 'tutor' ? 'Gia sư' : 'Học viên'})</div>
                       <div>• <strong>Thời gian gửi:</strong> <span style={{ color: '#0f172a' }}>{new Date(t.requested_at || t.created_at).toLocaleString('vi-VN')}</span></div>
                       <div>• <strong>Lý do hủy lớp:</strong> <span style={{ color: '#0f172a', fontStyle: 'italic', fontWeight: 600 }}>"{t.reason}"</span></div>
                       <div>• <strong>Trạng thái ticket:</strong> <span style={{ fontWeight: 700, color: t.status === 'PENDING' ? '#d97706' : t.status === 'COMPLETED' ? '#16a34a' : '#dc2626' }}>{t.status === 'PENDING' ? '⏳ ĐANG CHỜ ADMIN XỬ LÝ' : t.status}</span></div>

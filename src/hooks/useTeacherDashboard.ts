@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import tutorApi from '../services/tutorApi';
 import { courseApi } from '../services/courseApi';
@@ -17,10 +17,29 @@ export interface DashboardStats {
 
 export type TeacherTab = 'overview' | 'courses' | 'schedules' | 'bookings' | 'articles' | 'reviews' | 'wallet' | 'profile' | 'offline_classes';
 
+const VALID_TEACHER_TABS: TeacherTab[] = [
+  'overview',
+  'courses',
+  'schedules',
+  'bookings',
+  'articles',
+  'reviews',
+  'wallet',
+  'profile',
+  'offline_classes'
+];
+
 export const useTeacherDashboard = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<TeacherTab>('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
+
+  const tabFromUrl = searchParams.get('tab') as TeacherTab;
+  const activeTab: TeacherTab = tabFromUrl && VALID_TEACHER_TABS.includes(tabFromUrl) ? tabFromUrl : 'overview';
+
+  const setActiveTab = (tab: TeacherTab) => {
+    setSearchParams({ tab });
+  };
 
   // Core Data States
   const [stats, setStats] = useState<DashboardStats>({
