@@ -1,21 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, UserCheck, BookOpen, ShieldCheck, Sparkles, GraduationCap } from 'lucide-react';
+import { UserCheck, BookOpen, ShieldCheck, Sparkles, GraduationCap } from 'lucide-react';
 
 const HeroSection: React.FC = () => {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchTerm.trim()) {
-      navigate(`/lop-hoc-moi?search=${encodeURIComponent(searchTerm.trim())}`);
-    } else {
-      navigate('/tim-gia-su');
-    }
-  };
-
-  const quickSubjects = ['Toán Học', 'Tiếng Anh', 'Vật Lý', 'Hóa Học', 'Lập Trình', 'Luyện Thi Đại Học'];
 
   return (
     <header className="hero-section">
@@ -46,35 +34,6 @@ const HeroSection: React.FC = () => {
             Giải pháp tìm gia sư dạy kèm 1-1 tận nhà hoặc online chất lượng cao, minh bạch thông tin. Đồng thời cập nhật liên tục hàng trăm lớp học mới dành cho gia sư.
           </p>
 
-          {/* Search Bar on Hero */}
-          <form onSubmit={handleSearchSubmit} className="hero-search-box">
-            <Search size={20} className="search-icon-hero" />
-            <input
-              type="text"
-              placeholder="Nhập môn học hoặc địa điểm (VD: Toán lớp 12, Quận 1)..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="hero-search-input"
-            />
-            <button type="submit" className="hero-search-btn">
-              Tìm kiếm
-            </button>
-          </form>
-
-          {/* Quick Subject Tags */}
-          <div className="quick-tags-container">
-            <span className="quick-tag-label">Gợi ý:</span>
-            {quickSubjects.map((sub, idx) => (
-              <button
-                key={idx}
-                type="button"
-                className="quick-tag-btn"
-                onClick={() => navigate(`/lop-hoc-moi?search=${encodeURIComponent(sub)}`)}
-              >
-                {sub}
-              </button>
-            ))}
-          </div>
 
           {/* Action Buttons for Both User Personas */}
           <div className="hero-actions-dual">

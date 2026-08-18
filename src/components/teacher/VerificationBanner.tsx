@@ -25,7 +25,7 @@ export const VerificationBanner: React.FC<VerificationBannerProps> = ({
               <span className="banner-tag approved">CHÍNH THỨC</span>
             </div>
             <div className="banner-desc approved">
-              Hồ sơ và bằng cấp chuyên môn của bạn đã được kiểm duyệt hợp lệ. Khóa học của bạn sẽ hiển thị ưu tiên tới học viên.
+              Hồ sơ và bằng cấp chuyên môn của bạn đã được kiểm duyệt hợp lệ.
             </div>
           </div>
         </div>

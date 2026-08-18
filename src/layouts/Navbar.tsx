@@ -70,7 +70,7 @@ const Navbar: React.FC = () => {
               to="/courses"
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             >
-              Khóa học
+              Khóa học Online
             </NavLink>
           </li>
 
