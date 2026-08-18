@@ -133,14 +133,14 @@ const CourseList: React.FC = () => {
         <div className="container breadcrumbs-container">
           <Link to="/">Trang chủ</Link>
           <span className="breadcrumbs-separator">/</span>
-          <span className="breadcrumbs-current">Khóa học</span>
+          <span className="breadcrumbs-current">Khóa học Online</span>
         </div>
       </div>
 
       <div className="container">
         {/* Title */}
         <div className="listing-title-section">
-          <h1 className="listing-title">Tất cả khóa học</h1>
+          <h1 className="listing-title">Tất cả khóa học Online</h1>
         </div>
 
         {/* Layout Bipartite Split */}

@@ -16,6 +16,7 @@ import '../styles/StudentDashboard.css';
 const StudentDashboard: React.FC = () => {
   const {
     isAuthenticated,
+    isLoading,
     activeTab,
     setActiveTab,
     profile,
@@ -41,6 +42,17 @@ const StudentDashboard: React.FC = () => {
           <Clock className="spin-icon" size={48} style={{ color: 'var(--primary)', marginBottom: '16px' }} />
           <h3>Đang kiểm tra thông tin đăng nhập...</h3>
           <p style={{ color: 'var(--text-muted)', marginTop: '8px' }}>Vui lòng đăng nhập để xem thông tin học tập.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading && enrolledCourses.length === 0 && classSessions.length === 0) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: 'var(--bg-light)' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ width: '40px', height: '40px', border: '4px solid #e2e8f0', borderTopColor: '#ff7a3d', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 15px' }} />
+          <p style={{ color: 'var(--text-light)', fontWeight: 500 }}>Đang đồng bộ dữ liệu học tập...</p>
         </div>
       </div>
     );

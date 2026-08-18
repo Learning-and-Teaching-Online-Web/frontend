@@ -340,6 +340,24 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
     }
   };
 
+  const handleCancelStudentPayment = async (requestId: string) => {
+    if (!window.confirm('Bạn có chắc chắn muốn TỪ CHỐI nhận lớp học này và HỦY bài đăng không?')) {
+      return;
+    }
+
+    try {
+      setUpdating(true);
+      const res = await axiosClient.post(`/class-requests/${requestId}/cancel-student-payment`);
+      toast.success(res.data.message || 'Đã từ chối nhận lớp thành công!');
+      onRefresh();
+    } catch (err: any) {
+      console.error('Error cancelling student payment:', err);
+      toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi từ chối nhận lớp.');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const handleStartEditPrice = (req: StudentClassRequest) => {
     setEditingId(req.request_id || req.class_id || null);
     setEditPriceVal(String(req.desired_price));
@@ -750,28 +768,50 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
                         <p style={{ color: '#78350f', fontSize: '0.83rem', margin: '0 0 10px 0' }}>
                           Admin đã duyệt chọn gia sư cho lớp học của bạn. Để kích hoạt lớp học chính thức (ACTIVE), bạn cần nộp khoản học phí tháng đầu giữ chỗ ({formatCurrency(Number(item.desired_price))}).
                         </p>
-                        <button
-                          type="button"
-                          disabled={updating}
-                          onClick={() => handlePayTuition(reqId)}
-                          style={{
-                            padding: '10px 20px',
-                            background: '#d97706',
-                            color: '#ffffff',
-                            border: 'none',
-                            borderRadius: '8px',
-                            fontWeight: 700,
-                            fontSize: '0.88rem',
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            boxShadow: '0 2px 6px rgba(217, 119, 6, 0.25)',
-                            marginBottom: '8px'
-                          }}
-                        >
-                          {updating ? 'Đang xử lý...' : 'Nộp học phí tháng đầu ngay →'}
-                        </button>
+                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '8px' }}>
+                          <button
+                            type="button"
+                            disabled={updating}
+                            onClick={() => handlePayTuition(reqId)}
+                            style={{
+                              padding: '10px 20px',
+                              background: '#d97706',
+                              color: '#ffffff',
+                              border: 'none',
+                              borderRadius: '8px',
+                              fontWeight: 700,
+                              fontSize: '0.88rem',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              boxShadow: '0 2px 6px rgba(217, 119, 6, 0.25)',
+                            }}
+                          >
+                            {updating ? 'Đang xử lý...' : 'Nộp học phí tháng đầu ngay →'}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={updating}
+                            onClick={() => handleCancelStudentPayment(reqId)}
+                            style={{
+                              padding: '10px 18px',
+                              background: '#ffffff',
+                              color: '#dc2626',
+                              border: '1px solid #fca5a5',
+                              borderRadius: '8px',
+                              fontWeight: 700,
+                              fontSize: '0.88rem',
+                              cursor: updating ? 'not-allowed' : 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                            }}
+                          >
+                            <XCircle size={16} />
+                            Từ chối nhận lớp này
+                          </button>
+                        </div>
                         <PaymentCountdown deadline={item.payment_deadline} />
                       </div>
                     )}

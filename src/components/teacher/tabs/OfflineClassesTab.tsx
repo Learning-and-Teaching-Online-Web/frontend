@@ -538,7 +538,12 @@ export const OfflineClassesTab: React.FC = () => {
                       MS: {cls.code || (cls as any).class_offline_code}
                     </span>
 
-                    {isCancelledClass ? (
+                    {isTutorRefunded ? (
+                      <span style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <RotateCcw size={14} />
+                        ĐÃ HOÀN 100% PHÍ (HỌC VIÊN HỦY / QUÁ HẠN)
+                      </span>
+                    ) : isCancelledClass ? (
                       <span style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <XCircle size={14} />
                         LỚP ĐÃ HỦY (CANCELLED)
@@ -555,11 +560,6 @@ export const OfflineClassesTab: React.FC = () => {
                           CHỜ ĐÓNG PHÍ ESCROW
                         </span>
                       )
-                    ) : isTutorRefunded ? (
-                      <span style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <RotateCcw size={14} />
-                        ĐÃ HOÀN 100% PHÍ (HỌC VIÊN QUÁ HẠN)
-                      </span>
                     ) : isApplicationExpired ? (
                       <span style={{ background: '#fee2e2', color: '#991b1b', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <XCircle size={14} />
@@ -665,15 +665,27 @@ export const OfflineClassesTab: React.FC = () => {
                 {/* Footer / Actions */}
                 <div style={{ marginTop: '18px', paddingTop: '14px', borderTop: '1px solid #f1f5f9' }}>
                   {isCancelledClass ? (
-                    <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', padding: '12px 14px', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <div style={{ color: '#991b1b', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <XCircle size={16} color="#dc2626" />
-                        <span>✓ Lớp học đã được Hủy & Hoàn tiền thành công!</span>
+                    isTutorRefunded ? (
+                      <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', padding: '12px 14px', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <div style={{ color: '#1e40af', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <CheckCircle2 size={16} color="#2563eb" />
+                          <span>✓ Lớp học đã hủy — Đã hoàn 100% phí nhận lớp!</span>
+                        </div>
+                        <div style={{ color: '#1e3a8a', fontSize: '0.82rem', lineHeight: '1.4' }}>
+                          Học viên đã từ chối nhận lớp hoặc quá hạn đóng học phí 48h. Hệ thống đã tự động hoàn trả 100% phí nhận lớp ({formatVND(Number(cls.fee_amount || (Number((cls as any).class_salary || 0) * 0.35)))}) về Ví cá nhân của bạn.
+                        </div>
                       </div>
-                      <div style={{ color: '#7f1d1d', fontSize: '0.82rem', lineHeight: '1.4' }}>
-                        Admin đã xử lý chốt đơn hủy và hoàn tiền tương ứng vào ví của các bên theo quy định.
+                    ) : (
+                      <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', padding: '12px 14px', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <div style={{ color: '#991b1b', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <XCircle size={16} color="#dc2626" />
+                          <span>✓ Lớp học đã Hủy!</span>
+                        </div>
+                        <div style={{ color: '#7f1d1d', fontSize: '0.82rem', lineHeight: '1.4' }}>
+                          Bài đăng tìm gia sư / Lớp học này đã bị hủy bởi Học viên hoặc Admin.
+                        </div>
                       </div>
-                    </div>
+                    )
                   ) : hasPendingRefund ? (
                     <div style={{ background: '#fffbeb', border: '1px solid #fde68a', padding: '12px 14px', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       <div style={{ color: '#b45309', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}>

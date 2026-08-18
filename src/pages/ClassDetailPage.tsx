@@ -195,7 +195,7 @@ const ClassDetailPage: React.FC = () => {
               <strong>Địa chỉ:</strong> {classDetail.address_detail} <MapPin size={16} style={{ color: '#ef4444', verticalAlign: 'middle' }} />
             </p>
             <p style={{ margin: '0 0 8px 0' }}>
-              <strong>Khu vực:</strong> {classDetail.province} - {classDetail.district}
+              <strong>Khu vực:</strong> {[classDetail.province, classDetail.district].filter(Boolean).join(' - ')}
             </p>
             <p style={{ margin: '0 0 8px 0', color: '#16a34a' }}>
               <strong>Mức lương:</strong> <span style={{ fontWeight: '800', fontSize: '1.1rem' }}>{formatCurrency(Number(classDetail.desired_price))}</span>
@@ -210,7 +210,10 @@ const ClassDetailPage: React.FC = () => {
               <strong>Yêu cầu gia sư:</strong> <span style={{ fontWeight: '600', color: '#0369a1' }}>{classDetail.tutor_requirement || 'Sinh viên / Giáo viên'}</span>
             </p>
             <p style={{ margin: '0 0 8px 0' }}>
-              <strong>Thông tin người học:</strong> {classDetail.academic_level || 'Học sinh căn bản'}
+              <strong>Tên học viên:</strong> {classDetail.student_name || 'Chưa cập nhật'}
+            </p>
+            <p style={{ margin: '0 0 8px 0' }}>
+              <strong>Học lực:</strong> {classDetail.academic_level || 'Chưa cập nhật'}
             </p>
             <p style={{ margin: '0 0 8px 0', color: '#475569' }}>
               <strong>Liên hệ trung tâm:</strong> 0974.502.420 - 0938.708.488

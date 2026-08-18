@@ -34,6 +34,7 @@ export const useStudentDashboard = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const tabFromUrl = searchParams.get('tab');
   const activeTab = tabFromUrl && VALID_STUDENT_TABS.includes(tabFromUrl) ? tabFromUrl : 'overview';
@@ -136,6 +137,7 @@ export const useStudentDashboard = () => {
       const authStatus = authStorage.isAuthenticated();
       if (!authStatus) return;
 
+      setIsLoading(true);
       try {
         // 1. Fetch Profile
         const profileRes = await authApi.getProfile();
@@ -241,6 +243,8 @@ export const useStudentDashboard = () => {
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
         toast.error('Có lỗi xảy ra khi tải thông tin bảng điều khiển.');
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -445,6 +449,7 @@ export const useStudentDashboard = () => {
 
   return {
     isAuthenticated,
+    isLoading,
     activeTab,
     setActiveTab,
     profile,

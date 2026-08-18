@@ -166,15 +166,15 @@ const OpenClassesPage: React.FC = () => {
                     {/* Content Body */}
                     <div className="class-card-body">
                       <p className="class-info-row">
-                        <strong>Lớp dạy:</strong> <span>{formatGradeLevel(cls.grade_level)}.</span>
+                        <strong>Lớp dạy:</strong> <span>{formatGradeLevel(cls.grade_level)}</span>
                       </p>
                       <p className="class-info-row">
-                        <strong>Môn dạy:</strong> <span style={{ fontWeight: 600, color: '#0f172a' }}>{cls.subject_name}.</span>
+                        <strong>Môn dạy:</strong> <span style={{ fontWeight: 600, color: '#0f172a' }}>{cls.subject_name}</span>
                       </p>
                       <p className="class-info-row">
                         <strong>Địa chỉ:</strong> 
                         <span className="class-location-text">
-                          {cls.address_detail} - {cls.district || ''} - {cls.province || ''}{' '}
+                          {[cls.address_detail, cls.district, cls.province].filter(Boolean).join(' - ')}{' '}
                           <MapPin size={15} style={{ verticalAlign: 'middle', color: '#ea580c' }} />
                         </span>
                       </p>
