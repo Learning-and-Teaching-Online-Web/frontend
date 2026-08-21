@@ -19,6 +19,7 @@ import {
 import { toast } from 'react-toastify';
 import axiosClient from '../../../services/axiosClient';
 import { formatGradeLevel } from '../../../utils/formatters';
+import { EditClassRequestModal } from '../modals/EditClassRequestModal';
 
 export interface StudentClassRequest {
   request_id?: string;
@@ -139,6 +140,7 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
   const [updating, setUpdating] = useState<boolean>(false);
   const [refundModalItem, setRefundModalItem] = useState<StudentClassRequest | null>(null);
   const [refundReason, setRefundReason] = useState<string>('');
+  const [editClassModalItem, setEditClassModalItem] = useState<StudentClassRequest | null>(null);
 
   // Tab filter state: 'ALL' | 'ASSIGNED' | 'OPEN' | 'CANCELLED'
   const [activeSubTab, setActiveSubTab] = useState<'ALL' | 'ASSIGNED' | 'OPEN' | 'CANCELLED'>('ALL');
@@ -837,10 +839,31 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
                       Bài đăng tìm gia sư đã bị Admin từ chối.
                     </div>
                     {(item as any).admin_note && (
-                      <p style={{ color: '#7f1d1d', fontSize: '0.83rem', margin: 0 }}>
+                      <p style={{ color: '#7f1d1d', fontSize: '0.83rem', margin: '0 0 10px 0' }}>
                         <strong>Lý do từ chối:</strong> {(item as any).admin_note}
                       </p>
                     )}
+                    <button
+                      type="button"
+                      onClick={() => setEditClassModalItem(item)}
+                      style={{
+                        background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+                        color: '#ffffff',
+                        border: 'none',
+                        padding: '8px 18px',
+                        borderRadius: '8px',
+                        fontSize: '0.85rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        boxShadow: '0 2px 6px rgba(220, 38, 38, 0.3)'
+                      }}
+                    >
+                      <Edit3 size={15} />
+                      Sửa & Gửi lại cho Admin duyệt →
+                    </button>
                   </div>
                 )}
 
@@ -891,9 +914,31 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
                   </div>
                 ) : null}
 
-                {/* Cancel action if still open */}
-                {!item.is_active_offline_class && item.status !== 'CANCELLED' && item.status !== 'EXPIRED' && item.status !== 'REJECTED' && !isWaitingPayment && (
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+                {/* Edit & Cancel actions if editable */}
+                {!item.is_active_offline_class && item.status !== 'CANCELLED' && item.status !== 'EXPIRED' && !isWaitingPayment && (
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => setEditClassModalItem(item)}
+                      style={{
+                        background: '#f0f9ff',
+                        color: '#0284c7',
+                        border: '1px solid #bae6fd',
+                        padding: '5px 12px',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '0.82rem',
+                        fontWeight: 600,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <Edit3 size={14} />
+                      Sửa thông tin bài đăng
+                    </button>
+
                     <button
                       type="button"
                       disabled={updating}
@@ -902,7 +947,7 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
                         background: 'transparent',
                         color: '#dc2626',
                         border: '1px solid #fca5a5',
-                        padding: '4px 12px',
+                        padding: '5px 12px',
                         borderRadius: '6px',
                         cursor: 'pointer',
                         fontSize: '0.82rem',
@@ -1064,6 +1109,14 @@ export const ClassRequestsTab: React.FC<ClassRequestsTabProps> = ({
             </div>
           </div>
         </div>
+      )}
+      {/* MODAL EDIT CLASS REQUEST */}
+      {editClassModalItem && (
+        <EditClassRequestModal
+          item={editClassModalItem}
+          onClose={() => setEditClassModalItem(null)}
+          onSuccess={onRefresh}
+        />
       )}
     </div>
   );

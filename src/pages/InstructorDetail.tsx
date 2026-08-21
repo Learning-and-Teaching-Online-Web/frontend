@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
-  ChevronLeft, MapPin, Heart, ExternalLink
+  ChevronLeft, MapPin, Heart, ExternalLink, Copy, Check
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { tutorApi } from '../services/tutorApi';
@@ -18,6 +18,7 @@ const InstructorDetail: React.FC = () => {
   const [otherTutors, setOtherTutors] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const isAuthenticated = authStorage.isAuthenticated();
   const userRole = authStorage.getUserRole();
@@ -104,11 +105,12 @@ const InstructorDetail: React.FC = () => {
     }
   };
 
-  const handleSelectTutor = () => {
-    if (!tutor) return;
-    const code = tutor.tutor_code || tutor.tutor_id.substring(0, 6);
-    toast.info(`Đang chuyển tới form đăng ký tìm gia sư cho Mã GS: ${code}`);
-    navigate(`/tim-gia-su?tutor_id=${tutor.tutor_id}`);
+  const handleCopyCode = (codeToCopy: string) => {
+    if (!codeToCopy) return;
+    navigator.clipboard.writeText(codeToCopy);
+    setCopied(true);
+    toast.success(`Đã sao chép mã gia sư: ${codeToCopy}`);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   if (isLoading) {
@@ -138,7 +140,7 @@ const InstructorDetail: React.FC = () => {
 
   const name = tutor.full_name || tutor.user?.full_name || tutor.user?.email?.split('@')[0] || 'Gia sư';
   const avatar = tutor.avatar_url || tutor.user?.avatar_url;
-  const tutorCode = tutor.tutor_code || `${tutor.tutor_id.substring(0, 6).toUpperCase()}`;
+  const tutorCode = tutor.tutor_code || (tutor.tutor_id ? tutor.tutor_id.substring(0, 6).toUpperCase() : 'N/A');
 
   // Process Date of Birth
   let formattedDob = '';
@@ -216,7 +218,6 @@ const InstructorDetail: React.FC = () => {
                 {isFavorite ? 'Đã yêu thích' : 'Yêu thích'}
               </button>
             )}
-            <button className="btn-tutor-select" onClick={handleSelectTutor}>Chọn</button>
           </div>
 
           <div className="tutor-profile-header">
@@ -235,7 +236,31 @@ const InstructorDetail: React.FC = () => {
             <div className="tutor-profile-info-fields">
               <div className="tutor-field-row font-bold">
                 <span className="field-title">Mã số:</span>
-                <span className="field-value highlight-code">{tutorCode}</span>
+                <span className="field-value highlight-code" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                  {tutorCode}
+                  <button
+                    type="button"
+                    onClick={() => handleCopyCode(tutorCode)}
+                    title="Sao chép mã gia sư"
+                    style={{
+                      background: copied ? '#dcfce7' : '#eff6ff',
+                      color: copied ? '#15803d' : '#2563eb',
+                      border: copied ? '1px solid #bbf7d0' : '1px solid #bfdbfe',
+                      padding: '3px 10px',
+                      borderRadius: '6px',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {copied ? <Check size={14} /> : <Copy size={14} />}
+                    {copied ? 'Đã sao chép' : 'Sao chép mã'}
+                  </button>
+                </span>
               </div>
 
               <div className="tutor-field-row margin-top-sm">
@@ -340,8 +365,8 @@ const InstructorDetail: React.FC = () => {
                     const locationParts = [item.address_detail, item.district, item.province].filter(Boolean).join(', ');
 
                     return (
-                      <tr key={item.request_id}>
-                        <td className="text-center font-bold">{item.code || item.request_id.substring(0, 5)}</td>
+                      <tr key={item.request_id || item.class_id || item.class_offline_id || Math.random()}>
+                        <td className="text-center font-bold">{item.code || item.class_code || item.class_offline_code || item.request_id?.substring(0, 5) || item.class_id?.substring(0, 5) || 'N/A'}</td>
                         <td>
                           <span className="class-name">{classTitle || 'Lớp dạy'}</span>
                           {item.study_time && <>, <i className="class-schedule">{item.study_time}</i></>}
@@ -418,7 +443,7 @@ const InstructorDetail: React.FC = () => {
               otherTutors.map((other) => {
                 const otherName = other.full_name || other.user?.full_name || 'Gia sư';
                 const otherAvatar = other.avatar_url || other.user?.avatar_url;
-                const otherCode = other.tutor_code || `${other.tutor_id.substring(0, 5).toUpperCase()}`;
+                const otherCode = other.tutor_code || (other.tutor_id ? other.tutor_id.substring(0, 5).toUpperCase() : 'N/A');
 
                 return (
                   <div key={other.tutor_id} className="other-tutor-card">
@@ -434,7 +459,25 @@ const InstructorDetail: React.FC = () => {
                       </div>
 
                       <div className="other-tutor-details">
-                        <div className="other-tutor-code">Mã số: <strong>{otherCode}</strong></div>
+                        <div className="other-tutor-code" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span>Mã số: <strong>{otherCode}</strong></span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyCode(otherCode)}
+                            title="Sao chép mã gia sư"
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              cursor: 'pointer',
+                              color: '#2563eb',
+                              padding: '2px',
+                              display: 'inline-flex',
+                              alignItems: 'center'
+                            }}
+                          >
+                            <Copy size={14} />
+                          </button>
+                        </div>
                         <h4 className="other-tutor-name">Tên gia sư: {otherName}</h4>
                         <div className="other-tutor-row">Hiện là: {other.current_role || 'Cử Nhân'}</div>
                         <div className="other-tutor-row">Trường: {other.university || 'Đại học'}</div>

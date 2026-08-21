@@ -150,10 +150,10 @@ const TeacherDashboard: React.FC = () => {
   } = useTeacherDashboard();
 
   React.useEffect(() => {
-    if (!isApprovedTutor && activeTab !== 'overview' && activeTab !== 'profile') {
+    if (!isLoading && tutorProfile !== null && !isApprovedTutor && activeTab !== 'overview' && activeTab !== 'profile') {
       setActiveTab('overview');
     }
-  }, [isApprovedTutor, activeTab, setActiveTab]);
+  }, [isLoading, tutorProfile, isApprovedTutor, activeTab, setActiveTab]);
 
   if (isLoading && courses.length === 0 && bookings.length === 0) {
     return (
