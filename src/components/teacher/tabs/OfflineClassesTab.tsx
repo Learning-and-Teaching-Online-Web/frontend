@@ -568,10 +568,17 @@ export const OfflineClassesTab: React.FC = () => {
                         </span>
                       )
                     ) : isApplicationExpired ? (
-                      <span style={{ background: '#fee2e2', color: '#991b1b', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <XCircle size={14} />
-                        HẾT HẠN ĐÓNG PHÍ / ĐÃ HỦY
-                      </span>
+                      cls.my_application_status === 'CANCELLED' ? (
+                        <span style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <XCircle size={14} />
+                          BẠN ĐÃ HỦY NHẬN LỚP
+                        </span>
+                      ) : (
+                        <span style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Clock size={14} />
+                          HẾT HẠN ĐÓNG PHÍ NHẬN LỚP
+                        </span>
+                      )
                     ) : hasPendingRefund ? (
                       <span style={{ background: '#fffbeb', color: '#b45309', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Clock size={14} />
@@ -748,9 +755,15 @@ export const OfflineClassesTab: React.FC = () => {
                       </div>
                     </div>
                   ) : isApplicationExpired ? (
-                    <div style={{ color: '#991b1b', background: '#fee2e2', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, textAlign: 'center' }}>
-                      ✕ Đã quá hạn đóng phí hoặc Gia sư đã hủy nhận lớp. Lớp học đã được chuyển trả lại hệ thống.
-                    </div>
+                    cls.my_application_status === 'CANCELLED' ? (
+                      <div style={{ color: '#991b1b', background: '#fee2e2', border: '1px solid #fca5a5', padding: '10px 14px', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 600, textAlign: 'center' }}>
+                        ✕ Bạn đã chủ động hủy nhận lớp học này. Lớp học đã được chuyển trả lại hệ thống để các Gia sư khác ứng tuyển.
+                      </div>
+                    ) : (
+                      <div style={{ color: '#991b1b', background: '#fee2e2', border: '1px solid #fca5a5', padding: '10px 14px', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 600, textAlign: 'center' }}>
+                        ✕ Đã quá thời hạn nộp phí nhận lớp giữ chỗ. Lớp học đã được chuyển trả lại hệ thống.
+                      </div>
+                    )
                   ) : cls.my_application_status === 'REJECTED' ? (
                     <div style={{ background: '#fee2e2', border: '1px solid #fca5a5', padding: '12px 14px', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <div style={{ color: '#991b1b', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
