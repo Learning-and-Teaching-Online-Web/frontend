@@ -1081,6 +1081,10 @@ const AdminClassRequests: React.FC = () => {
                         <span className="admin-badge warning" style={{ padding: '6px 12px' }}>
                           ⏳ Chờ Đóng Phí Escrow
                         </span>
+                      ) : app.status === 'CANCELLED' ? (
+                        <span className="admin-badge danger" style={{ padding: '6px 12px', background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5' }}>
+                          ✕ Gia Sư Hủy Nhận Lớp
+                        </span>
                       ) : app.status === 'EXPIRED' ? (
                         <span className="admin-badge warning" style={{ padding: '6px 12px', background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a' }}>
                           ⏱ Hết Hạn Đóng Phí
