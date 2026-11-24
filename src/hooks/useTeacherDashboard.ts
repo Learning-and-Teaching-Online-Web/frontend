@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import tutorApi from '../services/tutorApi';
 import { courseApi } from '../services/courseApi';
 import { blogApi, type CreateArticlePayload } from '../services/blogApi';
 import { authApi } from '../services/authApi';
 import authStorage from '../utils/authStorage';
+import axiosClient from '../services/axiosClient';
 
 export interface DashboardStats {
   totalCourses: number;
@@ -17,10 +18,29 @@ export interface DashboardStats {
 
 export type TeacherTab = 'overview' | 'courses' | 'schedules' | 'bookings' | 'articles' | 'reviews' | 'wallet' | 'profile' | 'offline_classes';
 
+const VALID_TEACHER_TABS: TeacherTab[] = [
+  'overview',
+  'courses',
+  'schedules',
+  'bookings',
+  'articles',
+  'reviews',
+  'wallet',
+  'profile',
+  'offline_classes'
+];
+
 export const useTeacherDashboard = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<TeacherTab>('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
+
+  const tabFromUrl = searchParams.get('tab') as TeacherTab;
+  const activeTab: TeacherTab = tabFromUrl && VALID_TEACHER_TABS.includes(tabFromUrl) ? tabFromUrl : 'overview';
+
+  const setActiveTab = (tab: TeacherTab) => {
+    setSearchParams({ tab });
+  };
 
   // Core Data States
   const [stats, setStats] = useState<DashboardStats>({
@@ -38,6 +58,7 @@ export const useTeacherDashboard = () => {
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [articles, setArticles] = useState<any[]>([]);
   const [classSessions, setClassSessions] = useState<any[]>([]);
+  const [offlineClasses, setOfflineClasses] = useState<any[]>([]);
 
   // Tutor Profile
   const [teacherName, setTeacherName] = useState('Gia sư NovaLearn');
@@ -171,6 +192,16 @@ export const useTeacherDashboard = () => {
           );
           setArticles(myArticles);
         }
+      }
+
+      // 8. Fetch Offline Classes
+      try {
+        const offlineRes = await axiosClient.get('/class-requests/tutor-classes');
+        if (offlineRes.data && offlineRes.data.data) {
+          setOfflineClasses(offlineRes.data.data);
+        }
+      } catch (err) {
+        console.error('Error fetching tutor offline classes:', err);
       }
     } catch (error: any) {
       console.error('Error loading dashboard data:', error);
@@ -1102,6 +1133,7 @@ export const useTeacherDashboard = () => {
     // Booking actions
     handleConfirmBooking,
     handleCancelBooking,
+    offlineClasses,
     loadDashboardData
   };
 };

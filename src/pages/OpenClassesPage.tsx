@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axiosClient from '../services/axiosClient';
-import { Search, MapPin, Phone, Mail, Eye, BookOpen, Sparkles } from 'lucide-react';
+import { Search, MapPin, Phone, Mail, Eye, BookOpen, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import ReferencePriceTable from '../components/ReferencePriceTable';
+import { formatGradeLevel } from '../utils/formatters';
 import '../styles/OpenClassesPage.css';
 
 interface ClassRequest {
@@ -30,6 +31,13 @@ const OpenClassesPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [province, setProvince] = useState('--Tất cả Tỉnh/Thành--');
   const [showPriceTable, setShowPriceTable] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 4;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, province]);
 
   const fetchClasses = async () => {
     setLoading(true);
@@ -137,8 +145,9 @@ const OpenClassesPage: React.FC = () => {
                 Hiện tại không có lớp nào phù hợp với tìm kiếm của bạn.
               </div>
             ) : (
-              <div className="classes-grid-container">
-                {classes.map((cls) => (
+              <>
+                <div className="classes-grid-container">
+                  {classes.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((cls) => (
                   <div key={cls.request_id} className="class-item-card">
                     
                     {/* Header line of card */}
@@ -157,15 +166,15 @@ const OpenClassesPage: React.FC = () => {
                     {/* Content Body */}
                     <div className="class-card-body">
                       <p className="class-info-row">
-                        <strong>Lớp dạy:</strong> <span>{cls.grade_level || 'Tất cả các lớp'}.</span>
+                        <strong>Lớp dạy:</strong> <span>{formatGradeLevel(cls.grade_level)}</span>
                       </p>
                       <p className="class-info-row">
-                        <strong>Môn dạy:</strong> <span style={{ fontWeight: 600, color: '#0f172a' }}>{cls.subject_name}.</span>
+                        <strong>Môn dạy:</strong> <span style={{ fontWeight: 600, color: '#0f172a' }}>{cls.subject_name}</span>
                       </p>
                       <p className="class-info-row">
                         <strong>Địa chỉ:</strong> 
                         <span className="class-location-text">
-                          {cls.address_detail} - {cls.district || ''} - {cls.province || ''}{' '}
+                          {[cls.address_detail, cls.district, cls.province].filter(Boolean).join(' - ')}{' '}
                           <MapPin size={15} style={{ verticalAlign: 'middle', color: '#ea580c' }} />
                         </span>
                       </p>
@@ -209,6 +218,80 @@ const OpenClassesPage: React.FC = () => {
                   </div>
                 ))}
               </div>
+
+              {/* Pagination Controls */}
+              {Math.ceil(classes.length / ITEMS_PER_PAGE) > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginTop: '24px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px',
+                      padding: '8px 14px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      background: currentPage === 1 ? '#f1f5f9' : '#ffffff',
+                      color: currentPage === 1 ? '#94a3b8' : '#334155',
+                      cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                      fontWeight: 600,
+                      fontSize: '0.88rem',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <ChevronLeft size={16} /> Trang trước
+                  </button>
+
+                  {Array.from({ length: Math.ceil(classes.length / ITEMS_PER_PAGE) }, (_, idx) => idx + 1).map((page) => (
+                    <button
+                      key={page}
+                      type="button"
+                      onClick={() => setCurrentPage(page)}
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '8px',
+                        border: page === currentPage ? 'none' : '1px solid #cbd5e1',
+                        background: page === currentPage ? '#2563eb' : '#ffffff',
+                        color: page === currentPage ? '#ffffff' : '#334155',
+                        fontWeight: 700,
+                        fontSize: '0.9rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                  <button
+                    type="button"
+                    disabled={currentPage === Math.ceil(classes.length / ITEMS_PER_PAGE)}
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(classes.length / ITEMS_PER_PAGE)))}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px',
+                      padding: '8px 14px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      background: currentPage === Math.ceil(classes.length / ITEMS_PER_PAGE) ? '#f1f5f9' : '#ffffff',
+                      color: currentPage === Math.ceil(classes.length / ITEMS_PER_PAGE) ? '#94a3b8' : '#334155',
+                      cursor: currentPage === Math.ceil(classes.length / ITEMS_PER_PAGE) ? 'not-allowed' : 'pointer',
+                      fontWeight: 600,
+                      fontSize: '0.88rem',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    Trang sau <ChevronRight size={16} />
+                  </button>
+                </div>
+              )}
+            </>
             )}
           </div>
         </div>

@@ -5,11 +5,12 @@ import authStorage from '../utils/authStorage';
 import tutorApi from '../services/tutorApi';
 import { toast } from 'react-toastify';
 import { MapPin, UserCheck, Send, ArrowLeft, ShieldAlert, LogIn, CheckCircle } from 'lucide-react';
+import { formatGradeLevel } from '../utils/formatters';
 
 interface Application {
   application_id: string;
   applicant_phone: string;
-  available_date?: string;
+  available_from?: string;
   notes?: string;
   status: string;
   created_at: string;
@@ -54,9 +55,15 @@ const ClassDetailPage: React.FC = () => {
   const isAuthenticated = authStorage.isAuthenticated();
   const userRole = authStorage.getUserRole();
 
-  const [timeOption, setTimeOption] = useState('Ngay lập tức');
-  const [availableDate, setAvailableDate] = useState('');
+  const [availableFrom, setAvailableFrom] = useState('');
   const [notes, setNotes] = useState('');
+
+  const formatDateTime = (val?: string | null) => {
+    if (!val) return 'Chưa cập nhật';
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return val;
+    return d.toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' });
+  };
 
   const fetchDetail = async () => {
     try {
@@ -94,6 +101,8 @@ const ClassDetailPage: React.FC = () => {
   const tutorName = profileData?.full_name || profileData?.user?.full_name || authStorage.getUserName() || 'Gia sư';
   const tutorPhone = profileData?.phone || profileData?.user?.phone || '';
   const tutorAvatar = profileData?.avatar_url || profileData?.user?.avatar_url || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80';
+  const verifiedStatus = profileData?.verified_status || 'pending';
+  const isApprovedTutor = verifiedStatus === 'approved';
 
   const myApplication = classDetail?.applications?.find((app: any) =>
     (profileData?.tutor_id && app.tutor?.tutor_id === profileData.tutor_id) ||
@@ -103,18 +112,28 @@ const ClassDetailPage: React.FC = () => {
   const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!isApprovedTutor) {
+      toast.error('Hồ sơ Gia sư của bạn chưa được Admin phê duyệt. Vui lòng chờ Admin duyệt trước khi đăng ký nhận lớp!');
+      return;
+    }
+
+    if (!availableFrom) {
+      toast.error('Vui lòng chọn thời gian có thể nhận lớp!');
+      return;
+    }
+
     setSubmitting(true);
     try {
       const payload = {
         applicant_phone: tutorPhone || authStorage.getUserName() || 'Chưa cập nhật SĐT',
-        available_date: `${timeOption} - ${availableDate || 'Linh hoạt'}`,
+        available_from: new Date(availableFrom).toISOString(),
         notes,
       };
 
       const res = await axiosClient.post(`/class-requests/${id}/apply`, payload);
       toast.success(res.data.message || 'Xác nhận đăng ký nhận lớp thành công!');
 
-      setAvailableDate('');
+      setAvailableFrom('');
       setNotes('');
       fetchDetail();
     } catch (err: any) {
@@ -145,7 +164,7 @@ const ClassDetailPage: React.FC = () => {
   return (
     <div style={{ background: '#f8fafc', minHeight: '100vh', padding: '30px 16px' }}>
       <div style={{ maxWidth: '1050px', margin: '0 auto' }}>
-        
+
         {/* Back Link */}
         <div style={{ marginBottom: '16px' }}>
           <Link to="/lop-hoc-moi" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#2563eb', fontWeight: '600', textDecoration: 'none' }}>
@@ -155,19 +174,19 @@ const ClassDetailPage: React.FC = () => {
 
         {/* Main Box Header */}
         <div style={{ background: '#0284c7', color: '#ffffff', padding: '14px 20px', borderRadius: '8px 8px 0 0', fontWeight: '700', fontSize: '1.1rem' }}>
-          MS: {classDetail.code} - Việc làm gia sư dạy môn {classDetail.subject_name} {classDetail.grade_level} {classDetail.district} {classDetail.province}
+          MS: {classDetail.code} - Việc làm gia sư dạy môn {classDetail.subject_name} {formatGradeLevel(classDetail.grade_level)} {classDetail.district} {classDetail.province}
         </div>
 
         {/* Main Content Layout (Grid 2 Columns) */}
         <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderTop: 'none', borderRadius: '0 0 8px 8px', padding: '24px', display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', boxShadow: '0 4px 14px rgba(0,0,0,0.05)' }}>
-          
+
           {/* Left Column: Detail Info */}
           <div style={{ fontSize: '0.95rem', lineHeight: '1.8', color: '#1e293b' }}>
             <p style={{ margin: '0 0 8px 0' }}>
               <strong>Mã lớp:</strong> <span style={{ color: '#b45309', fontWeight: '700' }}>{classDetail.code}</span>
             </p>
             <p style={{ margin: '0 0 8px 0' }}>
-              <strong>Lớp dạy:</strong> {classDetail.grade_level || 'Tất cả các lớp'}
+              <strong>Lớp dạy:</strong> {formatGradeLevel(classDetail.grade_level)}
             </p>
             <p style={{ margin: '0 0 8px 0' }}>
               <strong>Môn dạy:</strong> {classDetail.subject_name}
@@ -176,7 +195,7 @@ const ClassDetailPage: React.FC = () => {
               <strong>Địa chỉ:</strong> {classDetail.address_detail} <MapPin size={16} style={{ color: '#ef4444', verticalAlign: 'middle' }} />
             </p>
             <p style={{ margin: '0 0 8px 0' }}>
-              <strong>Khu vực:</strong> {classDetail.province} - {classDetail.district}
+              <strong>Khu vực:</strong> {[classDetail.province, classDetail.district].filter(Boolean).join(' - ')}
             </p>
             <p style={{ margin: '0 0 8px 0', color: '#16a34a' }}>
               <strong>Mức lương:</strong> <span style={{ fontWeight: '800', fontSize: '1.1rem' }}>{formatCurrency(Number(classDetail.desired_price))}</span>
@@ -191,7 +210,10 @@ const ClassDetailPage: React.FC = () => {
               <strong>Yêu cầu gia sư:</strong> <span style={{ fontWeight: '600', color: '#0369a1' }}>{classDetail.tutor_requirement || 'Sinh viên / Giáo viên'}</span>
             </p>
             <p style={{ margin: '0 0 8px 0' }}>
-              <strong>Thông tin người học:</strong> {classDetail.academic_level || 'Học sinh căn bản'}
+              <strong>Tên học viên:</strong> {classDetail.student_name || 'Chưa cập nhật'}
+            </p>
+            <p style={{ margin: '0 0 8px 0' }}>
+              <strong>Học lực:</strong> {classDetail.academic_level || 'Chưa cập nhật'}
             </p>
             <p style={{ margin: '0 0 8px 0', color: '#475569' }}>
               <strong>Liên hệ trung tâm:</strong> 0974.502.420 - 0938.708.488
@@ -237,7 +259,7 @@ const ClassDetailPage: React.FC = () => {
                   Chỉ tài khoản <strong>Gia sư</strong> mới có thể đăng ký nhận lớp dạy này.
                 </p>
                 <p style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '16px' }}>
-                  Nếu bạn là Phụ huynh / Học viên, bạn có thể tạo yêu cầu tìm gia sư mới.
+                  Nếu bạn là Học viên, bạn có thể tạo yêu cầu tìm gia sư mới.
                 </p>
                 <Link
                   to="/tim-gia-su"
@@ -271,7 +293,7 @@ const ClassDetailPage: React.FC = () => {
 
                 <div style={{ background: '#ffffff', borderRadius: '8px', padding: '12px', textAlign: 'left', fontSize: '0.84rem', border: '1px solid #bbf7d0', marginBottom: '16px' }}>
                   <div style={{ marginBottom: '6px' }}><strong>SĐT ứng tuyển:</strong> {myApplication.applicant_phone}</div>
-                  <div style={{ marginBottom: '6px' }}><strong>Thời gian nhận lớp:</strong> {myApplication.available_date || 'Linh hoạt'}</div>
+                  <div style={{ marginBottom: '6px' }}><strong>Thời gian nhận lớp:</strong> {formatDateTime(myApplication.available_from)}</div>
                   <div><strong>Trạng thái đơn:</strong> <span style={{ background: '#fef3c7', color: '#b45309', padding: '2px 8px', borderRadius: '10px', fontWeight: 700, fontSize: '0.78rem' }}>CHỜ ADMIN DUYỆT</span></div>
                 </div>
 
@@ -308,36 +330,45 @@ const ClassDetailPage: React.FC = () => {
                   <div>
                     <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0f172a' }}>{tutorName}</div>
                     <div style={{ fontSize: '0.8rem', color: '#64748b' }}>SĐT liên hệ: <strong>{tutorPhone || 'Chưa cập nhật'}</strong></div>
-                    <span style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600 }}>✓ Hồ sơ đã xác minh</span>
+                    {isApprovedTutor ? (
+                      <span style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600 }}>✓ Hồ sơ đã xác minh</span>
+                    ) : verifiedStatus === 'pending' ? (
+                      <span style={{ fontSize: '0.75rem', color: '#d97706', fontWeight: 600 }}>⏳ Hồ sơ chờ Admin xét duyệt</span>
+                    ) : verifiedStatus === 'rejected' ? (
+                      <span style={{ fontSize: '0.75rem', color: '#dc2626', fontWeight: 600 }}>❌ Hồ sơ bị từ chối</span>
+                    ) : (
+                      <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>⚠️ Hồ sơ chưa được duyệt</span>
+                    )}
                   </div>
                 </div>
 
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#155e75', marginBottom: '4px' }}>
-                    Thời gian có thể nhận lớp <span style={{ color: '#ef4444' }}>*</span>
-                  </label>
-                  <select
-                    value={timeOption}
-                    onChange={(e) => setTimeOption(e.target.value)}
-                    style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #67e8f9', fontSize: '0.9rem', background: '#fff', outline: 'none' }}
-                  >
-                    <option value="Ngay lập tức">Ngay lập tức</option>
-                    <option value="Trong 1-2 ngày">Trong 1-2 ngày tới</option>
-                    <option value="Trong tuần này">Trong tuần này</option>
-                    <option value="Thỏa thuận sau">Thỏa thuận sau</option>
-                  </select>
-                </div>
+                {!isApprovedTutor && (
+                  <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '10px 12px', marginBottom: '14px', color: '#92400e', fontSize: '0.82rem', lineHeight: 1.5 }}>
+                    <strong>⚠️ Tài khoản chưa được duyệt:</strong> Hồ sơ của bạn đang ở trạng thái <strong>{verifiedStatus === 'pending' ? 'Chờ Admin duyệt (PENDING)' : verifiedStatus === 'rejected' ? 'Bị từ chối' : 'Chưa được duyệt'}</strong>. Vui lòng cập nhật đầy đủ thông tin/bằng cấp và chờ Admin phê duyệt tài khoản trước khi ứng tuyển nhận lớp.
+                  </div>
+                )}
 
-                <div style={{ marginBottom: '12px' }}>
+                <div style={{ marginBottom: '14px' }}>
                   <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#155e75', marginBottom: '4px' }}>
-                    Thời gian dạy cụ thể (Tùy chọn)
+                    Thời gian có thể nhận lớp (Ngày & Giờ) <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input
-                    type="text"
-                    value={availableDate}
-                    onChange={(e) => setAvailableDate(e.target.value)}
-                    placeholder="VD: Chiều T2 hoặc Ngày 10/08..."
-                    style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #67e8f9', fontSize: '0.9rem', outline: 'none' }}
+                    type="datetime-local"
+                    value={availableFrom}
+                    disabled={!isApprovedTutor}
+                    min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
+                    onChange={(e) => setAvailableFrom(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '8px 10px',
+                      borderRadius: '6px',
+                      border: '1px solid #67e8f9',
+                      fontSize: '0.9rem',
+                      outline: 'none',
+                      background: !isApprovedTutor ? '#f1f5f9' : '#fff',
+                      cursor: !isApprovedTutor ? 'not-allowed' : 'text'
+                    }}
                   />
                 </div>
 
@@ -347,35 +378,52 @@ const ClassDetailPage: React.FC = () => {
                   </label>
                   <textarea
                     value={notes}
+                    disabled={!isApprovedTutor}
                     onChange={(e) => setNotes(e.target.value)}
                     rows={2}
                     placeholder="Ghi chú thêm về lịch dạy / kinh nghiệm..."
-                    style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #67e8f9', fontSize: '0.9rem', outline: 'none', resize: 'none' }}
+                    style={{
+                      width: '100%',
+                      padding: '8px 10px',
+                      borderRadius: '6px',
+                      border: '1px solid #67e8f9',
+                      fontSize: '0.9rem',
+                      outline: 'none',
+                      resize: 'none',
+                      background: !isApprovedTutor ? '#f1f5f9' : '#fff',
+                      cursor: !isApprovedTutor ? 'not-allowed' : 'text'
+                    }}
                   />
                 </div>
 
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || !isApprovedTutor}
                   style={{
                     width: '100%',
-                    background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
-                    color: '#ffffff',
+                    background: !isApprovedTutor ? '#cbd5e1' : 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
+                    color: !isApprovedTutor ? '#64748b' : '#ffffff',
                     border: 'none',
                     padding: '12px',
                     borderRadius: '6px',
                     fontWeight: '700',
-                    fontSize: '0.95rem',
-                    cursor: submitting ? 'not-allowed' : 'pointer',
-                    boxShadow: '0 2px 8px rgba(22, 163, 74, 0.3)',
+                    fontSize: '0.92rem',
+                    cursor: submitting || !isApprovedTutor ? 'not-allowed' : 'pointer',
+                    boxShadow: !isApprovedTutor ? 'none' : '0 2px 8px rgba(22, 163, 74, 0.3)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '6px',
                   }}
+                  title={!isApprovedTutor ? 'Tài khoản chưa được Admin phê duyệt' : ''}
                 >
                   <Send size={16} />
-                  {submitting ? 'Đang gửi thông tin...' : 'XÁC NHẬN ĐĂNG KÝ NHẬN LỚP'}
+                  {submitting
+                    ? 'Đang gửi thông tin...'
+                    : !isApprovedTutor
+                    ? 'TÀI KHOẢN CHƯA ĐƯỢC DUYỆT'
+                    : 'XÁC NHẬN ĐĂNG KÝ NHẬN LỚP'
+                  }
                 </button>
               </form>
             )}
@@ -411,13 +459,8 @@ const ClassDetailPage: React.FC = () => {
                       <td style={{ padding: '10px', fontWeight: '600' }}>{idx + 1}</td>
                       <td style={{ padding: '10px', color: '#0f172a', fontWeight: '600' }}>
                         {app.tutor?.full_name || 'Gia sư'}
-                        {app.applicant_phone && (
-                          <span style={{ fontSize: '0.82rem', color: '#2563eb', fontWeight: 'normal', marginLeft: '6px' }}>
-                            (SĐT: {app.applicant_phone})
-                          </span>
-                        )}
                       </td>
-                      <td style={{ padding: '10px', color: '#334155' }}>{app.available_date || 'N/A'}</td>
+                      <td style={{ padding: '10px', color: '#334155' }}>{formatDateTime(app.available_from)}</td>
                       <td style={{ padding: '10px', color: '#64748b' }}>{app.notes || 'Không có'}</td>
                       <td style={{ padding: '10px' }}>
                         <span
@@ -441,15 +484,7 @@ const ClassDetailPage: React.FC = () => {
           )}
         </div>
 
-        {/* Bottom Policy Guidance */}
-        <div style={{ marginTop: '24px', padding: '16px', background: '#eff6ff', borderRadius: '8px', borderLeft: '4px solid #2563eb', fontSize: '0.88rem', color: '#1e40af', lineHeight: 1.6 }}>
-          <p style={{ margin: '0 0 6px 0', fontWeight: '700' }}>
-            HỢP TÁC GIỚI THIỆU LỚP MỚI CHO TRUNG TÂM, BẠN SẼ NHẬN ĐƯỢC 60% LỆ PHÍ LỚP MỚI
-          </p>
-          <p style={{ margin: 0 }}>
-            Lưu ý: Trung tâm cam kết thu phí nhận lớp đúng quy định ({classDetail.commission_rate}%). Gia sư vui lòng đọc kĩ quy trình nhận lớp trước khi đăng ký nhận dạy.
-          </p>
-        </div>
+
 
       </div>
     </div>

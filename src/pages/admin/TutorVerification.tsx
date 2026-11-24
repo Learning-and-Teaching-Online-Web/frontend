@@ -27,6 +27,7 @@ interface TutorItem {
   review_count?: number | null;
   teaching_mode?: string | null;
   verified_status: 'pending' | 'approved' | 'rejected';
+  admin_note?: string | null;
   created_at?: string;
   bio?: string | null;
   user: {
@@ -57,7 +58,8 @@ const TutorVerification: React.FC = () => {
   const [selectedTutor, setSelectedTutor] = useState<TutorItem | null>(null);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [certsLoading, setCertsLoading] = useState(false);
-  const [adminNote, setAdminNote] = useState('');
+  const [rejectReason, setRejectReason] = useState('');
+  const [certNotes, setCertNotes] = useState<Record<string, string>>({});
   const [previewCert, setPreviewCert] = useState<Certificate | null>(null);
 
   // File type helpers
@@ -147,7 +149,8 @@ const TutorVerification: React.FC = () => {
     setSelectedTutor(tutor);
     setCertificates([]);
     setCertsLoading(true);
-    setAdminNote('');
+    setRejectReason(tutor.admin_note || '');
+    setCertNotes({});
     try {
       const response = await adminApi.getTutorCertificates(tutor.tutor_id);
       if (response.success) {
@@ -162,16 +165,27 @@ const TutorVerification: React.FC = () => {
     }
   };
 
-  const handleVerifyTutor = async (tutorId: string, status: 'approved' | 'rejected') => {
+  const handleVerifyTutor = async (tutorId: string, status: 'approved' | 'rejected', adminNote?: string) => {
+    if (status === 'rejected' && !adminNote?.trim()) {
+      toast.error('Vui lòng nhập lý do từ chối hồ sơ.');
+      return;
+    }
     try {
-      const response = await adminApi.updateTutorVerification(tutorId, status);
+      const response = await adminApi.updateTutorVerification(tutorId, status, adminNote?.trim());
       if (response.success) {
         toast.success(`Đã cập nhật trạng thái gia sư thành: ${status === 'approved' ? 'Đã duyệt' : 'Từ chối'}`);
+        if (status === 'approved') {
+          setRejectReason('');
+        }
         // Refresh
         fetchTutors();
         fetchPendingCount();
         if (selectedTutor?.tutor_id === tutorId) {
-          const updatedTutor = { ...selectedTutor, verified_status: status };
+          const updatedTutor = { 
+            ...selectedTutor, 
+            verified_status: status, 
+            admin_note: status === 'rejected' ? adminNote : null 
+          };
           setSelectedTutor(updatedTutor);
           // Re-fetch certificates to reflect auto-approved/rejected statuses
           handleSelectTutor(updatedTutor);
@@ -184,9 +198,13 @@ const TutorVerification: React.FC = () => {
     }
   };
 
-  const handleVerifyCertificate = async (certId: string, status: 'approved' | 'rejected') => {
+  const handleVerifyCertificate = async (certId: string, status: 'approved' | 'rejected', adminNote?: string) => {
+    if (status === 'rejected' && !adminNote?.trim()) {
+      toast.error('Vui lòng nhập lý do từ chối chứng chỉ.');
+      return;
+    }
     try {
-      const response = await adminApi.updateCertificateStatus(certId, status, adminNote || undefined);
+      const response = await adminApi.updateCertificateStatus(certId, status, adminNote?.trim() || undefined);
       if (response.success) {
         toast.success(`Duyệt chứng chỉ thành công!`);
         // Refresh certs list
@@ -204,7 +222,7 @@ const TutorVerification: React.FC = () => {
   const totalPages = Math.ceil(total / 10);
 
   return (
-    <AdminLayout title="Quản lý & Duyệt hồ sơ Giảng viên">
+    <AdminLayout title="Quản lý & Duyệt hồ sơ Gia sư">
       <div style={{ display: 'grid', gridTemplateColumns: selectedTutor ? '1fr 1fr' : '1fr', gap: '24px', alignItems: 'start' }}>
         
         {/* Tutor list block */}
@@ -262,7 +280,7 @@ const TutorVerification: React.FC = () => {
                   {tutors && tutors.length > 0 ? (
                     tutors.map((t) => (
                       <tr key={t.tutor_id} className={selectedTutor?.tutor_id === t.tutor_id ? 'active-row' : ''} style={{ backgroundColor: selectedTutor?.tutor_id === t.tutor_id ? 'rgba(99, 102, 241, 0.05)' : '' }}>
-                        <td style={{ fontWeight: 600 }}>{t.user?.full_name || t.user?.email?.split('@')[0] || 'Giảng viên'}</td>
+                        <td style={{ fontWeight: 600 }}>{t.user?.full_name || t.user?.email?.split('@')[0] || 'Gia sư'}</td>
                         <td>{t.user?.email}</td>
                         <td>
                           <span className={`admin-badge ${t.verified_status === 'approved' ? 'success' : t.verified_status === 'rejected' ? 'danger' : 'warning'}`}>
@@ -282,7 +300,7 @@ const TutorVerification: React.FC = () => {
                   ) : (
                     <tr>
                       <td colSpan={4} style={{ textAlign: 'center', color: 'var(--admin-text-muted)', padding: '30px' }}>
-                        Không có hồ sơ giảng viên nào.
+                        Không có hồ sơ gia sư nào.
                       </td>
                     </tr>
                   )}
@@ -325,7 +343,7 @@ const TutorVerification: React.FC = () => {
               />
               <div style={{ flex: 1 }}>
                 <h3 style={{ fontSize: '17px', fontWeight: 700, margin: '0 0 4px 0', color: 'var(--admin-text-main)' }}>
-                  {selectedTutor.full_name || selectedTutor.user?.full_name || selectedTutor.user?.email?.split('@')[0] || 'Giảng viên'}
+                  {selectedTutor.full_name || selectedTutor.user?.full_name || selectedTutor.user?.email?.split('@')[0] || 'Gia sư'}
                 </h3>
                 <div style={{ fontSize: '13px', color: 'var(--admin-text-muted)', display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
                   <span>📧 Email: <strong style={{ color: 'var(--admin-text-main)' }}>{selectedTutor.user?.email}</strong></span>
@@ -425,13 +443,7 @@ const TutorVerification: React.FC = () => {
                 </div>
               </div>
 
-              {/* Group 4: Giới thiệu bản thân */}
-              <div>
-                <span style={{ fontSize: '11px', color: 'var(--admin-text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: 600, marginBottom: '2px' }}>Giới thiệu bản thân</span>
-                <div style={{ fontSize: '13px', background: 'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--admin-border)', whiteSpace: 'pre-line', lineHeight: 1.5 }}>
-                  {selectedTutor.bio || 'Chưa có thông tin giới thiệu.'}
-                </div>
-              </div>
+
 
               {/* Group 5: Ảnh CCCD Mặt trước */}
               <div>
@@ -471,6 +483,27 @@ const TutorVerification: React.FC = () => {
                   {selectedTutor.verified_status === 'approved' ? 'Đã duyệt tài khoản' : selectedTutor.verified_status === 'rejected' ? 'Đã từ chối tài khoản' : 'Đang chờ duyệt'}
                 </span>
               </div>
+
+              {selectedTutor.admin_note && (
+                <div style={{ fontSize: '12px', background: 'rgba(239, 68, 68, 0.1)', color: '#f87171', padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.2)', marginBottom: '12px' }}>
+                  <strong>Lý do từ chối hiện tại:</strong> {selectedTutor.admin_note}
+                </div>
+              )}
+
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--admin-text-muted)', display: 'block', marginBottom: '4px', fontWeight: 500 }}>
+                  Lý do từ chối hồ sơ (bắt buộc khi bấm Từ chối):
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Nhập lý do chi tiết từ chối hồ sơ gia sư (ví dụ: Cần bổ sung ảnh CCCD rõ nét, cập nhật lại tiểu sử...)"
+                  className="admin-search-input"
+                  style={{ width: '100%', fontSize: '13px', padding: '8px 10px', resize: 'vertical' }}
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                />
+              </div>
+
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button
                   onClick={() => handleVerifyTutor(selectedTutor.tutor_id, 'approved')}
@@ -481,7 +514,7 @@ const TutorVerification: React.FC = () => {
                   <span>Duyệt hồ sơ (Đồng bộ bằng cấp)</span>
                 </button>
                 <button
-                  onClick={() => handleVerifyTutor(selectedTutor.tutor_id, 'rejected')}
+                  onClick={() => handleVerifyTutor(selectedTutor.tutor_id, 'rejected', rejectReason)}
                   className={`admin-btn ${selectedTutor.verified_status === 'rejected' ? 'danger' : 'secondary'} sm`}
                   style={{ flexGrow: 1, opacity: selectedTutor.verified_status === 'rejected' ? 1 : 0.8 }}
                 >
@@ -560,12 +593,12 @@ const TutorVerification: React.FC = () => {
                         placeholder="Lý do từ chối/ghi chú..." 
                         className="admin-search-input"
                         style={{ minWidth: '100%', padding: '6px 10px', fontSize: '12px' }}
-                        value={adminNote}
-                        onChange={(e) => setAdminNote(e.target.value)}
+                        value={certNotes[cert.cert_id] || ''}
+                        onChange={(e) => setCertNotes(prev => ({ ...prev, [cert.cert_id]: e.target.value }))}
                       />
                       <div style={{ display: 'flex', gap: '8px' }}>
-                        <button onClick={() => handleVerifyCertificate(cert.cert_id, 'approved')} className={`admin-btn ${cert.status === 'approved' ? 'success' : 'secondary'} sm`} style={{ flexGrow: 1, padding: '4px' }}>Duyệt</button>
-                        <button onClick={() => handleVerifyCertificate(cert.cert_id, 'rejected')} className={`admin-btn ${cert.status === 'rejected' ? 'danger' : 'secondary'} sm`} style={{ flexGrow: 1, padding: '4px' }}>Bỏ</button>
+                        <button onClick={() => handleVerifyCertificate(cert.cert_id, 'approved', certNotes[cert.cert_id])} className={`admin-btn ${cert.status === 'approved' ? 'success' : 'secondary'} sm`} style={{ flexGrow: 1, padding: '4px' }}>Duyệt</button>
+                        <button onClick={() => handleVerifyCertificate(cert.cert_id, 'rejected', certNotes[cert.cert_id])} className={`admin-btn ${cert.status === 'rejected' ? 'danger' : 'secondary'} sm`} style={{ flexGrow: 1, padding: '4px' }}>Bỏ</button>
                       </div>
                     </div>
                   </div>
@@ -620,7 +653,7 @@ const TutorVerification: React.FC = () => {
                   <FileText size={20} />
                   <span>{previewCert.title}</span>
                 </h3>
-                <span style={{ fontSize: '12px', color: '#9ca3af' }}>Giảng viên: {selectedTutor?.user?.full_name || selectedTutor?.user?.email?.split('@')[0] || 'Giảng viên'}</span>
+                <span style={{ fontSize: '12px', color: '#9ca3af' }}>Gia sư: {selectedTutor?.user?.full_name || selectedTutor?.user?.email?.split('@')[0] || 'Gia sư'}</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span className={`admin-badge ${previewCert.status === 'approved' ? 'success' : previewCert.status === 'rejected' ? 'danger' : 'warning'}`}>
@@ -662,13 +695,21 @@ const TutorVerification: React.FC = () => {
               </button>
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button 
-                  onClick={() => { handleVerifyCertificate(previewCert.cert_id, 'approved'); setPreviewCert(null); }} 
+                  onClick={() => { handleVerifyCertificate(previewCert.cert_id, 'approved', certNotes[previewCert.cert_id]); setPreviewCert(null); }} 
                   className="admin-btn success sm"
                 >
                   <Check size={14} /> Duyệt chứng chỉ
                 </button>
                 <button 
-                  onClick={() => { handleVerifyCertificate(previewCert.cert_id, 'rejected'); setPreviewCert(null); }} 
+                  onClick={() => {
+                    const note = certNotes[previewCert.cert_id];
+                    if (!note?.trim()) {
+                      toast.error('Vui lòng nhập lý do từ chối chứng chỉ.');
+                      return;
+                    }
+                    handleVerifyCertificate(previewCert.cert_id, 'rejected', note);
+                    setPreviewCert(null);
+                  }} 
                   className="admin-btn danger sm"
                 >
                   <X size={14} /> Từ chối chứng chỉ

@@ -39,7 +39,7 @@ const HomePage: React.FC = () => {
       {/* 8. Key Statistics */}
       <StatsSection />
 
-      {/* 9. Student & Parent Testimonials */}
+      {/* 9. Student Testimonials */}
       <StudentFeedbacks />
 
       {/* 10. Educational News & Study Tips */}

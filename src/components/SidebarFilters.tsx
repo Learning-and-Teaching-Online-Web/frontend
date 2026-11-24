@@ -309,17 +309,17 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({ filters, onFilterChange
         )}
       </div>
 
-      {/* 4. Instructors */}
+      {/* 4. Tutors */}
       {availableInstructors.length > 0 && (
         <div className="filter-group">
-          <h3 className="filter-title">Giảng viên</h3>
+          <h3 className="filter-title">Gia sư</h3>
 
           {/* Mini Search Input for Instructors */}
           {availableInstructors.length > 4 && (
             <div style={{ marginBottom: '10px', position: 'relative' }}>
               <input 
                 type="text"
-                placeholder="Tìm giảng viên..."
+                placeholder="Tìm gia sư..."
                 value={instructorSearch}
                 onChange={(e) => setInstructorSearch(e.target.value)}
                 style={{
@@ -356,7 +356,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({ filters, onFilterChange
             })}
             {visibleInstructors.length === 0 && (
               <div style={{ fontSize: '12px', color: '#94a3b8', padding: '6px 0' }}>
-                Không tìm thấy giảng viên
+                Không tìm thấy gia sư
               </div>
             )}
           </div>

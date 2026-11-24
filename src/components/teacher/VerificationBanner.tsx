@@ -3,11 +3,13 @@ import { Clock, AlertTriangle, ShieldCheck, ArrowRight } from 'lucide-react';
 
 interface VerificationBannerProps {
   status?: 'pending' | 'approved' | 'rejected' | string;
+  reason?: string | null;
   onGoToProfile?: () => void;
 }
 
 export const VerificationBanner: React.FC<VerificationBannerProps> = ({
   status = 'pending',
+  reason,
   onGoToProfile
 }) => {
   if (status === 'approved') {
@@ -19,11 +21,11 @@ export const VerificationBanner: React.FC<VerificationBannerProps> = ({
           </div>
           <div>
             <div className="banner-title approved">
-              Tài khoản Giảng viên Đối tác Đã Xác Thực
+              Tài khoản Gia sư Đối tác Đã Xác Thực
               <span className="banner-tag approved">CHÍNH THỨC</span>
             </div>
             <div className="banner-desc approved">
-              Hồ sơ và bằng cấp chuyên môn của bạn đã được kiểm duyệt hợp lệ. Khóa học của bạn sẽ hiển thị ưu tiên tới học viên.
+              Hồ sơ và bằng cấp chuyên môn của bạn đã được kiểm duyệt hợp lệ.
             </div>
           </div>
         </div>
@@ -44,6 +46,11 @@ export const VerificationBanner: React.FC<VerificationBannerProps> = ({
             </div>
             <div className="banner-desc rejected">
               Admin đã từ chối hồ sơ của bạn. Vui lòng cập nhật lại tiểu sử hoặc tải lên bổ sung các chứng chỉ/bằng cấp hợp lệ để yêu cầu duyệt lại.
+              {reason && (
+                <div style={{ marginTop: '6px', fontWeight: 600, color: '#ef4444' }}>
+                  Lý do từ chối: {reason}
+                </div>
+              )}
             </div>
           </div>
         </div>

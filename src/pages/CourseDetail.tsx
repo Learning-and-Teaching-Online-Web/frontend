@@ -161,12 +161,12 @@ const CourseDetail: React.FC = () => {
 
   const handleToggleFavoriteTutor = async () => {
     if (!isAuthenticated) {
-      toast.warning('Bạn cần đăng nhập tài khoản Học viên để yêu thích giảng viên.');
+      toast.warning('Bạn cần đăng nhập tài khoản Học viên để yêu thích gia sư.');
       return;
     }
     const currentRole = authStorage.getUserRole();
     if (currentRole === 'tutor' || currentRole === 'admin') {
-      toast.error('Chỉ tài khoản Học viên mới có quyền yêu thích giảng viên.');
+      toast.error('Chỉ tài khoản Học viên mới có quyền yêu thích gia sư.');
       return;
     }
     if (!course || !course.tutor_id) return;
@@ -176,7 +176,7 @@ const CourseDetail: React.FC = () => {
       if (res && res.success) {
         setIsFavoriteTutor(!isFavoriteTutor);
         if (!isFavoriteTutor) {
-          toast.success(`Đã thêm ${course.instructor} vào danh sách giảng viên yêu thích! ❤️`);
+          toast.success(`Đã thêm ${course.instructor} vào danh sách gia sư yêu thích! ❤️`);
         } else {
           toast.info(`Đã xóa ${course.instructor} khỏi danh sách yêu thích.`);
         }
@@ -185,7 +185,7 @@ const CourseDetail: React.FC = () => {
       }
     } catch (err: any) {
       console.error('Error toggling favorite tutor:', err);
-      toast.error(err.response?.data?.error || 'Có lỗi xảy ra khi lưu giảng viên yêu thích.');
+      toast.error(err.response?.data?.error || 'Có lỗi xảy ra khi lưu gia sư yêu thích.');
     }
   };
 
@@ -202,7 +202,7 @@ const CourseDetail: React.FC = () => {
       return;
     }
     if (userRole === 'tutor') {
-      toast.error('Tài khoản Giảng viên không thể đăng ký khóa học. Vui lòng sử dụng tài khoản Học viên.');
+      toast.error('Tài khoản Gia sư không thể đăng ký khóa học. Vui lòng sử dụng tài khoản Học viên.');
       return;
     }
 
@@ -502,7 +502,7 @@ const CourseDetail: React.FC = () => {
                 className={`tab-button ${activeTab === 'instructor' ? 'active' : ''}`}
                 onClick={() => setActiveTab('instructor')}
               >
-                Giảng viên
+                Gia sư
               </button>
               <button
                 className={`tab-button ${activeTab === 'faqs' ? 'active' : ''}`}
@@ -694,7 +694,7 @@ const CourseDetail: React.FC = () => {
                       })
                     ) : (
                       <p style={{ color: 'var(--text-muted)', padding: '20px 0' }}>
-                        Giảng viên chưa tải bài giảng nào lên cho khóa học này.
+                        Gia sư chưa tải bài giảng nào lên cho khóa học này.
                       </p>
                     )}
                   </div>
@@ -747,7 +747,7 @@ const CourseDetail: React.FC = () => {
                         }}
                       >
                         <Heart size={16} fill={isFavoriteTutor ? '#ef4444' : 'none'} color={isFavoriteTutor ? '#ef4444' : '#64748b'} />
-                        {isFavoriteTutor ? 'Đã yêu thích giảng viên' : 'Yêu thích giảng viên'}
+                        {isFavoriteTutor ? 'Đã yêu thích gia sư' : 'Yêu thích gia sư'}
                       </button>
                     )}
                   </div>

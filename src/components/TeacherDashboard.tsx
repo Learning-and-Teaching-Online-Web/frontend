@@ -5,7 +5,6 @@ import {
   Calendar,
   CheckSquare,
   FileText,
-  Star,
   CreditCard,
   X,
   DollarSign,
@@ -45,6 +44,7 @@ const TeacherDashboard: React.FC = () => {
     handleAvatarUpload,
     stats,
     tutorProfile,
+    isApprovedTutor,
     courses,
     bookings,
     reviews,
@@ -144,8 +144,15 @@ const TeacherDashboard: React.FC = () => {
     // Booking Actions
     handleConfirmBooking,
     handleCancelBooking,
-    classSessions
+    classSessions,
+    offlineClasses
   } = useTeacherDashboard();
+
+  React.useEffect(() => {
+    if (!isLoading && tutorProfile !== null && !isApprovedTutor && activeTab !== 'overview' && activeTab !== 'profile') {
+      setActiveTab('overview');
+    }
+  }, [isLoading, tutorProfile, isApprovedTutor, activeTab, setActiveTab]);
 
   if (isLoading && courses.length === 0 && bookings.length === 0) {
     return (
@@ -219,60 +226,7 @@ const TeacherDashboard: React.FC = () => {
                 Tổng quan
               </button>
             </li>
-            <li>
-              <button
-                className={`menu-item-btn ${activeTab === 'courses' ? 'active' : ''}`}
-                onClick={() => setActiveTab('courses')}
-              >
-                <BookOpen size={18} />
-                Quản lý khóa học
-              </button>
-            </li>
-            <li>
-              <button
-                className={`menu-item-btn ${activeTab === 'schedules' ? 'active' : ''}`}
-                onClick={() => setActiveTab('schedules')}
-              >
-                <Calendar size={18} />
-                Lịch dạy của tôi
-              </button>
-            </li>
-            <li>
-              <button
-                className={`menu-item-btn ${activeTab === 'bookings' ? 'active' : ''}`}
-                onClick={() => setActiveTab('bookings')}
-              >
-                <CheckSquare size={18} />
-                Yêu cầu học ({bookings.filter(b => b.status === 'pending').length})
-              </button>
-            </li>
-            <li>
-              <button
-                className={`menu-item-btn ${activeTab === 'offline_classes' ? 'active' : ''}`}
-                onClick={() => setActiveTab('offline_classes')}
-              >
-                <ClipboardList size={18} />
-                Lớp offline cần dạy
-              </button>
-            </li>
-            <li>
-              <button
-                className={`menu-item-btn ${activeTab === 'articles' ? 'active' : ''}`}
-                onClick={() => setActiveTab('articles')}
-              >
-                <FileText size={18} />
-                Bài viết của tôi ({articles.length})
-              </button>
-            </li>
-            <li>
-              <button
-                className={`menu-item-btn ${activeTab === 'reviews' ? 'active' : ''}`}
-                onClick={() => setActiveTab('reviews')}
-              >
-                <Star size={18} />
-                Nhận xét học sinh
-              </button>
-            </li>
+
             <li>
               <button
                 className={`menu-item-btn ${activeTab === 'profile' ? 'active' : ''}`}
@@ -282,16 +236,66 @@ const TeacherDashboard: React.FC = () => {
                 Hồ sơ & Chứng chỉ
               </button>
             </li>
-            <li>
-              <button
-                id="tab-btn-wallet"
-                className={`menu-item-btn ${activeTab === 'wallet' ? 'active' : ''}`}
-                onClick={() => setActiveTab('wallet')}
-              >
-                <CreditCard size={18} />
-                Ví tiền & Doanh thu
-              </button>
-            </li>
+
+            {isApprovedTutor && (
+              <>
+                <li>
+                  <button
+                    className={`menu-item-btn ${activeTab === 'offline_classes' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('offline_classes')}
+                  >
+                    <ClipboardList size={18} />
+                    Lớp offline cần dạy
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className={`menu-item-btn ${activeTab === 'courses' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('courses')}
+                  >
+                    <BookOpen size={18} />
+                    Quản lý khóa học
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className={`menu-item-btn ${activeTab === 'schedules' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('schedules')}
+                  >
+                    <Calendar size={18} />
+                    Lịch dạy online
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className={`menu-item-btn ${activeTab === 'bookings' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('bookings')}
+                  >
+                    <CheckSquare size={18} />
+                    Yêu cầu học ({bookings.filter(b => b.status === 'pending').length})
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className={`menu-item-btn ${activeTab === 'articles' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('articles')}
+                  >
+                    <FileText size={18} />
+                    Bài viết của tôi ({articles.length})
+                  </button>
+                </li>
+                <li>
+                  <button
+                    id="tab-btn-wallet"
+                    className={`menu-item-btn ${activeTab === 'wallet' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('wallet')}
+                  >
+                    <CreditCard size={18} />
+                    Ví tiền & Doanh thu
+                  </button>
+                </li>
+              </>
+            )}
           </ul>
         </aside>
 
@@ -301,6 +305,7 @@ const TeacherDashboard: React.FC = () => {
           {/* VERIFICATION STATUS BANNER */}
           <VerificationBanner
             status={tutorProfile?.verified_status || 'pending'}
+            reason={tutorProfile?.admin_note}
             onGoToProfile={() => setActiveTab('profile')}
           />
 
@@ -311,8 +316,8 @@ const TeacherDashboard: React.FC = () => {
                 <DollarSign size={24} />
               </div>
               <div className="stat-info">
-                <span className="stat-value">{formatVND(stats.totalEarnings)}</span>
                 <span className="stat-label">Tổng thu nhập</span>
+                <span className="stat-value">{formatVND(stats.totalEarnings)}</span>
               </div>
             </div>
 
@@ -321,8 +326,8 @@ const TeacherDashboard: React.FC = () => {
                 <Users size={24} />
               </div>
               <div className="stat-info">
-                <span className="stat-value">{stats.totalStudents}</span>
                 <span className="stat-label">Học sinh đăng ký</span>
+                <span className="stat-value">{stats.totalStudents}</span>
               </div>
             </div>
 
@@ -331,11 +336,22 @@ const TeacherDashboard: React.FC = () => {
                 <BookOpen size={24} />
               </div>
               <div className="stat-info">
-                <span className="stat-value">{stats.totalCourses}</span>
                 <span className="stat-label">Khóa học của tôi</span>
+                <span className="stat-value">{stats.totalCourses}</span>
               </div>
             </div>
 
+            <div className="stat-card">
+              <div className="stat-icon-box" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', color: '#ffffff' }}>
+                <ClipboardList size={24} />
+              </div>
+              <div className="stat-info">
+                <span className="stat-label">Lớp học Offline</span>
+                <span className="stat-value">{offlineClasses.length}</span>
+              </div>
+            </div>
+
+            {/* Ẩn Đánh giá gia sư theo yêu cầu
             <div className="stat-card">
               <div className="stat-icon-box rating">
                 <Star size={24} />
@@ -345,6 +361,7 @@ const TeacherDashboard: React.FC = () => {
                 <span className="stat-label">Đánh giá gia sư</span>
               </div>
             </div>
+            */}
           </section>
 
           {/* ACTIVE TAB CONTENT */}
@@ -573,7 +590,7 @@ const TeacherDashboard: React.FC = () => {
 
                   <div className="form-row-db">
                     <div className="form-group-db">
-                      <label>Ngày Khai Giảng (Bắt đầu) <span style={{color: 'red'}}>*</span></label>
+                      <label>Ngày Khai Giảng (Bắt đầu) <span style={{ color: 'red' }}>*</span></label>
                       <input
                         type="date"
                         value={newCourseStartDate}
@@ -584,7 +601,7 @@ const TeacherDashboard: React.FC = () => {
                     </div>
 
                     <div className="form-group-db">
-                      <label>Ngày Bế Giảng (Kết thúc) <span style={{color: 'red'}}>*</span></label>
+                      <label>Ngày Bế Giảng (Kết thúc) <span style={{ color: 'red' }}>*</span></label>
                       <input
                         type="date"
                         value={newCourseEndDate}
