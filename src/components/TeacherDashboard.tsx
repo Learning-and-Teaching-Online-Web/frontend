@@ -5,7 +5,6 @@ import {
   Calendar,
   CheckSquare,
   FileText,
-  Star,
   CreditCard,
   X,
   DollarSign,
