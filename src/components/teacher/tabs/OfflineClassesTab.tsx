@@ -218,32 +218,8 @@ export const OfflineClassesTab: React.FC = () => {
     }
   };
 
-  // Execute decline class request
-  const executeDecline = async (requestId: string) => {
-    try {
-      setSubmitting(true);
-      const res = await axiosClient.patch(`/class-requests/tutor-respond/${requestId}`, { action: 'DECLINE' });
-      toast.success(res.data.message || 'Đã từ chối nhận lớp thành công!');
-      setPendingDeclineClass(null);
-      fetchMyClasses();
-    } catch (err: any) {
-      console.error('Error declining class:', err);
-      toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi từ chối nhận lớp.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // Tutor accepts a class directed to them
+  // Tutor accepts or declines a class directed to them
   const handleRespondClass = async (requestId: string, action: 'ACCEPT' | 'DECLINE') => {
-    if (action === 'DECLINE') {
-      const cls = myClasses.find(c => c.request_id === requestId);
-      if (cls) {
-        setPendingDeclineClass(cls);
-        return;
-      }
-    }
-
     const actionText = action === 'ACCEPT' ? 'ĐỒNG Ý NHẬN' : 'TỪ CHỐI / HỦY';
     if (!window.confirm(`Bạn có chắc chắn muốn ${actionText} lớp học này không?`)) {
       return;
