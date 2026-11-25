@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import type { 
   StudentProfile, 
@@ -18,30 +18,14 @@ import authStorage from '../utils/authStorage';
 import { quizApi } from '../services/quizApi';
 import axiosClient from '../services/axiosClient';
 import type { StudentClassRequest } from '../components/student/tabs/ClassRequestsTab';
+import { mapScheduleToDisplayItem, type RawSchedule, type ScheduleDisplayItem } from './sessionMapper';
 
-const VALID_STUDENT_TABS = [
-  'overview',
-  'courses',
-  'schedule',
-  'class-requests',
-  'quizzes',
-  'favorites',
-  'profile',
-  'wallet'
-];
+export { mapScheduleToDisplayItem, type RawSchedule, type ScheduleDisplayItem };
 
 export const useStudentDashboard = () => {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-
-  const tabFromUrl = searchParams.get('tab');
-  const activeTab = tabFromUrl && VALID_STUDENT_TABS.includes(tabFromUrl) ? tabFromUrl : 'overview';
-
-  const setActiveTab = (tab: string) => {
-    setSearchParams({ tab });
-  };
+  const [activeTab, setActiveTab] = useState<string>('overview');
 
   // Dashboard states
   const [profile, setProfile] = useState<StudentProfile>(initialStudentProfile);
@@ -74,7 +58,7 @@ export const useStudentDashboard = () => {
       type: b.course?.type || 'online',
       title: b.course?.title || 'Khóa học',
       subject: b.course?.subject || 'Môn học',
-      instructor: b.course?.tutor?.user?.full_name || 'Gia sư',
+      instructor: b.course?.tutor?.user?.full_name || 'Giảng viên',
       thumbnail: b.course?.thumbnail_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500&auto=format&fit=crop&q=60',
       progress: b.status === 'completed' ? 100 : 50,
       completedLessons: b.status === 'completed' ? (b.course?.total_sessions || 1) : 0,
@@ -94,7 +78,7 @@ export const useStudentDashboard = () => {
       course_id: b.course?.course_id,
       type: b.course?.type || 'online',
       courseTitle: b.course?.title || 'Khóa học',
-      tutorName: b.course?.tutor?.user?.full_name || 'Gia sư',
+      tutorName: b.course?.tutor?.user?.full_name || 'Giảng viên',
       tutorAvatar: b.course?.tutor?.user?.avatar_url || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
       startTime: b.schedule?.start_time || new Date().toISOString(),
       endTime: b.schedule?.end_time || new Date().toISOString(),
@@ -137,7 +121,6 @@ export const useStudentDashboard = () => {
       const authStatus = authStorage.isAuthenticated();
       if (!authStatus) return;
 
-      setIsLoading(true);
       try {
         // 1. Fetch Profile
         const profileRes = await authApi.getProfile();
@@ -217,7 +200,7 @@ export const useStudentDashboard = () => {
             }
             return {
               tutor_id: fav.tutor?.tutor_id || '',
-              name: fav.tutor?.user?.full_name || 'Gia sư',
+              name: fav.tutor?.user?.full_name || 'Giảng viên',
               avatar: fav.tutor?.user?.avatar_url || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
               subject: subjectStr,
               rating: Number(fav.tutor?.rating) || 5.0,
@@ -243,8 +226,6 @@ export const useStudentDashboard = () => {
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
         toast.error('Có lỗi xảy ra khi tải thông tin bảng điều khiển.');
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -337,13 +318,13 @@ export const useStudentDashboard = () => {
       const res = await favoriteApi.toggleFavorite(tutorId);
       if (res && res.success) {
         setFavoriteTutors(prev => prev.filter(t => t.tutor_id !== tutorId));
-        toast.info('Đã xóa gia sư khỏi danh sách yêu thích.');
+        toast.info('Đã xóa giảng viên khỏi danh sách yêu thích.');
       } else {
-        toast.error(res?.error || 'Không thể xóa gia sư khỏi danh sách yêu thích.');
+        toast.error(res?.error || 'Không thể xóa giảng viên khỏi danh sách yêu thích.');
       }
     } catch (err: any) {
       console.error('Error removing favorite tutor:', err);
-      toast.error('Có lỗi xảy ra khi xóa gia sư yêu thích.');
+      toast.error('Có lỗi xảy ra khi xóa giảng viên yêu thích.');
     }
   };
 
@@ -449,7 +430,6 @@ export const useStudentDashboard = () => {
 
   return {
     isAuthenticated,
-    isLoading,
     activeTab,
     setActiveTab,
     profile,
@@ -494,7 +474,8 @@ export const useStudentDashboard = () => {
     },
     helpers: {
       formatDate,
-      formatTime
+      formatTime,
+      mapScheduleToDisplayItem
     },
     computed: {
       nextSession,
