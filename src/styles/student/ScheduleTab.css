@@ -81,19 +81,40 @@
   border-radius: 4px;
 }
 
+/* upcoming (Xanh dương) */
+.status-badge.upcoming,
 .status-badge.scheduled {
   background-color: #eff6ff;
   color: #2563eb;
+  border: 1px solid #bfdbfe;
 }
 
-.status-badge.completed {
+/* ongoing (Xanh lá) */
+.status-badge.ongoing {
   background-color: #ecfdf5;
   color: #059669;
+  border: 1px solid #a7f3d0;
 }
 
+/* completed (Xám) */
+.status-badge.completed {
+  background-color: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+}
+
+/* cancelled (Đỏ) */
 .status-badge.cancelled {
   background-color: #fef2f2;
   color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.empty-schedule-message {
+  color: var(--text-muted);
+  font-size: 14px;
+  padding: 24px 0;
+  text-align: center;
 }
 
 .btn-meeting-link {

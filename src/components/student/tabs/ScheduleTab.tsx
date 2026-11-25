@@ -4,14 +4,64 @@ import type { ClassSession } from '../../../data/mockStudentData';
 import ReviewModal from '../ReviewModal';
 import '../../../styles/student/ScheduleTab.css';
 
-interface ScheduleTabProps {
+export interface ScheduleTabProps {
   classSessions: ClassSession[];
-  formatTime: (isoString: string) => string;
+  formatTime?: (isoString: string) => string;
 }
 
+/**
+ * Helper ánh xạ trạng thái sang class badge và tiêu đề hiển thị tương ứng
+ * - upcoming / scheduled: Xanh dương
+ * - ongoing: Xanh lá
+ * - completed: Xám
+ * - cancelled: Đỏ
+ */
+export const getStatusBadgeInfo = (status: string) => {
+  const normalized = status?.toLowerCase() || '';
+  switch (normalized) {
+    case 'upcoming':
+    case 'scheduled':
+      return {
+        className: 'status-badge upcoming',
+        text: 'Sắp diễn ra'
+      };
+    case 'ongoing':
+      return {
+        className: 'status-badge ongoing',
+        text: 'Đang học'
+      };
+    case 'completed':
+      return {
+        className: 'status-badge completed',
+        text: 'Hoàn thành'
+      };
+    case 'cancelled':
+      return {
+        className: 'status-badge cancelled',
+        text: 'Đã hủy'
+      };
+    default:
+      return {
+        className: `status-badge ${normalized || 'unknown'}`,
+        text: status || 'Chưa xác định'
+      };
+  }
+};
+
+const defaultFormatTime = (isoString: string) => {
+  if (!isoString) return '';
+  const d = new Date(isoString);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleTimeString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+};
+
 export const ScheduleTab: React.FC<ScheduleTabProps> = ({
-  classSessions,
-  formatTime
+  classSessions = [],
+  formatTime = defaultFormatTime
 }) => {
   const [selectedSessionForReview, setSelectedSessionForReview] = useState<ClassSession | null>(null);
   const [reviewedSessionIds, setReviewedSessionIds] = useState<Set<string>>(new Set());
@@ -20,6 +70,8 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
     setReviewedSessionIds(prev => new Set(prev).add(sessionId));
   };
 
+  const safeSessions = Array.isArray(classSessions) ? classSessions : [];
+
   return (
     <div>
       <div className="content-header">
@@ -27,16 +79,23 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
         <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Danh sách các buổi học 1-kèm-1 và lớp trực tuyến</span>
       </div>
 
-      {classSessions.length > 0 ? (
-        <div className="schedule-list">
-          {classSessions.map(session => {
+      {safeSessions.length > 0 ? (
+        <div className="schedule-list" data-testid="schedule-list">
+          {safeSessions.map(session => {
             const sessionDate = new Date(session.startTime);
-            const day = sessionDate.getDate();
-            const month = `Thg ${sessionDate.getMonth() + 1}`;
+            const isValidDate = !isNaN(sessionDate.getTime());
+            const day = isValidDate ? sessionDate.getDate() : '--';
+            const month = isValidDate ? `Thg ${sessionDate.getMonth() + 1}` : '--';
             const isReviewed = reviewedSessionIds.has(session.session_id);
+            const badgeInfo = getStatusBadgeInfo(session.status);
             
             return (
-              <div key={session.session_id} className="schedule-item">
+              <div 
+                key={session.session_id} 
+                className="schedule-item" 
+                data-testid="schedule-card"
+                data-session-id={session.session_id}
+              >
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                   <div className="schedule-time-box">
                     <span className="time-box-day">{day}</span>
@@ -52,19 +111,17 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
                       </span>
                       <span>
                         <User size={14} />
-                        Gia sư: {session.tutorName}
+                        Giảng viên: {session.tutorName}
                       </span>
-                      <span className={`status-badge ${session.status}`}>
-                        {session.status === 'scheduled' ? 'Sắp diễn ra' : 
-                         session.status === 'completed' ? 'Hoàn thành' : 
-                         session.status === 'ongoing' ? 'Đang học' : 'Đã hủy'}
+                      <span className={badgeInfo.className} data-testid="status-badge">
+                        {badgeInfo.text}
                       </span>
                     </div>
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  {session.status === 'scheduled' || session.status === 'ongoing' ? (
+                  {session.status === 'scheduled' || session.status === 'upcoming' || session.status === 'ongoing' ? (
                     <a 
                       href={session.meetingLink} 
                       target="_blank" 
@@ -135,7 +192,9 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
           })}
         </div>
       ) : (
-        <p style={{ color: 'var(--text-muted)' }}>Bạn chưa có lịch học nào.</p>
+        <p className="empty-schedule-message" data-testid="empty-schedule" style={{ color: 'var(--text-muted)' }}>
+          Chưa có lịch học nào
+        </p>
       )}
 
       {/* REVIEW MODAL */}
