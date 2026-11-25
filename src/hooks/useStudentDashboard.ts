@@ -18,6 +18,9 @@ import authStorage from '../utils/authStorage';
 import { quizApi } from '../services/quizApi';
 import axiosClient from '../services/axiosClient';
 import type { StudentClassRequest } from '../components/student/tabs/ClassRequestsTab';
+import { mapScheduleToDisplayItem, type RawSchedule, type ScheduleDisplayItem } from './sessionMapper';
+
+export { mapScheduleToDisplayItem, type RawSchedule, type ScheduleDisplayItem };
 
 const VALID_STUDENT_TABS = [
   'overview',
@@ -494,7 +497,8 @@ export const useStudentDashboard = () => {
     },
     helpers: {
       formatDate,
-      formatTime
+      formatTime,
+      mapScheduleToDisplayItem
     },
     computed: {
       nextSession,
