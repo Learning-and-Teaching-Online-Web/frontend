@@ -41,7 +41,7 @@ export interface ClassSession {
   tutorAvatar: string;
   startTime: string; // ISO format string
   endTime: string;   // ISO format string
-  status: 'scheduled' | 'ongoing' | 'completed' | 'cancelled';
+  status: 'scheduled' | 'ongoing' | 'completed' | 'cancelled' | 'upcoming';
   meetingLink: string;
   bookingStatus?: string;
   paymentStatus?: string;
