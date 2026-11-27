@@ -30,6 +30,7 @@ import RequestTutorPage from '../pages/RequestTutorPage';
 import OpenClassesPage from '../pages/OpenClassesPage';
 import ClassDetailPage from '../pages/ClassDetailPage';
 import AdminClassRequests from '../pages/admin/AdminClassRequests';
+import ClassroomPage from '../pages/ClassroomPage';
 
 const AppRoutes: React.FC = () => {
   return (
@@ -54,6 +55,9 @@ const AppRoutes: React.FC = () => {
       <Route path="/admin/login" element={<AdminLogin />} />
 
       {/* Protected Student routes */}
+      <Route element={<ProtectedRoute allowedRoles={['student', 'admin', 'tutor']} redirectPath="/auth" />}>
+        <Route path="/classroom/:scheduleId" element={<ClassroomPage />} />
+      </Route>
       <Route element={<ProtectedRoute allowedRoles={['student', 'admin']} redirectPath="/auth" />}>
         <Route path="/student/dashboard" element={<StudentDashboard />} />
       </Route>
