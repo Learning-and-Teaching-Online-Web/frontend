@@ -91,7 +91,7 @@ export const ClassroomPage: React.FC<ClassroomPageProps> = ({
 
   const displayName =
     authStorage.getUserName() ||
-    (accessData.user_role === 'tutor' ? 'Giảng viên' : 'Học viên');
+    (accessData.user_role === 'tutor' ? 'Gia Sư' : 'Học viên');
 
   return (
     <div className="classroom-page" data-testid="classroom-page">
