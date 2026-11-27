@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@jitsi/react-sdk": "^1.4.4",
     "@types/react-datepicker": "^6.2.0",
     "axios": "^1.18.1",
     "date-fns": "^4.4.0",
