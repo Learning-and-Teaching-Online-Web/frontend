@@ -89,24 +89,77 @@ export const useStudentDashboard = () => {
     };
   };
 
-  const mapBookingToClassSession = (b: any): ClassSession => {
-    const hasReview = Array.isArray(b.reviews) ? b.reviews.length > 0 : !!b.reviews;
-    return {
-      session_id: b.booking_id,
-      booking_id: b.booking_id,
-      course_id: b.course?.course_id,
-      type: b.course?.type || 'online',
-      courseTitle: b.course?.title || 'Khóa học',
-      tutorName: b.course?.tutor?.user?.full_name || 'Gia sư',
-      tutorAvatar: b.course?.tutor?.user?.avatar_url || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
-      startTime: b.schedule?.start_time || new Date().toISOString(),
-      endTime: b.schedule?.end_time || new Date().toISOString(),
-      status: b.status === 'confirmed' ? 'scheduled' : (b.status === 'completed' ? 'completed' : 'cancelled'),
-      meetingLink: `https://meet.jit.si/novalearn-${b.booking_id}`,
-      bookingStatus: b.status,
-      paymentStatus: b.payment_status,
-      isReviewed: hasReview
-    };
+  const mapBookingsToClassSessions = (bookings: any[]): ClassSession[] => {
+    const sessions: ClassSession[] = [];
+
+    for (const b of bookings) {
+      if (b.status === 'cancelled') continue;
+      if ((b.course?.type || 'online') !== 'online') continue;
+
+      const hasReview = Array.isArray(b.reviews) ? b.reviews.length > 0 : !!b.reviews;
+      const tutorName = b.course?.tutor?.full_name || b.course?.tutor?.user?.full_name || 'Gia sư';
+      const tutorAvatar =
+        b.course?.tutor?.avatar_url ||
+        b.course?.tutor?.user?.avatar_url ||
+        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80';
+      const courseTitle = b.course?.title || 'Khóa học';
+      const schedules = Array.isArray(b.course?.schedules) ? [...b.course.schedules] : [];
+
+      if (schedules.length > 0) {
+        schedules.sort((a: any, bSched: any) => {
+          const numDiff = (Number(a.session_number) || 0) - (Number(bSched.session_number) || 0);
+          if (numDiff !== 0) return numDiff;
+          return new Date(a.start_time).getTime() - new Date(bSched.start_time).getTime();
+        });
+
+        for (const sched of schedules) {
+          const fallbackStatus =
+            b.status === 'confirmed' ? 'upcoming' : (b.status === 'completed' ? 'completed' : 'cancelled');
+          const sessionStatus = sched.status || fallbackStatus;
+
+          sessions.push({
+            session_id: sched.schedule_id,
+            schedule_id: sched.schedule_id,
+            booking_id: b.booking_id,
+            course_id: b.course?.course_id,
+            type: b.course?.type || 'online',
+            courseTitle,
+            sessionTitle: sched.title || (sched.session_number ? `Buổi ${sched.session_number}` : undefined),
+            tutorName,
+            tutorAvatar,
+            startTime: sched.start_time || '',
+            endTime: sched.end_time || '',
+            status: sessionStatus,
+            meetingLink: `/classroom/${sched.schedule_id}`,
+            roomId: sched.room_id || undefined,
+            bookingStatus: b.status,
+            paymentStatus: b.payment_status,
+            isReviewed: hasReview
+          });
+        }
+      } else if (b.schedule) {
+        sessions.push({
+          session_id: b.booking_id,
+          booking_id: b.booking_id,
+          course_id: b.course?.course_id,
+          type: b.course?.type || 'online',
+          courseTitle,
+          tutorName,
+          tutorAvatar,
+          startTime: b.schedule.start_time || '',
+          endTime: b.schedule.end_time || '',
+          status: b.status === 'confirmed' ? 'upcoming' : (b.status === 'completed' ? 'completed' : 'cancelled'),
+          meetingLink: `/classroom/${b.schedule.schedule_id || b.booking_id}`,
+          bookingStatus: b.status,
+          paymentStatus: b.payment_status,
+          isReviewed: hasReview
+        });
+      }
+    }
+
+    return sessions.sort(
+      (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+    );
   };
 
   const fetchWalletData = async () => {
@@ -179,7 +232,7 @@ export const useStudentDashboard = () => {
           const mappedCourses = bookingsRes.data.map(mapBookingToEnrolledCourse);
           setEnrolledCourses(mappedCourses);
 
-          const mappedSessions = bookingsRes.data.map(mapBookingToClassSession);
+          const mappedSessions = mapBookingsToClassSessions(bookingsRes.data);
           setClassSessions(mappedSessions);
         }
 
@@ -396,7 +449,7 @@ export const useStudentDashboard = () => {
           const mappedCourses = bookingsRes.data.map(mapBookingToEnrolledCourse);
           setEnrolledCourses(mappedCourses);
 
-          const mappedSessions = bookingsRes.data.map(mapBookingToClassSession);
+          const mappedSessions = mapBookingsToClassSessions(bookingsRes.data);
           setClassSessions(mappedSessions);
         }
         return true;
@@ -437,8 +490,10 @@ export const useStudentDashboard = () => {
     navigate('/');
   };
 
-  // Get active session for overview (next scheduled session)
-  const nextSession = classSessions.find(s => s.status === 'scheduled');
+  // Get active session for overview (next upcoming/ongoing session)
+  const nextSession = classSessions.find(
+    s => s.status === 'upcoming' || s.status === 'scheduled' || s.status === 'ongoing'
+  );
 
   // Quiz statistics
   const totalQuizzes = quizAttempts.length;

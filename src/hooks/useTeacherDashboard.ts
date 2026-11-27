@@ -429,68 +429,14 @@ export const useTeacherDashboard = () => {
         payload.end_date = newCourseEndDate || undefined;
         payload.duration_months = Number(newCourseDurationMonths) || undefined;
         payload.course_days = newCourseScheduleDays.map(d => DAY_MAP[d]);
+        payload.schedule_time = newCourseStartTime || undefined;
       }
-
-      const generateAndAddSchedules = async (courseId: string) => {
-        if (newCourseType === 'online' && courseId && newCourseStartDate && newCourseEndDate && newCourseScheduleDays.length > 0 && newCourseStartTime && newCourseEndTime) {
-          const startD = new Date(newCourseStartDate);
-          const autoSlots: any[] = [];
-
-          const yyyy = startD.getFullYear();
-          const mm = String(startD.getMonth() + 1).padStart(2, '0');
-          const dd = String(startD.getDate()).padStart(2, '0');
-          const dateStr = `${yyyy}-${mm}-${dd}`;
-
-          const startISO = `${dateStr}T${newCourseStartTime}:00+07:00`;
-          const endISO = `${dateStr}T${newCourseEndTime}:00+07:00`;
-
-          for (const dayOfWeek of newCourseScheduleDays) {
-            autoSlots.push({
-              start_time: startISO,
-              end_time: endISO,
-              is_recurring: true,
-              day_of_week: dayOfWeek,
-              recurrence_end: newCourseEndDate,
-              max_slot: Number(newCourseMaxStudents) || 1
-            });
-          }
-
-          if (autoSlots.length > 0) {
-            let createdCount = 0;
-            for (const slot of autoSlots) {
-              try {
-                await tutorApi.addSchedule(courseId, slot);
-                createdCount++;
-              } catch (e: any) {
-                toast.warning(`Không thể xếp lịch thứ ${slot.day_of_week === 0 ? 'Chủ Nhật' : slot.day_of_week + 1}: ${e.response?.data?.error || 'Trùng lịch'}`);
-              }
-            }
-            if (createdCount > 0) {
-              toast.success(`Đã lưu ${createdCount} cấu hình lịch tuần hoàn!`);
-            }
-          }
-        }
-      };
 
       if (editingCourse) {
         await tutorApi.updateCourse(editingCourse.course_id, payload);
-        
-        if (newCourseType === 'online' && editingCourse.status !== 'published') {
-          try {
-            await tutorApi.deleteCourseSchedules(editingCourse.course_id);
-            await generateAndAddSchedules(editingCourse.course_id);
-          } catch (e) {
-            console.error('Lỗi cập nhật lịch dạy:', e);
-          }
-        }
-        
         toast.success('Cập nhật khóa học thành công!');
       } else {
-        const createRes = await tutorApi.createCourse(payload);
-        const createdCourseId = createRes?.data?.course_id || createRes?.data?.id;
-
-        await generateAndAddSchedules(createdCourseId);
-
+        await tutorApi.createCourse(payload);
         toast.success('Tạo khóa học mới thành công!');
       }
 
