@@ -88,11 +88,11 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
             const month = isValidDate ? `Thg ${sessionDate.getMonth() + 1}` : '--';
             const isReviewed = reviewedSessionIds.has(session.session_id);
             const badgeInfo = getStatusBadgeInfo(session.status);
-            
+
             return (
-              <div 
-                key={session.session_id} 
-                className="schedule-item" 
+              <div
+                key={session.session_id}
+                className="schedule-item"
                 data-testid="schedule-card"
                 data-session-id={session.session_id}
               >
@@ -101,7 +101,7 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
                     <span className="time-box-day">{day}</span>
                     <span className="time-box-month">{month}</span>
                   </div>
-                  
+
                   <div className="schedule-details">
                     <h3>{session.courseTitle}</h3>
                     <div className="schedule-meta">
@@ -111,7 +111,7 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
                       </span>
                       <span>
                         <User size={14} />
-                        Giảng viên: {session.tutorName}
+                        Gia Sư: {session.tutorName}
                       </span>
                       <span className={badgeInfo.className} data-testid="status-badge">
                         {badgeInfo.text}
@@ -122,10 +122,10 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   {session.status === 'scheduled' || session.status === 'upcoming' || session.status === 'ongoing' ? (
-                    <a 
-                      href={session.meetingLink} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
+                    <a
+                      href={session.meetingLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="btn-meeting-link"
                     >
                       <Video size={16} />
@@ -133,8 +133,8 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
                     </a>
                   ) : (
                     <>
-                      <button 
-                        className="btn-meeting-link" 
+                      <button
+                        className="btn-meeting-link"
                         disabled
                         style={{ opacity: 0.6, cursor: 'not-allowed' }}
                       >
