@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Clock, User, Video, Star, Check } from 'lucide-react';
 import type { ClassSession } from '../../../data/mockStudentData';
 import ReviewModal from '../ReviewModal';
+import { Pagination } from '../../Pagination';
 import '../../../styles/student/ScheduleTab.css';
 
 export interface ScheduleTabProps {
@@ -67,12 +68,24 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
 }) => {
   const [selectedSessionForReview, setSelectedSessionForReview] = useState<ClassSession | null>(null);
   const [reviewedSessionIds, setReviewedSessionIds] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const ITEMS_PER_PAGE = 6;
 
   const handleReviewSuccess = (sessionId: string) => {
     setReviewedSessionIds(prev => new Set(prev).add(sessionId));
   };
 
   const safeSessions = Array.isArray(classSessions) ? classSessions : [];
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [safeSessions.length]);
+
+  const totalPages = Math.ceil(safeSessions.length / ITEMS_PER_PAGE);
+  const paginatedSessions = safeSessions.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <div>
@@ -82,8 +95,9 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
       </div>
 
       {safeSessions.length > 0 ? (
-        <div className="schedule-list" data-testid="schedule-list">
-          {safeSessions.map(session => {
+        <>
+          <div className="schedule-list" data-testid="schedule-list">
+            {paginatedSessions.map(session => {
             const sessionDate = new Date(session.startTime);
             const isValidDate = !isNaN(sessionDate.getTime());
             const day = isValidDate ? sessionDate.getDate() : '--';
@@ -201,7 +215,13 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
               </div>
             );
           })}
-        </div>
+          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </>
       ) : (
         <p className="empty-schedule-message" data-testid="empty-schedule" style={{ color: 'var(--text-muted)' }}>
           Chưa có lịch học nào

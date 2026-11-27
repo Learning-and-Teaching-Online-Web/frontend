@@ -15,7 +15,9 @@ import {
   Sparkles,
   Info,
   Camera,
-  ClipboardList
+  ClipboardList,
+  ShieldCheck,
+  AlertCircle
 } from 'lucide-react';
 
 import '../styles/TeacherDashboard.css';
@@ -29,7 +31,6 @@ import { ReviewsTab } from './teacher/tabs/ReviewsTab';
 import { WalletTab } from './teacher/tabs/WalletTab';
 import { ProfileTab } from './teacher/tabs/ProfileTab';
 import { OfflineClassesTab } from './teacher/tabs/OfflineClassesTab';
-import { VerificationBanner } from './teacher/VerificationBanner';
 import { LessonManagementModal } from './teacher/LessonManagementModal';
 import { DocumentManagementModal } from './teacher/DocumentManagementModal';
 
@@ -168,6 +169,7 @@ const TeacherDashboard: React.FC = () => {
   const rawDisplayName = tutorProfile?.full_name || tutorProfile?.user?.full_name || teacherName || 'Gia sư';
   const displayName = rawDisplayName.replace(/^Học viên\s+/i, '');
   const avatarUrl = tutorProfile?.avatar_url || tutorProfile?.user?.avatar_url;
+  const isVerified = tutorProfile?.verified_status === 'approved';
 
   return (
     <div className="dashboard-wrapper">
@@ -188,29 +190,65 @@ const TeacherDashboard: React.FC = () => {
               }}
             />
 
-            <div
-              className="sidebar-avatar avatar-clickable"
-              onClick={() => avatarInputRef.current?.click()}
-              title="Nhấp vào đây để thay đổi ảnh đại diện gia sư"
-              style={{
-                position: 'relative',
-                cursor: 'pointer',
-                overflow: 'hidden',
-                padding: 0
-              }}
-            >
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt={displayName}
-                  style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
-                />
-              ) : (
-                displayName.charAt(0).toUpperCase()
-              )}
-              <div className="sidebar-avatar-overlay">
-                <Camera size={18} color="#ffffff" />
+            <div style={{ position: 'relative', display: 'inline-block', marginBottom: '12px' }}>
+              <div
+                className="sidebar-avatar avatar-clickable"
+                onClick={() => avatarInputRef.current?.click()}
+                title="Nhấp vào đây để thay đổi ảnh đại diện gia sư"
+                style={{
+                  position: 'relative',
+                  cursor: 'pointer',
+                  overflow: 'hidden',
+                  padding: 0,
+                  marginBottom: 0
+                }}
+              >
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={displayName}
+                    style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  displayName.charAt(0).toUpperCase()
+                )}
+                <div className="sidebar-avatar-overlay">
+                  <Camera size={18} color="#ffffff" />
+                </div>
               </div>
+
+              <span
+                title={
+                  isVerified
+                    ? 'Hồ sơ và chứng chỉ đã hợp lệ'
+                    : tutorProfile?.admin_note
+                      ? `Chứng chỉ chưa hợp lệ: ${tutorProfile.admin_note}`
+                      : 'Chứng chỉ chưa được xác thực - Nhấp để cập nhật'
+                }
+                onClick={!isVerified ? () => setActiveTab('profile') : undefined}
+                style={{
+                  position: 'absolute',
+                  bottom: '-2px',
+                  right: '-30px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '3px 8px',
+                  borderRadius: '999px',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  lineHeight: 1.2,
+                  whiteSpace: 'nowrap',
+                  background: isVerified ? '#dcfce7' : '#fee2e2',
+                  color: isVerified ? '#15803d' : '#b91c1c',
+                  border: `1.5px solid ${isVerified ? '#86efac' : '#fca5a5'}`,
+                  boxShadow: '0 2px 6px rgba(15, 23, 42, 0.12)',
+                  cursor: !isVerified ? 'pointer' : 'default'
+                }}
+              >
+                {isVerified ? <ShieldCheck size={12} /> : <AlertCircle size={12} />}
+                {isVerified ? 'Verified' : 'Not verified'}
+              </span>
             </div>
             <h3 className="sidebar-name">{displayName}</h3>
             <span className="sidebar-role">Gia Sư Đối Tác</span>
@@ -301,13 +339,6 @@ const TeacherDashboard: React.FC = () => {
 
         {/* MAIN DASHBOARD PANELS */}
         <main className="dashboard-main">
-
-          {/* VERIFICATION STATUS BANNER */}
-          <VerificationBanner
-            status={tutorProfile?.verified_status || 'pending'}
-            reason={tutorProfile?.admin_note}
-            onGoToProfile={() => setActiveTab('profile')}
-          />
 
           {/* STATS OVERVIEW CARDS */}
           <section className="stats-grid">

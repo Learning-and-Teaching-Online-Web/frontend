@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   BookOpen,
@@ -10,6 +10,7 @@ import {
   Filter,
   Sparkles
 } from 'lucide-react';
+import { Pagination } from '../../Pagination';
 
 interface SchedulesTabProps {
   classSessions?: any[];
@@ -93,6 +94,8 @@ export const SchedulesTab: React.FC<SchedulesTabProps> = ({
 }) => {
   const [selectedCourse, setSelectedCourse] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const ITEMS_PER_PAGE = 6;
 
   const safeSessions = useMemo(
     () => (Array.isArray(classSessions) ? classSessions : []),
@@ -154,6 +157,16 @@ export const SchedulesTab: React.FC<SchedulesTabProps> = ({
         return aGroup === 'completed' || aGroup === 'cancelled' ? -diff : diff;
       });
   }, [safeSessions, selectedCourse, statusFilter]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCourse, statusFilter, safeSessions.length]);
+
+  const totalPages = Math.ceil(filteredSessions.length / ITEMS_PER_PAGE);
+  const paginatedSessions = filteredSessions.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const filterTabs: { key: StatusFilter; label: string }[] = [
     { key: 'all', label: `Tất cả (${statusCounts.all})` },
@@ -483,9 +496,15 @@ export const SchedulesTab: React.FC<SchedulesTabProps> = ({
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {filteredSessions.map(renderSessionCard)}
+              {paginatedSessions.map(renderSessionCard)}
             </div>
           )}
+
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </div>
       )}
     </div>
