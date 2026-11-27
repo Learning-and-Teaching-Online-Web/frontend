@@ -71,18 +71,39 @@ export const useStudentDashboard = () => {
   // Helper mapper functions for bookings
   const mapBookingToEnrolledCourse = (b: any): EnrolledCourse => {
     const hasReview = Array.isArray(b.reviews) ? b.reviews.length > 0 : !!b.reviews;
+    const schedules = Array.isArray(b.course?.schedules) ? b.course.schedules : [];
+    const totalLessons =
+      typeof b.total_sessions === 'number' && b.total_sessions > 0
+        ? b.total_sessions
+        : (schedules.length || b.course?.total_sessions || 1);
+
+    const completedFromSchedules = schedules.filter((s: any) => s.status === 'completed').length;
+    const completedLessons =
+      typeof b.completed_sessions === 'number'
+        ? b.completed_sessions
+        : (b.status === 'completed' ? totalLessons : completedFromSchedules);
+
+    const progress =
+      typeof b.progress === 'number'
+        ? b.progress
+        : (totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 10000) / 100 : 0);
+
+    const upcomingSchedule = schedules.find(
+      (s: any) => s.status === 'ongoing' || s.status === 'upcoming' || s.status === 'scheduled'
+    );
+
     return {
       course_id: b.course?.course_id || '',
       booking_id: b.booking_id,
       type: b.course?.type || 'online',
       title: b.course?.title || 'Khóa học',
       subject: b.course?.subject || 'Môn học',
-      instructor: b.course?.tutor?.user?.full_name || 'Gia sư',
+      instructor: b.course?.tutor?.full_name || b.course?.tutor?.user?.full_name || 'Gia sư',
       thumbnail: b.course?.thumbnail_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500&auto=format&fit=crop&q=60',
-      progress: b.status === 'completed' ? 100 : 50,
-      completedLessons: b.status === 'completed' ? (b.course?.total_sessions || 1) : 0,
-      totalLessons: b.course?.total_sessions || 1,
-      nextSessionTime: b.schedule?.start_time || undefined,
+      progress,
+      completedLessons,
+      totalLessons,
+      nextSessionTime: upcomingSchedule?.start_time || b.schedule?.start_time || undefined,
       bookingStatus: b.status,
       paymentStatus: b.payment_status,
       isReviewed: hasReview
