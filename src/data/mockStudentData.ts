@@ -33,16 +33,19 @@ export interface EnrolledCourse {
 
 export interface ClassSession {
   session_id: string;
+  schedule_id?: string;
   booking_id?: string;
   course_id?: string;
   type?: 'online' | 'offline';
   courseTitle: string;
+  sessionTitle?: string;
   tutorName: string;
   tutorAvatar: string;
   startTime: string; // ISO format string
   endTime: string;   // ISO format string
   status: 'scheduled' | 'ongoing' | 'completed' | 'cancelled' | 'upcoming';
   meetingLink: string;
+  roomId?: string;
   bookingStatus?: string;
   paymentStatus?: string;
   isReviewed?: boolean;

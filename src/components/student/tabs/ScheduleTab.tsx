@@ -7,6 +7,7 @@ import '../../../styles/student/ScheduleTab.css';
 export interface ScheduleTabProps {
   classSessions: ClassSession[];
   formatTime?: (isoString: string) => string;
+  onJoinRoom?: (scheduleId: string) => void;
 }
 
 /**
@@ -61,7 +62,8 @@ const defaultFormatTime = (isoString: string) => {
 
 export const ScheduleTab: React.FC<ScheduleTabProps> = ({
   classSessions = [],
-  formatTime = defaultFormatTime
+  formatTime = defaultFormatTime,
+  onJoinRoom
 }) => {
   const [selectedSessionForReview, setSelectedSessionForReview] = useState<ClassSession | null>(null);
   const [reviewedSessionIds, setReviewedSessionIds] = useState<Set<string>>(new Set());
@@ -103,11 +105,15 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
                   </div>
 
                   <div className="schedule-details">
-                    <h3>{session.courseTitle}</h3>
+                    <h3>
+                      {session.sessionTitle
+                        ? `${session.courseTitle} — ${session.sessionTitle}`
+                        : session.courseTitle}
+                    </h3>
                     <div className="schedule-meta">
                       <span>
                         <Clock size={14} />
-                        {formatTime(session.startTime)} - {formatTime(session.endTime)}
+                        {formatTime(session.startTime) || '--:--'} - {formatTime(session.endTime) || '--:--'}
                       </span>
                       <span>
                         <User size={14} />
@@ -123,13 +129,18 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   {session.status === 'scheduled' || session.status === 'upcoming' || session.status === 'ongoing' ? (
                     <a
-                      href={session.meetingLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={session.meetingLink || `/classroom/${session.schedule_id || session.session_id}`}
+                      onClick={(e) => {
+                        const targetId = session.schedule_id || session.session_id;
+                        if (onJoinRoom && targetId) {
+                          e.preventDefault();
+                          onJoinRoom(targetId);
+                        }
+                      }}
                       className="btn-meeting-link"
                     >
                       <Video size={16} />
-                      Vào phòng học Zoom
+                      Vào phòng học
                     </a>
                   ) : (
                     <>

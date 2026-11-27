@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Clock } from 'lucide-react';
 import { useStudentDashboard } from '../hooks/useStudentDashboard';
 import { DashboardSidebar } from '../components/student/DashboardSidebar';
@@ -14,6 +14,7 @@ import { WalletTab } from '../components/student/tabs/WalletTab';
 import '../styles/StudentDashboard.css';
 
 const StudentDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const {
     isAuthenticated,
     isLoading,
@@ -113,6 +114,7 @@ const StudentDashboard: React.FC = () => {
             <ScheduleTab
               classSessions={classSessions}
               formatTime={helpers.formatTime}
+              onJoinRoom={(scheduleId) => navigate(`/classroom/${scheduleId}`)}
             />
           )}
 
