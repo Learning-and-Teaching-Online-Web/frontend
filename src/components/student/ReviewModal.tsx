@@ -12,6 +12,11 @@ interface ReviewModalProps {
   onSuccess?: () => void;
 }
 
+/** Helper kiểm tra form có hợp lệ để submit không */
+export function isReviewFormValid(rating: number): boolean {
+  return rating > 0;
+}
+
 export const ReviewModal: React.FC<ReviewModalProps> = ({
   isOpen,
   onClose,
@@ -20,7 +25,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
   courseTitle,
   onSuccess
 }) => {
-  const [rating, setRating] = useState<number>(5);
+  const [rating, setRating] = useState<number>(0);
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [professionalism, setProfessionalism] = useState<number>(5);
   const [communication, setCommunication] = useState<number>(5);
@@ -86,6 +91,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
             <button
               type="button"
               key={star}
+              data-testid={`star-btn-${star}`}
               onClick={() => onChange(star)}
               onMouseEnter={() => onHover && onHover(star)}
               onMouseLeave={() => onHover && onHover(0)}
@@ -207,6 +213,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
             </label>
             <textarea
               rows={3}
+              data-testid="comment-textarea"
               placeholder="Chia sẻ nhận xét chi tiết về bài giảng, thái độ hỗ trợ của thầy/cô..."
               value={comment}
               onChange={(e) => setComment(e.target.value)}
@@ -246,21 +253,24 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={!rating || loading}
+              data-testid="btn-submit-review"
               style={{
                 padding: '10px 22px',
                 borderRadius: '10px',
-                background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                background: !rating
+                  ? 'rgba(99, 102, 241, 0.3)'
+                  : 'linear-gradient(135deg, #6366f1, #4f46e5)',
                 color: '#ffffff',
                 border: 'none',
                 fontSize: '14px',
                 fontWeight: 600,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.7 : 1,
+                cursor: !rating || loading ? 'not-allowed' : 'pointer',
+                opacity: !rating || loading ? 0.5 : 1,
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                boxShadow: '0 4px 12px rgba(99, 102, 241, 0.35)'
+                boxShadow: !rating ? 'none' : '0 4px 12px rgba(99, 102, 241, 0.35)'
               }}
             >
               <Send size={16} />
